@@ -220,7 +220,7 @@ export async function ensureRefusalReceipt(
   stateDirectory: string,
   runtime: ContextRuntime,
   sessionID: string,
-  deps: Pick<ContextManagementDeps, "reportReceiptFailure">,
+  deps: Pick<ContextManagementDeps, "reportReceiptFailure" | "isCurrent">,
 ): Promise<void> {
   if (runtime.refusals.has(sessionID)) {
     return;
