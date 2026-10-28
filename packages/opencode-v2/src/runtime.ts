@@ -42,8 +42,9 @@ export type SessionRuntime = {
   // the first touch seeds the baseline (a fresh process always renders
   // fresh, so the baseline needs no refresh).
   preambleFingerprint: string | null;
-  // Set by the compaction hook: the next preamble check re-renders
-  // unconditionally, since compaction already flushed the cache.
+  // Set by the compaction hook: the next preamble check refreshes on a
+  // fingerprint move without the cold-cache and estimate-floor gates,
+  // since compaction already flushed the cache.
   preambleRefreshPending: boolean;
 };
 

@@ -44,23 +44,62 @@ export function registerCompletionTrigger(
 ): void {
   const resubscribe = () =>
     context.event.subscribe(options?.signal !== undefined ? { signal: options.signal } : undefined);
-  void consume(resubscribe(), deps, runtime, options?.signal, resubscribe, MAX_RESUBSCRIBES);
+  void consume(
+    resubscribe(),
+    deps,
+    options?.signal,
+    resubscribe,
+    MAX_RESUBSCRIBES,
+    raw => dispatchEvent(raw, deps, runtime),
+    () => reportReceiptFailureOnce(runtime, deps, null, "event-stream"),
+  );
+}
+
+// Step-only tracking for preamble refresh without context management: it
+// anchors the estimator and records step tokens for cache-coldness checks,
+// without evaluating triggers or requesting compactions. The completion
+// trigger above covers both when context management is on. Shares the same
+// single-resubscribe stream loop; exhaustion surfaces through the error
+// channel like any other stream death.
+export function registerStepTracking(
+  context: Context,
+  deps: Pick<ContextManagementDeps, "isBrainAvailable" | "isCurrent" | "reportReceiptFailure">,
+  runtime: ContextRuntime,
+  options?: { readonly signal?: AbortSignal },
+): void {
+  const resubscribe = () =>
+    context.event.subscribe(options?.signal !== undefined ? { signal: options.signal } : undefined);
+  void consume(
+    resubscribe(),
+    deps,
+    options?.signal,
+    resubscribe,
+    MAX_RESUBSCRIBES,
+    async raw => {
+      const event = asHostEvent(raw);
+      if (event !== null && event.type === STEP_ENDED) {
+        handleStepEnded(event.sessionID, event.tokens, deps, runtime);
+      }
+    },
+    () => reportReceiptFailureOnce(runtime, deps, null, "event-stream"),
+  );
 }
 
 async function consume(
   stream: AsyncIterable<unknown>,
-  deps: ContextManagementDeps,
-  runtime: ContextRuntime,
+  deps: Pick<ContextManagementDeps, "isCurrent">,
   signal: AbortSignal | undefined,
   resubscribe: () => AsyncIterable<unknown>,
   attemptsLeft: number,
+  dispatch: (raw: unknown) => Promise<void>,
+  onExhausted: () => void,
 ): Promise<void> {
   try {
     for await (const raw of stream) {
       if (signal?.aborted === true || isContextStale(deps)) {
         return;
       }
-      await dispatchEvent(raw, deps, runtime).catch(() => undefined);
+      await dispatch(raw).catch(() => undefined);
     }
   } catch {
     // The stream threw. Teardown and stale generations end quietly; only a
@@ -70,17 +109,17 @@ async function consume(
       return;
     }
     if (attemptsLeft <= 0) {
-      reportReceiptFailureOnce(runtime, deps, null, "event-stream");
+      onExhausted();
       return;
     }
     let next: AsyncIterable<unknown>;
     try {
       next = resubscribe();
     } catch {
-      reportReceiptFailureOnce(runtime, deps, null, "event-stream");
+      onExhausted();
       return;
     }
-    await consume(next, deps, runtime, signal, resubscribe, attemptsLeft - 1);
+    await consume(next, deps, signal, resubscribe, attemptsLeft - 1, dispatch, onExhausted);
   }
 }
 
@@ -158,7 +197,7 @@ async function handleExecutionSucceeded(
 function handleStepEnded(
   sessionID: string | undefined,
   tokens: StepTokenCounts | undefined,
-  deps: ContextManagementDeps,
+  deps: Pick<ContextManagementDeps, "isBrainAvailable">,
   runtime: ContextRuntime,
 ): void {
   if (sessionID === undefined || tokens === undefined) {

@@ -54,8 +54,8 @@ export function registerCompactionHook(
     }
     const session = sessionRuntime(runtime, sessionID);
     if (deps.refreshEnabled) {
-      // Compaction already flushed the provider cache, so the next
-      // preamble check re-renders from current Brain state for free.
+      // Compaction flushed the cache, so the next preamble check refreshes
+      // on a fingerprint move without the cold-cache and floor gates.
       session.preambleRefreshPending = true;
     }
 

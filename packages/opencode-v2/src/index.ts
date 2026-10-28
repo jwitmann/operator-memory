@@ -12,9 +12,13 @@ import { registerCommands } from "./commands.ts";
 import { DEFAULT_BRAIN_PATHS, registerCompactionHook } from "./compaction.ts";
 import { registerContextHook } from "./context.ts";
 import { parseContextManagementConfig } from "./context-config.ts";
-import { registerCompletionTrigger, requestSessionCompaction } from "./events.ts";
+import {
+  registerCompletionTrigger,
+  registerStepTracking,
+  requestSessionCompaction,
+} from "./events.ts";
 import { loadPreamble } from "./preamble.ts";
-import { maybeRefreshPreamble } from "./refresh.ts";
+import { refreshPreambleContent } from "./refresh.ts";
 import { DEFAULT_PREAMBLE_REFRESH_CONFIG, parsePreambleRefreshConfig } from "./refresh-config.ts";
 import { sharedContextRuntime } from "./runtime.ts";
 import { registerPruneTool, registerReadOmittedTool } from "./tool.ts";
@@ -66,6 +70,19 @@ const OperatorPlugin = Plugin.define({
       }).catch(() => undefined);
     }
     const refreshConfig = refreshParsed.ok ? refreshParsed.value : DEFAULT_PREAMBLE_REFRESH_CONFIG;
+    // Context management is opt-in and off by default; vanilla Operator
+    // behavior is unchanged when disabled. Parsed up front so the hook
+    // and event registration below can split enforcement from
+    // refresh-only tracking.
+    const parsed = parseContextManagementConfig(context.options);
+    if (!parsed.ok) {
+      await showToast({
+        title: "Operator Error",
+        message: parsed.error.message,
+        variant: "error",
+      }).catch(() => undefined);
+    }
+    const contextManagementEnabled = parsed.ok && parsed.value.enabled;
     await registerCommands(context);
     // Brain availability per session, from preamble loads. Context management
     // gates on it: the feature stays off without the Brain.
@@ -103,43 +120,38 @@ const OperatorPlugin = Plugin.define({
       }
       let content = result.value.content;
       if (refreshConfig.enabled) {
-        const refresh = await maybeRefreshPreamble(
+        content = await refreshPreambleContent(
           {
             config: refreshConfig,
             stateDirectory: join(homedir(), ".operator", "state"),
             isBrainAvailable: sessionID => brainAvailable.get(sessionID) === true,
             isCurrent,
+            reportFailure: () => {
+              void showToast({
+                title: "Operator Error",
+                message: "Operator preamble refresh failed. Continuing with the session preamble.",
+                variant: "error",
+              }).catch(() => undefined);
+            },
+            failureNotices: refreshNotices,
           },
           sharedContextRuntime(),
           event.sessionID,
           context.location.directory,
           homedir(),
           cache,
+          event.messages,
+          content,
         );
-        if (refresh.refreshed) {
-          content = refresh.content;
-        } else if (refresh.failed && !refreshNotices.has(event.sessionID)) {
-          refreshNotices.add(event.sessionID);
-          await showToast({
-            title: "Operator Error",
-            message: "Operator preamble refresh failed. Continuing with the session preamble.",
-            variant: "error",
-          }).catch(() => undefined);
-        }
       }
       event.system.push({ type: "text", text: content });
     });
 
-    // Context management is opt-in and off by default; vanilla Operator
-    // behavior is unchanged when disabled.
-    const parsed = parseContextManagementConfig(context.options);
-    if (!parsed.ok) {
-      await showToast({
-        title: "Operator Error",
-        message: parsed.error.message,
-        variant: "error",
-      }).catch(() => undefined);
-    } else if (parsed.value.enabled) {
+    // Step anchoring runs whenever either feature is on; the refresh
+    // floor measures its own estimate on demand inside the refresh path.
+    // Enforcement (trim, compaction requests, tool registration) stays
+    // behind the context-management switch.
+    if (parsed.ok && (contextManagementEnabled || refreshConfig.enabled)) {
       const config = parsed.value;
       const stateDirectory = join(homedir(), ".operator", "state");
       // Shared across reloads so trigger dedup survives a teardown/setup
@@ -150,12 +162,6 @@ const OperatorPlugin = Plugin.define({
       // brainAvailable, which these hooks read through isBrainAvailable.
       // Unknown sessions default to unavailable (fail closed).
       const isBrainAvailable = (sessionID: string) => brainAvailable.get(sessionID) === true;
-      const requestCompaction = (sessionID: string, cause: TriggerKind) => {
-        if (!isCurrent()) {
-          return;
-        }
-        requestSessionCompaction(context, runtime, sessionID, cause);
-      };
       const reportReceiptFailure = async (
         sessionID: string | null,
         kind: "trim" | "compact" | "refusal" | "event-stream",
@@ -172,32 +178,50 @@ const OperatorPlugin = Plugin.define({
           variant: "error",
         }).catch(() => undefined);
       };
-      const deps = {
-        config,
-        stateDirectory,
-        requestCompaction,
-        isBrainAvailable,
-        reportReceiptFailure,
-        isCurrent,
-      };
-      registerContextHook(context, deps, runtime);
-      registerCompactionHook(
-        context,
-        {
+      const controller = new AbortController();
+      if (contextManagementEnabled) {
+        const requestCompaction = (sessionID: string, cause: TriggerKind) => {
+          if (!isCurrent()) {
+            return;
+          }
+          requestSessionCompaction(context, runtime, sessionID, cause);
+        };
+        const deps = {
           config,
           stateDirectory,
-          brainPaths: DEFAULT_BRAIN_PATHS,
+          requestCompaction,
           isBrainAvailable,
           reportReceiptFailure,
-          refreshEnabled: refreshConfig.enabled,
           isCurrent,
-        },
-        runtime,
-      );
-      const controller = new AbortController();
-      registerCompletionTrigger(context, deps, runtime, { signal: controller.signal });
-      await registerReadOmittedTool(context, { stateDirectory });
-      await registerPruneTool(context, { stateDirectory });
+        };
+        registerContextHook(context, deps, runtime);
+        registerCompactionHook(
+          context,
+          {
+            config,
+            stateDirectory,
+            brainPaths: DEFAULT_BRAIN_PATHS,
+            isBrainAvailable,
+            reportReceiptFailure,
+            refreshEnabled: refreshConfig.enabled,
+            isCurrent,
+          },
+          runtime,
+        );
+        registerCompletionTrigger(context, deps, runtime, { signal: controller.signal });
+        await registerReadOmittedTool(context, { stateDirectory });
+        await registerPruneTool(context, { stateDirectory });
+      } else {
+        // Refresh-only telemetry: step anchoring without triggers.
+        registerStepTracking(
+          context,
+          { isBrainAvailable, isCurrent, reportReceiptFailure },
+          runtime,
+          {
+            signal: controller.signal,
+          },
+        );
+      }
       // Tearing down stops the event loop and marks this generation stale so
       // surviving closures no-op. Only bump the generation when still
       // current: a newer setup may already have superseded this one.

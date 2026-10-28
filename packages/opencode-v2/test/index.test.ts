@@ -1,5 +1,5 @@
 import type { Context } from "@opencode/plugin/promise/plugin";
-import { vol } from "memfs";
+import { fs, vol } from "memfs";
 import { beforeEach, expect, test, vi } from "vitest";
 
 const { emitToast, loadMemorySnapshot, loadPreamble } = vi.hoisted(() => ({
@@ -285,4 +285,93 @@ test("teardown marks the old setup stale and the new setup still enforces", asyn
   expect(liveEvent.system).toEqual([{ type: "text", text: "operator preamble" }]);
 
   (cleanup as () => void)?.();
+});
+
+test("registers step tracking without enforcement hooks when only refresh is on", async () => {
+  async function* emptyStream(): AsyncGenerator<never> {
+    // No events.
+  }
+  const sessionHook = vi.fn();
+  const subscribe = vi.fn(() => emptyStream());
+  const context = {
+    location: { directory: "/project" },
+    options: { operator: { preambleRefresh: { enabled: true } } },
+    command: {
+      list: () => Promise.resolve({ data: [], location: "/project" }),
+      transform: vi.fn(),
+    },
+    rpc: { register: vi.fn(() => Promise.resolve({ events: { emit: emitToast } })) },
+    session: { hook: sessionHook },
+    event: { subscribe },
+    model: { list: vi.fn(async () => ({ data: [] })) },
+  } as unknown as Context;
+
+  await OperatorPlugin.setup(context);
+
+  // Preamble hook only; no trim, compaction, completion, or tool wiring.
+  expect(sessionHook.mock.calls.map(([name]) => name)).toEqual(["context"]);
+  expect(subscribe).toHaveBeenCalledOnce();
+});
+
+test("refreshes the preamble end to end when the Brain changes cold", async () => {
+  loadPreamble.mockResolvedValue({
+    ok: true as const,
+    value: { content: "operator preamble", loaded: true, initialized: true },
+  });
+  loadPreamble.mockClear();
+  async function* emptyStream(): AsyncGenerator<never> {
+    // No events: no finished step yet counts as cold.
+  }
+  const sessionHook = vi.fn();
+  const context = {
+    location: { directory: "/project" },
+    options: { operator: { preambleRefresh: { enabled: true } } },
+    command: {
+      list: () => Promise.resolve({ data: [], location: "/project" }),
+      transform: vi.fn(),
+    },
+    rpc: { register: vi.fn(() => Promise.resolve({ events: { emit: emitToast } })) },
+    session: { hook: sessionHook },
+    event: { subscribe: vi.fn(() => emptyStream()) },
+    model: { list: vi.fn(async () => ({ data: [] })) },
+  } as unknown as Context;
+  await OperatorPlugin.setup(context);
+
+  const hook = sessionHook.mock.calls[0]?.[1] as (event: {
+    sessionID: string;
+    system: unknown[];
+    messages: unknown[];
+  }) => Promise<void>;
+  // Above the refresh floor so only the fingerprint gates the refresh.
+  const bulky = [{ type: "text", text: "lorem ipsum dolor sit amet ".repeat(2000) }];
+  await hook({
+    sessionID: "ses-refresh-e2e",
+    system: [],
+    messages: [{ role: "user", content: bulky }],
+  });
+  expect(loadPreamble).toHaveBeenCalledTimes(1);
+
+  fs.mkdirSync("/project/.operator", { recursive: true });
+  fs.writeFileSync("/project/.operator/operator.md", "# changed");
+
+  const event = {
+    sessionID: "ses-refresh-e2e",
+    system: [] as unknown[],
+    messages: [{ role: "user", content: bulky }],
+  };
+  await hook(event);
+
+  // Initial load, cached re-load, then the refresh re-render.
+  expect(loadPreamble).toHaveBeenCalledTimes(3);
+  expect(event.system).toEqual([{ type: "text", text: "operator preamble" }]);
+  const { readReceipts } = await import("@aerovato/operator-core/context/receipts");
+  const { join } = await import("node:path");
+  const { homedir } = await import("node:os");
+  const receipts = await readReceipts(
+    join(homedir(), ".operator", "state", "context-log"),
+    "ses-refresh-e2e",
+  );
+  expect(receipts.ok ? receipts.value : null).toMatchObject([
+    { kind: "refresh", reason: "brain-changed" },
+  ]);
 });

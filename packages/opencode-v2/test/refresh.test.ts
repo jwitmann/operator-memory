@@ -48,6 +48,13 @@ beforeEach(() => {
   vol.reset();
 });
 
+// Above the refresh floor: the floor judges the current request.
+function bulkyMessages() {
+  return [
+    { role: "user", content: [{ type: "text", text: "lorem ipsum dolor sit amet ".repeat(2000) }] },
+  ];
+}
+
 test("stays inert when disabled", async () => {
   seedBrain();
   const runtime = createContextRuntime();
@@ -70,7 +77,15 @@ test("first touch seeds the baseline without refreshing", async () => {
   seedBrain();
   const runtime = createContextRuntime();
 
-  const outcome = await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, new Map());
+  const outcome = await maybeRefreshPreamble(
+    deps(),
+    runtime,
+    SESSION,
+    PROJECT,
+    HOME,
+    new Map(),
+    [],
+  );
 
   expect(outcome).toEqual({ refreshed: false, failed: false });
   expect(sessionRuntime(runtime, SESSION).preambleFingerprint).not.toBeNull();
@@ -82,11 +97,19 @@ test("refreshes on Brain change with a cold cache and records a receipt", async 
   seedBrain();
   const runtime = createContextRuntime();
   const cache = new Map();
-  await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache);
+  await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache, bulkyMessages());
 
   fs.writeFileSync(`${PROJECT}/.operator/catalog.md`, "# catalog with FRESHMARKER");
 
-  const outcome = await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache);
+  const outcome = await maybeRefreshPreamble(
+    deps(),
+    runtime,
+    SESSION,
+    PROJECT,
+    HOME,
+    cache,
+    bulkyMessages(),
+  );
 
   expect(outcome.refreshed).toBe(true);
   expect(outcome.refreshed && outcome.content).toContain("FRESHMARKER");
@@ -100,14 +123,22 @@ test("defers while the cache is hot and keeps the stale baseline", async () => {
   seedBrain();
   const runtime = createContextRuntime();
   const cache = new Map();
-  await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache);
+  await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache, bulkyMessages());
 
   fs.writeFileSync(`${PROJECT}/.operator/catalog.md`, "# changed");
   const session = sessionRuntime(runtime, SESSION);
   const baseline = session.preambleFingerprint;
   session.lastStepTokens = { input: 1, output: 1, reasoning: 0, cacheRead: 28529, cacheWrite: 0 };
 
-  const outcome = await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache);
+  const outcome = await maybeRefreshPreamble(
+    deps(),
+    runtime,
+    SESSION,
+    PROJECT,
+    HOME,
+    cache,
+    bulkyMessages(),
+  );
 
   expect(outcome).toEqual({ refreshed: false, failed: false });
   expect(sessionRuntime(runtime, SESSION).preambleFingerprint).toBe(baseline);
@@ -119,13 +150,13 @@ test("defers below the estimate floor", async () => {
   seedBrain();
   const runtime = createContextRuntime();
   const cache = new Map();
-  await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache);
+  await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache, bulkyMessages());
 
   fs.writeFileSync(`${PROJECT}/.operator/catalog.md`, "# changed");
-  const session = sessionRuntime(runtime, SESSION);
-  session.lastEstimate = 100;
 
-  const outcome = await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache);
+  const outcome = await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache, [
+    { role: "user", content: [{ type: "text", text: "tiny" }] },
+  ]);
 
   expect(outcome).toEqual({ refreshed: false, failed: false });
 });
@@ -134,19 +165,34 @@ test("post-compaction pending bypasses the floor but not freshness", async () =>
   seedBrain();
   const runtime = createContextRuntime();
   const cache = new Map();
-  await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache);
+  await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache, bulkyMessages());
 
   const session = sessionRuntime(runtime, SESSION);
   session.preambleRefreshPending = true;
-  session.lastEstimate = 100;
 
-  const unchanged = await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache);
+  const unchanged = await maybeRefreshPreamble(
+    deps(),
+    runtime,
+    SESSION,
+    PROJECT,
+    HOME,
+    cache,
+    bulkyMessages(),
+  );
   expect(unchanged).toEqual({ refreshed: false, failed: false });
   expect(sessionRuntime(runtime, SESSION).preambleRefreshPending).toBe(false);
 
   fs.writeFileSync(`${PROJECT}/.operator/catalog.md`, "# changed after compact");
   sessionRuntime(runtime, SESSION).preambleRefreshPending = true;
-  const outcome = await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache);
+  const outcome = await maybeRefreshPreamble(
+    deps(),
+    runtime,
+    SESSION,
+    PROJECT,
+    HOME,
+    cache,
+    bulkyMessages(),
+  );
 
   expect(outcome.refreshed).toBe(true);
   const receipts = await readReceipts(`${STATE}/context-log`, SESSION);
@@ -166,6 +212,7 @@ test("stays quiet without the Brain and when stale", async () => {
     PROJECT,
     HOME,
     new Map(),
+    [],
   );
   expect(gated).toEqual({ refreshed: false, failed: false });
 
@@ -176,6 +223,80 @@ test("stays quiet without the Brain and when stale", async () => {
     PROJECT,
     HOME,
     new Map(),
+    [],
   );
   expect(stale).toEqual({ refreshed: false, failed: false });
+});
+
+test("a failed render toasts once and keeps serving the cached preamble", async () => {
+  const { refreshPreambleContent } = await import("../src/refresh.ts");
+  seedBrain();
+  const runtime = createContextRuntime();
+  const cache = new Map();
+  const messages = [
+    { role: "user", content: [{ type: "text", text: "lorem ipsum dolor sit amet ".repeat(2000) }] },
+  ];
+  const reported: string[] = [];
+  const deps = {
+    config: { enabled: true },
+    stateDirectory: STATE,
+    isBrainAvailable: () => true,
+    reportFailure: (sessionID: string) => {
+      reported.push(sessionID);
+    },
+    failureNotices: new Set<string>(),
+  };
+  const invoke = () =>
+    refreshPreambleContent(
+      deps,
+      runtime,
+      SESSION,
+      PROJECT,
+      HOME,
+      cache as never,
+      messages,
+      "cached",
+    );
+
+  expect(await invoke()).toBe("cached");
+
+  // Break the render after the baseline: reading a directory as a file
+  // throws instead of returning a diagnostic.
+  fs.unlinkSync(`${PROJECT}/.operator/operator.md`);
+  fs.mkdirSync(`${PROJECT}/.operator/operator.md`);
+
+  expect(await invoke()).toBe("cached");
+  expect(await invoke()).toBe("cached");
+  expect(reported).toEqual([SESSION]);
+});
+
+test("records the request size so step anchoring never double-counts", async () => {
+  const { refreshPreambleContent } = await import("../src/refresh.ts");
+  seedBrain();
+  const runtime = createContextRuntime();
+  const messages = [
+    { role: "user", content: [{ type: "text", text: "one" }] },
+    { role: "user", content: [{ type: "text", text: "two" }] },
+  ];
+
+  await refreshPreambleContent(
+    {
+      config: { enabled: true },
+      stateDirectory: STATE,
+      isBrainAvailable: () => true,
+      reportFailure: () => {},
+      failureNotices: new Set(),
+    },
+    runtime,
+    SESSION,
+    PROJECT,
+    HOME,
+    new Map(),
+    messages,
+    "cached",
+  );
+
+  // Without this write the step anchor covers zero messages and every
+  // message gets counted twice, silently disabling the estimate floor.
+  expect(sessionRuntime(runtime, SESSION).lastMessageCount).toBe(2);
 });
