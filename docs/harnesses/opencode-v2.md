@@ -60,6 +60,8 @@ All keys live under `operator.contextManagement` in the plugin entry's `options`
 
 Trim replaces bulky completed tool input and output with omission notices and stores the originals on disk under `~/.operator/state/omitted/<sessionID>/`, recoverable in the same session through the `operator:read_omitted` tool. Every trim and compaction appends one JSON line to `~/.operator/state/context-log/<sessionID>.log`. Pending, running, and errored tool calls, user messages, and the injected preamble are never trimmed. A satisfied trigger rests until context grows again, so continued sessions do not re-compact on every run.
 
+Omitted payloads are retained per session up to 200 payloads, 32 MiB, and 30 days, with the count cap enforced automatically on every store; the `operator:prune` tool applies the same policy on demand. Receipts are never pruned. Both locations live under `~/.operator/state/`, operational state outside the Brain partitions that is safe to delete when a session is done with.
+
 ### Update
 
 OpenCode V2 owns plugin updates:
