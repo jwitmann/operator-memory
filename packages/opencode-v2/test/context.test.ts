@@ -96,7 +96,13 @@ test("leaves small sessions untouched and writes no receipt", async () => {
   const requestCompaction = vi.fn();
   registerContextHook(
     context,
-    { config: CONFIG, stateDirectory: STATE, isBrainAvailable: () => true, requestCompaction },
+    {
+      config: CONFIG,
+      stateDirectory: STATE,
+      isBrainAvailable: () => true,
+      reportReceiptFailure: () => undefined,
+      requestCompaction,
+    },
     createContextRuntime(),
   );
 
@@ -115,7 +121,13 @@ test("trims past the ratio threshold and writes a trim receipt", async () => {
   const requestCompaction = vi.fn();
   registerContextHook(
     context,
-    { config: CONFIG, stateDirectory: STATE, isBrainAvailable: () => true, requestCompaction },
+    {
+      config: CONFIG,
+      stateDirectory: STATE,
+      isBrainAvailable: () => true,
+      reportReceiptFailure: () => undefined,
+      requestCompaction,
+    },
     createContextRuntime(),
   );
   const hook = sessionHook.mock.calls[0]?.[1] as (event: unknown) => Promise<void>;
@@ -144,6 +156,7 @@ test("re-trimming after a restart reuses the same omission ID", async () => {
       config: CONFIG,
       stateDirectory: STATE,
       isBrainAvailable: () => true,
+      reportReceiptFailure: () => undefined,
       requestCompaction,
     },
     createContextRuntime(),
@@ -174,6 +187,7 @@ test("re-trimming after a restart reuses the same omission ID", async () => {
       config: CONFIG,
       stateDirectory: STATE,
       isBrainAvailable: () => true,
+      reportReceiptFailure: () => undefined,
       requestCompaction,
     },
     createContextRuntime(),
@@ -200,7 +214,13 @@ test("requests compaction when the estimate stays over threshold after trim", as
   const requestCompaction = vi.fn();
   registerContextHook(
     context,
-    { config: CONFIG, stateDirectory: STATE, isBrainAvailable: () => true, requestCompaction },
+    {
+      config: CONFIG,
+      stateDirectory: STATE,
+      isBrainAvailable: () => true,
+      reportReceiptFailure: () => undefined,
+      requestCompaction,
+    },
     createContextRuntime(),
   );
   const hook = sessionHook.mock.calls[0]?.[1] as (event: unknown) => Promise<void>;
@@ -216,7 +236,13 @@ test("ratio cannot fire when the model window is unknown", async () => {
   const requestCompaction = vi.fn();
   registerContextHook(
     context,
-    { config: CONFIG, stateDirectory: STATE, isBrainAvailable: () => true, requestCompaction },
+    {
+      config: CONFIG,
+      stateDirectory: STATE,
+      isBrainAvailable: () => true,
+      reportReceiptFailure: () => undefined,
+      requestCompaction,
+    },
     createContextRuntime(),
   );
   const hook = sessionHook.mock.calls[0]?.[1] as (event: unknown) => Promise<void>;
@@ -240,6 +266,7 @@ test("stays off and records one refusal when the Brain is unavailable", async ()
       config: CONFIG,
       stateDirectory: STATE,
       isBrainAvailable: () => false,
+      reportReceiptFailure: () => undefined,
       requestCompaction,
     },
     createContextRuntime(),
@@ -278,6 +305,7 @@ test("leaves parts intact when the omission store fails", async () => {
       config: CONFIG,
       stateDirectory: STATE,
       isBrainAvailable: () => true,
+      reportReceiptFailure: () => undefined,
       requestCompaction,
     },
     createContextRuntime(),
@@ -293,4 +321,37 @@ test("leaves parts intact when the omission store fails", async () => {
   expect(result?.value).toBe(BIG_OUTPUT);
   // Still over threshold with nothing removed, so compaction is requested.
   expect(requestCompaction).toHaveBeenCalledWith(SESSION, "ratio");
+});
+
+test("surfaces a failed trim receipt once and still applies the trim", async () => {
+  const { context, sessionHook } = contextHookFake(100000);
+  const requestCompaction = vi.fn();
+  const reportReceiptFailure = vi.fn();
+  registerContextHook(
+    context,
+    {
+      config: CONFIG,
+      stateDirectory: STATE,
+      isBrainAvailable: () => true,
+      reportReceiptFailure,
+      requestCompaction,
+    },
+    createContextRuntime(),
+  );
+  const hook = sessionHook.mock.calls[0]?.[1] as (event: unknown) => Promise<void>;
+
+  // Block the receipt path: the log file position holds a directory, so the
+  // append fails while omission payloads still persist.
+  fs.mkdirSync(`${STATE}/context-log`, { recursive: true });
+  fs.mkdirSync(`${STATE}/context-log/${SESSION}.log`);
+
+  const event = fakeEvent(readCall(), CALL_ROLES);
+  await hook(event);
+
+  const resultPart = (event.messages[RESULT_INDEX]?.content[0] ?? {}) as {
+    result: { value: string };
+  };
+  expect(resultPart.result.value).toContain("<tool-output-omission-notice>");
+  expect(reportReceiptFailure).toHaveBeenCalledTimes(1);
+  expect(reportReceiptFailure).toHaveBeenCalledWith(SESSION, "trim");
 });

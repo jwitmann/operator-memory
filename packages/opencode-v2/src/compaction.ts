@@ -9,6 +9,7 @@ import {
   ensureSessionHydrated,
   isContextStale,
   PENDING_CAUSE_TTL_MS,
+  reportReceiptFailureOnce,
   sessionRuntime,
   type ContextManagementDeps,
   type ContextRuntime,
@@ -45,7 +46,7 @@ export function registerCompactionHook(
       return;
     }
     if (!deps.isBrainAvailable(sessionID)) {
-      await ensureRefusalReceipt(deps.stateDirectory, runtime, sessionID);
+      await ensureRefusalReceipt(deps.stateDirectory, runtime, sessionID, deps);
       return;
     }
     const session = sessionRuntime(runtime, sessionID);
@@ -76,6 +77,13 @@ export function registerCompactionHook(
       at: new Date().toISOString(),
       summarized: Math.max(0, estimatedTokens),
     };
-    await appendReceipt(join(deps.stateDirectory, "context-log"), sessionID, receipt);
+    const written = await appendReceipt(
+      join(deps.stateDirectory, "context-log"),
+      sessionID,
+      receipt,
+    );
+    if (!written.ok) {
+      reportReceiptFailureOnce(runtime, deps, sessionID, "compact");
+    }
   });
 }

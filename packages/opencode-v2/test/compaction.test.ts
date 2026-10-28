@@ -76,6 +76,7 @@ const DEPS = {
   stateDirectory: STATE,
   brainPaths: DEFAULT_BRAIN_PATHS,
   isBrainAvailable: () => true,
+  reportReceiptFailure: () => undefined,
 };
 
 beforeEach(() => {

@@ -38,6 +38,9 @@ export type ContextRuntime = {
   // Sessions that already logged a refusal; the Brain gate records one
   // refusal receipt per session, never one per request.
   readonly refusals: Set<string>;
+  // Sessions whose receipt-write failure was already surfaced; one notice
+  // per session, never one per over-threshold request.
+  readonly reportedReceiptFailures: Set<string>;
   // Sessions whose trigger state was already seeded from disk. Tracked
   // separately from sessions: paths that only need the session entry (step
   // anchoring, compaction shaping) must not mark it hydrated.
@@ -55,6 +58,8 @@ export type PendingCause = {
   readonly at: number;
 };
 
+export type ReceiptFailureKind = "trim" | "compact" | "refusal" | "event-stream";
+
 // A requested-but-never-executed compaction must not label a far-future
 // host-initiated compaction with its stale trigger. Ten minutes is generous:
 // post-run compactions execute within seconds or not at all.
@@ -71,6 +76,11 @@ export type ContextManagementDeps = {
   // Brain availability per session, tracked by setup from preamble loads.
   // The feature stays off without the Brain.
   readonly isBrainAvailable: (sessionID: string) => boolean;
+  // Error channel for failed receipt writes and event-stream death. Receipts
+  // are the audit trail: a write failure is surfaced once per session, never
+  // retried on the hot path, and reductions continue unaudited rather than
+  // failing the request. Stream death is process-scoped and sessionless.
+  readonly reportReceiptFailure: (sessionID: string | null, kind: ReceiptFailureKind) => void;
   // True while the registering setup is still the live generation. Stale
   // setups (teardown/reload without disposal) no-op instead of enforcing
   // with empty dedup state and double-firing triggers.
@@ -89,6 +99,7 @@ export function createContextRuntime(): ContextRuntime {
   return {
     sessions: new Map(),
     refusals: new Set(),
+    reportedReceiptFailures: new Set(),
     hydrated: new Set(),
     pendingCauses: new Map(),
   };
@@ -203,19 +214,46 @@ export async function ensureSessionHydrated(
   runtime.hydrated.add(sessionID);
 }
 // Records the Brain-unavailable refusal once per session. The feature stays
-// off without the Brain; the receipt is the audit trail.
+// off without the Brain; the receipt is the audit trail. A failed write is
+// surfaced once per session through the error channel; reductions continue.
 export async function ensureRefusalReceipt(
   stateDirectory: string,
   runtime: ContextRuntime,
   sessionID: string,
+  deps: Pick<ContextManagementDeps, "reportReceiptFailure">,
 ): Promise<void> {
   if (runtime.refusals.has(sessionID)) {
     return;
   }
   runtime.refusals.add(sessionID);
-  await appendReceipt(join(stateDirectory, "context-log"), sessionID, {
+  const written = await appendReceipt(join(stateDirectory, "context-log"), sessionID, {
     kind: "refusal",
     at: new Date().toISOString(),
     reason: "brain-unavailable",
   });
+  if (!written.ok) {
+    reportReceiptFailureOnce(runtime, deps, sessionID, "refusal");
+  }
+}
+
+// Surfaces a failed receipt write once per session, or a sessionless failure
+// (event-stream death) once per process. A stale generation never consumes
+// the budget: a reload landing mid-write must not silently burn the live
+// generation's single notice. Later failures stay silent; the first notice
+// is enough, and the hot path never retries.
+export function reportReceiptFailureOnce(
+  runtime: ContextRuntime,
+  deps: Pick<ContextManagementDeps, "reportReceiptFailure" | "isCurrent">,
+  sessionID: string | null,
+  kind: ReceiptFailureKind,
+): void {
+  if (isContextStale(deps)) {
+    return;
+  }
+  const key = sessionID === null ? `null:${kind}` : sessionID;
+  if (runtime.reportedReceiptFailures.has(key)) {
+    return;
+  }
+  runtime.reportedReceiptFailures.add(key);
+  deps.reportReceiptFailure(sessionID, kind);
 }

@@ -1,5 +1,5 @@
 import { readReceipts } from "@aerovato/operator-core/context/receipts";
-import { vol } from "memfs";
+import { fs, vol } from "memfs";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import type { ContextManagementConfig } from "../src/context-config.ts";
@@ -69,6 +69,7 @@ test("requests compaction once when a run succeeds above the floor", async () =>
     config: CONFIG,
     stateDirectory: STATE,
     isBrainAvailable: () => true,
+    reportReceiptFailure: () => undefined,
     requestCompaction,
   };
 
@@ -89,6 +90,7 @@ test("stays silent below the floor", async () => {
     config: CONFIG,
     stateDirectory: STATE,
     isBrainAvailable: () => true,
+    reportReceiptFailure: () => undefined,
     requestCompaction,
   };
 
@@ -106,6 +108,7 @@ test("stays silent with no observed request", async () => {
     config: CONFIG,
     stateDirectory: STATE,
     isBrainAvailable: () => true,
+    reportReceiptFailure: () => undefined,
     requestCompaction,
   };
 
@@ -122,6 +125,7 @@ test("dedups a second success without growth", async () => {
     config: CONFIG,
     stateDirectory: STATE,
     isBrainAvailable: () => true,
+    reportReceiptFailure: () => undefined,
     requestCompaction,
   };
 
@@ -139,6 +143,7 @@ test("ignores sibling and unknown events", async () => {
     config: CONFIG,
     stateDirectory: STATE,
     isBrainAvailable: () => true,
+    reportReceiptFailure: () => undefined,
     requestCompaction,
   };
 
@@ -166,6 +171,7 @@ test("anchors the estimator on step tokens", async () => {
     config: CONFIG,
     stateDirectory: STATE,
     isBrainAvailable: () => true,
+    reportReceiptFailure: () => undefined,
     requestCompaction: () => {},
   };
 
@@ -184,6 +190,7 @@ test("ignores steps with malformed tokens", async () => {
     config: CONFIG,
     stateDirectory: STATE,
     isBrainAvailable: () => true,
+    reportReceiptFailure: () => undefined,
     requestCompaction: () => {},
   };
 
@@ -208,7 +215,13 @@ test("subscription consumes the stream without blocking setup", async () => {
 
   registerCompletionTrigger(
     context,
-    { config: CONFIG, stateDirectory: STATE, isBrainAvailable: () => true, requestCompaction },
+    {
+      config: CONFIG,
+      stateDirectory: STATE,
+      isBrainAvailable: () => true,
+      reportReceiptFailure: () => undefined,
+      requestCompaction,
+    },
     runtime,
   );
   expect(subscribe).toHaveBeenCalled();
@@ -254,6 +267,7 @@ test("refuses the completion trigger when the Brain is unavailable", async () =>
     config: CONFIG,
     stateDirectory: STATE,
     isBrainAvailable: () => false,
+    reportReceiptFailure: () => undefined,
     requestCompaction,
   };
 
@@ -276,6 +290,7 @@ test("ignores events once the setup is stale (reload without disposal)", async (
     config: CONFIG,
     stateDirectory: STATE,
     isBrainAvailable: () => true,
+    reportReceiptFailure: () => undefined,
     requestCompaction,
     isCurrent: () => false,
   };
@@ -298,6 +313,7 @@ test("drops the trigger when a reload lands mid-hydration", async () => {
     config: CONFIG,
     stateDirectory: STATE,
     isBrainAvailable: () => true,
+    reportReceiptFailure: () => undefined,
     requestCompaction,
     isCurrent: () => live,
   };
@@ -329,7 +345,13 @@ test("stops consuming once the teardown signal aborts", async () => {
 
   registerCompletionTrigger(
     context,
-    { config: CONFIG, stateDirectory: STATE, isBrainAvailable: () => true, requestCompaction },
+    {
+      config: CONFIG,
+      stateDirectory: STATE,
+      isBrainAvailable: () => true,
+      reportReceiptFailure: () => undefined,
+      requestCompaction,
+    },
     runtime,
     { signal: controller.signal },
   );
@@ -357,7 +379,13 @@ test("resubscribes once when the stream throws, then dispatches on the new strea
 
   registerCompletionTrigger(
     context,
-    { config: CONFIG, stateDirectory: STATE, isBrainAvailable: () => true, requestCompaction },
+    {
+      config: CONFIG,
+      stateDirectory: STATE,
+      isBrainAvailable: () => true,
+      reportReceiptFailure: () => undefined,
+      requestCompaction,
+    },
     runtime,
   );
 
@@ -376,19 +404,54 @@ test("stops after the second stream failure without further subscribes", async (
   const runtime = createContextRuntime();
   observe(runtime, 100000);
   const requestCompaction = vi.fn();
+  const reportReceiptFailure = vi.fn();
 
   registerCompletionTrigger(
     context,
-    { config: CONFIG, stateDirectory: STATE, isBrainAvailable: () => true, requestCompaction },
+    {
+      config: CONFIG,
+      stateDirectory: STATE,
+      isBrainAvailable: () => true,
+      reportReceiptFailure,
+      requestCompaction,
+    },
     runtime,
   );
 
   await vi.waitFor(() => expect(subscribe).toHaveBeenCalledTimes(2));
   // The remaining work after the second failure is pure microtasks (throw
-  // handling, terminal line, return); flush instead of sleeping.
+  // handling, error-channel notice, return); flush instead of sleeping.
   for (let index = 0; index < 10; index++) {
     await Promise.resolve();
   }
   expect(subscribe).toHaveBeenCalledTimes(2);
   expect(requestCompaction).not.toHaveBeenCalled();
+  // Exhaustion surfaces once through the error channel, not stderr.
+  expect(reportReceiptFailure).toHaveBeenCalledTimes(1);
+  expect(reportReceiptFailure).toHaveBeenCalledWith(null, "event-stream");
+});
+
+test("surfaces a failed refusal receipt instead of failing silently", async () => {
+  // Block the receipt path: the log file position holds a directory, so the
+  // append fails while the run itself succeeds.
+  fs.mkdirSync(`${STATE}/context-log`, { recursive: true });
+  fs.mkdirSync(`${STATE}/context-log/${SESSION}.log`);
+  const runtime = createContextRuntime();
+  observe(runtime, 100000);
+  const reportReceiptFailure = vi.fn();
+
+  await dispatchEvent(
+    succeededEvent(SESSION),
+    {
+      config: CONFIG,
+      stateDirectory: STATE,
+      isBrainAvailable: () => false,
+      reportReceiptFailure,
+      requestCompaction: vi.fn(),
+    },
+    runtime,
+  );
+
+  expect(reportReceiptFailure).toHaveBeenCalledTimes(1);
+  expect(reportReceiptFailure).toHaveBeenCalledWith(SESSION, "refusal");
 });

@@ -7,6 +7,7 @@ import {
   ensureRefusalReceipt,
   ensureSessionHydrated,
   isContextStale,
+  reportReceiptFailureOnce,
   sessionRuntime,
   type ContextManagementDeps,
   type ContextRuntime,
@@ -63,23 +64,20 @@ async function consume(
     }
   } catch {
     // The stream threw. Teardown and stale generations end quietly; only a
-    // live generation earns the single resubscribe.
+    // live generation earns the single resubscribe, and exhaustion surfaces
+    // through the error channel rather than failing silently.
     if (signal?.aborted === true || isContextStale(deps)) {
       return;
     }
     if (attemptsLeft <= 0) {
-      console.error(
-        "[operator] context management event stream failed twice; completion triggering stopped",
-      );
+      reportReceiptFailureOnce(runtime, deps, null, "event-stream");
       return;
     }
     let next: AsyncIterable<unknown>;
     try {
       next = resubscribe();
     } catch {
-      console.error(
-        "[operator] context management event stream failed twice; completion triggering stopped",
-      );
+      reportReceiptFailureOnce(runtime, deps, null, "event-stream");
       return;
     }
     await consume(next, deps, runtime, signal, resubscribe, attemptsLeft - 1);
@@ -128,7 +126,7 @@ async function handleExecutionSucceeded(
     return;
   }
   if (!deps.isBrainAvailable(sessionID)) {
-    await ensureRefusalReceipt(deps.stateDirectory, runtime, sessionID);
+    await ensureRefusalReceipt(deps.stateDirectory, runtime, sessionID, deps);
     return;
   }
 

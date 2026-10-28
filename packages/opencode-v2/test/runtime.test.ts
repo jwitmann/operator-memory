@@ -6,6 +6,7 @@ import {
   createContextRuntime,
   ensureSessionHydrated,
   MAX_WINDOW_LOOKUP_ATTEMPTS,
+  reportReceiptFailureOnce,
   resolveWindowTokens,
   sessionRuntime,
   sharedContextRuntime,
@@ -181,4 +182,46 @@ test("shared runtime preserves fired state across reloads", async () => {
   });
   // Clean up so later tests in this worker see a fresh probe entry.
   session.triggerState = { fired: {} };
+});
+
+test("surfaces a receipt failure once per session", () => {
+  const runtime = createContextRuntime();
+  const reportReceiptFailure = vi.fn();
+  const deps = { reportReceiptFailure };
+
+  reportReceiptFailureOnce(runtime, deps, "ses_test", "trim");
+  reportReceiptFailureOnce(runtime, deps, "ses_test", "compact");
+  expect(reportReceiptFailure).toHaveBeenCalledTimes(1);
+  expect(reportReceiptFailure).toHaveBeenCalledWith("ses_test", "trim");
+
+  reportReceiptFailureOnce(runtime, deps, "ses_other", "trim");
+  expect(reportReceiptFailure).toHaveBeenCalledTimes(2);
+});
+
+test("surfaces a sessionless failure once per process", () => {
+  const runtime = createContextRuntime();
+  const reportReceiptFailure = vi.fn();
+  const deps = { reportReceiptFailure };
+
+  reportReceiptFailureOnce(runtime, deps, null, "event-stream");
+  reportReceiptFailureOnce(runtime, deps, null, "event-stream");
+  expect(reportReceiptFailure).toHaveBeenCalledTimes(1);
+  expect(reportReceiptFailure).toHaveBeenCalledWith(null, "event-stream");
+});
+
+test("a stale generation never consumes the reporting budget", () => {
+  const runtime = createContextRuntime();
+  const reportReceiptFailure = vi.fn();
+
+  reportReceiptFailureOnce(
+    runtime,
+    { reportReceiptFailure, isCurrent: () => false },
+    "ses_test",
+    "trim",
+  );
+  expect(reportReceiptFailure).not.toHaveBeenCalled();
+
+  // The budget is intact: the live generation's later failure still reports.
+  reportReceiptFailureOnce(runtime, { reportReceiptFailure }, "ses_test", "trim");
+  expect(reportReceiptFailure).toHaveBeenCalledTimes(1);
 });

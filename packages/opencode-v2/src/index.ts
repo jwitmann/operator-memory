@@ -116,11 +116,41 @@ const OperatorPlugin = Plugin.define({
         }
         requestSessionCompaction(context, runtime, sessionID, cause);
       };
-      const deps = { config, stateDirectory, requestCompaction, isBrainAvailable, isCurrent };
+      const reportReceiptFailure = async (
+        sessionID: string | null,
+        kind: "trim" | "compact" | "refusal" | "event-stream",
+      ) => {
+        if (!isCurrent()) {
+          return;
+        }
+        await showToast({
+          title: "Operator Error",
+          message:
+            kind === "event-stream"
+              ? "Operator event stream failed twice; completion triggering stopped for this process."
+              : `Operator context log write failed (${kind}) for session ${sessionID}. Reductions continue but are unaudited for this session.`,
+          variant: "error",
+        }).catch(() => undefined);
+      };
+      const deps = {
+        config,
+        stateDirectory,
+        requestCompaction,
+        isBrainAvailable,
+        reportReceiptFailure,
+        isCurrent,
+      };
       registerContextHook(context, deps, runtime);
       registerCompactionHook(
         context,
-        { config, stateDirectory, brainPaths: DEFAULT_BRAIN_PATHS, isBrainAvailable, isCurrent },
+        {
+          config,
+          stateDirectory,
+          brainPaths: DEFAULT_BRAIN_PATHS,
+          isBrainAvailable,
+          reportReceiptFailure,
+          isCurrent,
+        },
         runtime,
       );
       const controller = new AbortController();

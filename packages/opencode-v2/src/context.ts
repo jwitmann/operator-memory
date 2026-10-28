@@ -11,6 +11,7 @@ import {
   ensureRefusalReceipt,
   ensureSessionHydrated,
   isContextStale,
+  reportReceiptFailureOnce,
   resolveWindowTokens,
   sessionRuntime,
   type ContextManagementDeps,
@@ -37,7 +38,7 @@ export function registerContextHook(
 
     await ensureSessionHydrated(deps.stateDirectory, runtime, sessionID);
     if (!deps.isBrainAvailable(sessionID)) {
-      await ensureRefusalReceipt(deps.stateDirectory, runtime, sessionID);
+      await ensureRefusalReceipt(deps.stateDirectory, runtime, sessionID, deps);
       return;
     }
     const session = sessionRuntime(runtime, sessionID);
@@ -91,7 +92,14 @@ export function registerContextHook(
       removed: trimResult.removedTokens,
       omissions: trimResult.omissionCount,
     };
-    await appendReceipt(join(deps.stateDirectory, "context-log"), sessionID, receipt);
+    const written = await appendReceipt(
+      join(deps.stateDirectory, "context-log"),
+      sessionID,
+      receipt,
+    );
+    if (!written.ok) {
+      reportReceiptFailureOnce(runtime, deps, sessionID, "trim");
+    }
 
     const estimateAfterTrim = estimatedTokens - trimResult.removedTokens;
     if (exceedsThresholds(estimateAfterTrim, windowTokens ?? 0, config)) {
