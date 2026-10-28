@@ -5,6 +5,7 @@
   "description": "Harness-agnostic runtime core for Operator Memory",
   "type": "module",
   "exports": {
+    "./brain-updates": "./src/brain-updates.ts",
     "./context/notices": "./src/context/notices.ts",
     "./context/tokens": "./src/context/tokens.ts",
     "./context/trim": "./src/context/trim.ts",
