@@ -21,6 +21,13 @@ import {
 const EXECUTION_SUCCEEDED = "session.execution.succeeded";
 const STEP_ENDED = "session.step.ended";
 
+// One silent stream death earns a single resubscribe; a second one ends
+// triggering for the process lifetime with a terminal line. Without this
+// bound a flapping host would resubscribe forever, and without any
+// resubscribe one throw would silently stop completion triggering and
+// estimator anchoring.
+const MAX_RESUBSCRIBES = 1;
+
 // Runs as a background loop; a dead or failed stream must not take the
 // plugin down with it. The caller passes an AbortSignal tied to plugin
 // teardown: the stream is created with that signal so the host closes it on
@@ -34,17 +41,18 @@ export function registerCompletionTrigger(
   runtime: ContextRuntime,
   options?: { readonly signal?: AbortSignal },
 ): void {
-  const stream = context.event.subscribe(
-    options?.signal !== undefined ? { signal: options.signal } : undefined,
-  );
-  void consume(stream, deps, runtime, options?.signal);
+  const resubscribe = () =>
+    context.event.subscribe(options?.signal !== undefined ? { signal: options.signal } : undefined);
+  void consume(resubscribe(), deps, runtime, options?.signal, resubscribe, MAX_RESUBSCRIBES);
 }
 
 async function consume(
   stream: AsyncIterable<unknown>,
   deps: ContextManagementDeps,
   runtime: ContextRuntime,
-  signal?: AbortSignal,
+  signal: AbortSignal | undefined,
+  resubscribe: () => AsyncIterable<unknown>,
+  attemptsLeft: number,
 ): Promise<void> {
   try {
     for await (const raw of stream) {
@@ -54,7 +62,27 @@ async function consume(
       await dispatchEvent(raw, deps, runtime).catch(() => undefined);
     }
   } catch {
-    // Stream ended or failed; context management simply stops reacting.
+    // The stream threw. Teardown and stale generations end quietly; only a
+    // live generation earns the single resubscribe.
+    if (signal?.aborted === true || isContextStale(deps)) {
+      return;
+    }
+    if (attemptsLeft <= 0) {
+      console.error(
+        "[operator] context management event stream failed twice; completion triggering stopped",
+      );
+      return;
+    }
+    let next: AsyncIterable<unknown>;
+    try {
+      next = resubscribe();
+    } catch {
+      console.error(
+        "[operator] context management event stream failed twice; completion triggering stopped",
+      );
+      return;
+    }
+    await consume(next, deps, runtime, signal, resubscribe, attemptsLeft - 1);
   }
 }
 

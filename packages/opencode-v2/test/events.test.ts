@@ -339,3 +339,56 @@ test("stops consuming once the teardown signal aborts", async () => {
   // with the file's vi.waitFor idiom instead of a wall-clock sleep.
   await vi.waitFor(() => expect(requestCompaction).not.toHaveBeenCalled());
 });
+
+test("resubscribes once when the stream throws, then dispatches on the new stream", async () => {
+  async function* dying() {
+    yield succeededEvent(SESSION);
+    throw new Error("boom");
+  }
+  async function* healthy() {
+    yield succeededEvent(SESSION);
+  }
+  const streams = [dying(), healthy()];
+  const subscribe = vi.fn(() => streams.shift() ?? healthy());
+  const context = { event: { subscribe } } as never;
+  const runtime = createContextRuntime();
+  observe(runtime, 100000);
+  const requestCompaction = vi.fn();
+
+  registerCompletionTrigger(
+    context,
+    { config: CONFIG, stateDirectory: STATE, isBrainAvailable: () => true, requestCompaction },
+    runtime,
+  );
+
+  // First success dispatches, the throw resubscribes, the second success
+  // dispatches from the new stream — then dedup quiets the follow-up.
+  await vi.waitFor(() => expect(subscribe).toHaveBeenCalledTimes(2));
+  await vi.waitFor(() => expect(requestCompaction).toHaveBeenCalledTimes(1));
+});
+
+test("stops after the second stream failure without further subscribes", async () => {
+  async function* dying(): AsyncGenerator<unknown> {
+    yield await Promise.reject(new Error("boom"));
+  }
+  const subscribe = vi.fn(() => dying());
+  const context = { event: { subscribe } } as never;
+  const runtime = createContextRuntime();
+  observe(runtime, 100000);
+  const requestCompaction = vi.fn();
+
+  registerCompletionTrigger(
+    context,
+    { config: CONFIG, stateDirectory: STATE, isBrainAvailable: () => true, requestCompaction },
+    runtime,
+  );
+
+  await vi.waitFor(() => expect(subscribe).toHaveBeenCalledTimes(2));
+  // The remaining work after the second failure is pure microtasks (throw
+  // handling, terminal line, return); flush instead of sleeping.
+  for (let index = 0; index < 10; index++) {
+    await Promise.resolve();
+  }
+  expect(subscribe).toHaveBeenCalledTimes(2);
+  expect(requestCompaction).not.toHaveBeenCalled();
+});
