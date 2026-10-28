@@ -137,6 +137,36 @@ test("reminds once per fingerprint era", async () => {
   expect(repeated).toBe("preamble");
 });
 
+test("honors a custom threshold", async () => {
+  seedBrain();
+  const runtime = createContextRuntime();
+  const config = { enabled: true, toolCallThreshold: 40 };
+  await maybeAppendBrainUpdateReminder(
+    { ...deps(), config },
+    runtime,
+    SESSION,
+    completedMessages(0),
+    "preamble",
+  );
+  const below = await maybeAppendBrainUpdateReminder(
+    { ...deps(), config },
+    runtime,
+    SESSION,
+    completedMessages(39),
+    "preamble",
+  );
+  expect(below).toBe("preamble");
+
+  const reminded = await maybeAppendBrainUpdateReminder(
+    { ...deps(), config },
+    runtime,
+    SESSION,
+    completedMessages(40),
+    "preamble",
+  );
+  expect(reminded).toContain("completed 40 tool calls without a Brain change");
+});
+
 test("a Brain change resets the baseline without reminding", async () => {
   seedBrain();
   const runtime = createContextRuntime();

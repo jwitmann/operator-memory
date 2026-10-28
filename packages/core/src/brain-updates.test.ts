@@ -96,6 +96,25 @@ test("the first observation seeds the baseline without firing", () => {
   });
 });
 
+test("stays quiet below the threshold", () => {
+  const seeded = evaluateBrainUpdateActivity(
+    EMPTY_BRAIN_UPDATE_ACTIVITY_STATE,
+    "fingerprint-one",
+    countCompletedToolCalls(sequentialHistory(100)),
+    THRESHOLD,
+  ).state;
+
+  const below = evaluateBrainUpdateActivity(
+    seeded,
+    "fingerprint-one",
+    countCompletedToolCalls(sequentialHistory(124)),
+    THRESHOLD,
+  );
+
+  expect(below.crossed).toBe(false);
+  expect(below.completedSinceBaseline).toBe(24);
+});
+
 test("reports the crossing once, then stays quiet", () => {
   const seeded = evaluateBrainUpdateActivity(
     EMPTY_BRAIN_UPDATE_ACTIVITY_STATE,
