@@ -35,6 +35,31 @@ Secondary signals: the home footer shows `Operator Ready (vX.Y.Z)` and the sessi
 
 Run each in a new conversation. See [Getting Started](../getting-started.md#appendix-commands) for what each command does.
 
+### Context Management
+
+Context management is an opt-in feature that reduces what a session resends to the model. It stays off unless enabled, so vanilla Operator behavior is unchanged while disabled. It requires an initialized Brain: run `/operator:user-init` or `/operator:project-init` first. Without one the feature stays off and records one refusal receipt per session.
+
+All keys live under `operator.contextManagement` in the plugin entry's `options`:
+
+```jsonc
+{
+  "operator": {
+    "contextManagement": {
+      "enabled": false,
+      "ratio": 0.8,
+      "hardCapTokens": 250000,
+      "keepRecentTurns": 3,
+      "compactOnComplete": true,
+      "compactFloorTokens": 32000
+    }
+  }
+}
+```
+
+`enabled` is the master switch. `ratio` trims past that fraction of the model's declared window, `hardCapTokens` trims past that absolute size and backstops an unknown window, `keepRecentTurns` excludes the most recent assistant turns from trimming, `compactOnComplete` compacts at the end of successful runs, and `compactFloorTokens` skips end-of-run compaction below that size.
+
+Trim replaces bulky completed tool input and output with omission notices and stores the originals on disk under `~/.operator/state/omitted/<sessionID>/`, recoverable in the same session through the `operator:read_omitted` tool. Every trim and compaction appends one JSON line to `~/.operator/state/context-log/<sessionID>.log`. Pending, running, and errored tool calls, user messages, and the injected preamble are never trimmed. A satisfied trigger rests until context grows again, so continued sessions do not re-compact on every run.
+
 ### Update
 
 OpenCode V2 owns plugin updates:
