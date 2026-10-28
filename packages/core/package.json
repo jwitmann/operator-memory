@@ -15,6 +15,7 @@
     "./memory/frontmatter": "./src/memory/frontmatter.ts",
     "./memory/load": "./src/memory/load.ts",
     "./preamble": "./src/preamble.ts",
+    "./preamble-refresh": "./src/preamble-refresh.ts",
     "./templates/project-index": "./src/templates/project-index.ts",
     "./templates/project-subindex": "./src/templates/project-subindex.ts",
     "./templates/catalog": "./src/templates/catalog.ts"

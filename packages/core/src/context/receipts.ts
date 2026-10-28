@@ -31,6 +31,15 @@ export type CompactReceipt = {
   readonly summarized: number;
 };
 
+// Recorded when the preamble re-renders mid-session: the Brain changed on
+// disk and the provider cache was cold — or a compaction just flushed it,
+// in which case the fingerprint move alone suffices.
+export type RefreshReceipt = {
+  readonly kind: "refresh";
+  readonly reason: "brain-changed" | "post-compaction";
+  readonly at: string;
+};
+
 // Recorded when context management refuses to engage (for example the Brain
 // is unavailable); the feature stays off and the reason is auditable.
 export type RefusalReceipt = {
@@ -39,7 +48,7 @@ export type RefusalReceipt = {
   readonly reason: string;
 };
 
-export type ContextReceipt = TrimReceipt | CompactReceipt | RefusalReceipt;
+export type ContextReceipt = TrimReceipt | CompactReceipt | RefreshReceipt | RefusalReceipt;
 
 export async function appendReceipt(
   root: string,
@@ -107,6 +116,9 @@ function isContextReceipt(value: unknown): value is ContextReceipt {
   }
   if (kind === "compact") {
     return "trigger" in value && "at" in value && "summarized" in value;
+  }
+  if (kind === "refresh") {
+    return "reason" in value && "at" in value;
   }
   return kind === "refusal" && "at" in value && "reason" in value;
 }

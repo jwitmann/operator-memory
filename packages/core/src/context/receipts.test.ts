@@ -37,6 +37,12 @@ const REFUSAL: ContextReceipt = {
   reason: "brain-unavailable",
 };
 
+const REFRESH: ContextReceipt = {
+  kind: "refresh",
+  reason: "brain-changed",
+  at: "2026-10-04T14:00:00Z",
+};
+
 beforeEach(() => {
   vol.reset();
 });
@@ -53,6 +59,14 @@ test("appends one JSON line per receipt", async () => {
   expect(JSON.parse(lines[0] ?? "")).toEqual(TRIM);
   expect(JSON.parse(lines[1] ?? "")).toEqual(COMPACT);
   expect(JSON.parse(lines[2] ?? "")).toEqual(REFUSAL);
+});
+
+test("round-trips refresh receipts", async () => {
+  const written = await appendReceipt(ROOT, SESSION, REFRESH);
+  expect(written.ok).toBe(true);
+
+  const result = await readReceipts(ROOT, SESSION);
+  expect(result.ok && result.value).toEqual([REFRESH]);
 });
 
 test("reads receipts back in order", async () => {
