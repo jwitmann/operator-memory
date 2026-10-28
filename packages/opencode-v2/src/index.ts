@@ -20,6 +20,8 @@ import {
 import { loadPreamble } from "./preamble.ts";
 import { refreshPreambleContent } from "./refresh.ts";
 import { DEFAULT_PREAMBLE_REFRESH_CONFIG, parsePreambleRefreshConfig } from "./refresh-config.ts";
+import { maybeAppendBrainUpdateReminder } from "./brain-updates.ts";
+import { DEFAULT_BRAIN_UPDATES_CONFIG, parseBrainUpdatesConfig } from "./brain-updates-config.ts";
 import { sharedContextRuntime } from "./runtime.ts";
 import { registerPruneTool, registerReadOmittedTool } from "./tool.ts";
 import {
@@ -70,6 +72,19 @@ const OperatorPlugin = Plugin.define({
       }).catch(() => undefined);
     }
     const refreshConfig = refreshParsed.ok ? refreshParsed.value : DEFAULT_PREAMBLE_REFRESH_CONFIG;
+    // Brain updates are opt-in and off by default, like the other operator
+    // features. Parsed up front so the preamble hook below can use it.
+    const brainUpdatesParsed = parseBrainUpdatesConfig(context.options);
+    if (!brainUpdatesParsed.ok) {
+      await showToast({
+        title: "Operator Error",
+        message: brainUpdatesParsed.error.message,
+        variant: "error",
+      }).catch(() => undefined);
+    }
+    const brainUpdatesConfig = brainUpdatesParsed.ok
+      ? brainUpdatesParsed.value
+      : DEFAULT_BRAIN_UPDATES_CONFIG;
     // Context management is opt-in and off by default; vanilla Operator
     // behavior is unchanged when disabled. Parsed up front so the hook
     // and event registration below can split enforcement from
@@ -140,6 +155,21 @@ const OperatorPlugin = Plugin.define({
           context.location.directory,
           homedir(),
           cache,
+          event.messages,
+          content,
+        );
+      }
+      if (brainUpdatesConfig.enabled) {
+        content = await maybeAppendBrainUpdateReminder(
+          {
+            config: brainUpdatesConfig,
+            projectDirectory: context.location.directory,
+            homeDirectory: homedir(),
+            isBrainAvailable: sessionID => brainAvailable.get(sessionID) === true,
+            isCurrent,
+          },
+          sharedContextRuntime(),
+          event.sessionID,
           event.messages,
           content,
         );

@@ -8,6 +8,10 @@ import {
   type ContextEstimator,
   type StepTokenCounts,
 } from "@aerovato/operator-core/context/tokens";
+import {
+  EMPTY_BRAIN_UPDATE_ACTIVITY_STATE,
+  type BrainUpdateActivityState,
+} from "@aerovato/operator-core/brain-updates";
 import { appendReceipt, readReceipts } from "@aerovato/operator-core/context/receipts";
 import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
@@ -46,6 +50,11 @@ export type SessionRuntime = {
   // fingerprint move without the cold-cache and estimate-floor gates,
   // since compaction already flushed the cache.
   preambleRefreshPending: boolean;
+  // Brain-update activity for this session. The fingerprint baseline is
+  // independent from preamble refresh: refresh consumes its own fingerprint
+  // move under cache gates, while the reminder consumes moves after a
+  // completed-call threshold with no re-arm.
+  brainUpdateActivity: BrainUpdateActivityState;
 };
 
 export type ContextRuntime = {
@@ -152,6 +161,7 @@ export function sessionRuntime(runtime: ContextRuntime, sessionID: string): Sess
     lastStepTokens: null,
     preambleFingerprint: null,
     preambleRefreshPending: false,
+    brainUpdateActivity: EMPTY_BRAIN_UPDATE_ACTIVITY_STATE,
   };
   runtime.sessions.set(sessionID, created);
   return created;
