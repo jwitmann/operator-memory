@@ -224,7 +224,7 @@ test("requests compaction through the narrow client cast", () => {
   requestSessionCompaction(context, runtime, SESSION, "task-complete");
 
   expect(compact).toHaveBeenCalledWith({ sessionID: SESSION });
-  expect(runtime.pendingCauses.get(SESSION)).toBe("task-complete");
+  expect(runtime.pendingCauses.get(SESSION)).toMatchObject({ cause: "task-complete" });
 });
 
 test("records no cause on hosts without session.compact", () => {

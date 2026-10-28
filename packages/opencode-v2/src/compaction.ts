@@ -8,6 +8,7 @@ import {
   ensureRefusalReceipt,
   ensureSessionHydrated,
   isContextStale,
+  PENDING_CAUSE_TTL_MS,
   sessionRuntime,
   type ContextManagementDeps,
   type ContextRuntime,
@@ -60,8 +61,13 @@ export function registerCompactionHook(
     });
 
     // The cause is recorded by our own compaction requesters; a host-initiated
-    // compaction carries none and is labeled manual.
-    const cause = runtime.pendingCauses.get(sessionID) ?? "manual";
+    // compaction carries none and is labeled manual, as is a stale entry from
+    // a requested-but-never-executed compaction past its TTL.
+    const pending = runtime.pendingCauses.get(sessionID);
+    const cause =
+      pending !== undefined && Date.now() - pending.at <= PENDING_CAUSE_TTL_MS
+        ? pending.cause
+        : "manual";
     runtime.pendingCauses.delete(sessionID);
 
     const receipt: CompactReceipt = {

@@ -43,10 +43,22 @@ export type ContextRuntime = {
   // anchoring, compaction shaping) must not mark it hydrated.
   readonly hydrated: Set<string>;
   // Compaction causes recorded by our own requesters, consumed once by the
-  // compaction hook for the receipt label. A host-initiated compaction finds
+  // compaction hook for the receipt label. Entries carry the request time so
+  // a requested-but-never-executed compaction expires instead of mislabeling
+  // a much later host-initiated compaction. A host-initiated compaction finds
   // no entry and is labeled manual.
-  readonly pendingCauses: Map<string, TriggerKind>;
+  readonly pendingCauses: Map<string, PendingCause>;
 };
+
+export type PendingCause = {
+  readonly cause: TriggerKind;
+  readonly at: number;
+};
+
+// A requested-but-never-executed compaction must not label a far-future
+// host-initiated compaction with its stale trigger. Ten minutes is generous:
+// post-run compactions execute within seconds or not at all.
+export const PENDING_CAUSE_TTL_MS = 10 * 60 * 1000;
 
 // Shared wiring for the context-management hooks: the config, the state
 // root, the compaction requester, and the Brain gate. The compaction hook

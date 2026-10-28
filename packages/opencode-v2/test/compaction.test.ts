@@ -110,7 +110,7 @@ test("shapes the request and leaves messages intact", async () => {
 test("labels the receipt with the recorded request cause", async () => {
   const { context, sessionHook } = hookFake();
   const runtime = createContextRuntime();
-  runtime.pendingCauses.set(SESSION, "task-complete");
+  runtime.pendingCauses.set(SESSION, { cause: "task-complete", at: Date.now() });
   registerCompactionHook(context, DEPS, runtime);
   const hook = sessionHook.mock.calls[0]?.[1] as (event: TestEvent) => Promise<void>;
 
@@ -122,6 +122,23 @@ test("labels the receipt with the recorded request cause", async () => {
     trigger: "task-complete",
   });
   // Consumed once: a later host-initiated compaction is labeled manual.
+  expect(runtime.pendingCauses.has(SESSION)).toBe(false);
+});
+
+test("labels a stale recorded cause manual instead of reusing it", async () => {
+  const { context, sessionHook } = hookFake();
+  const runtime = createContextRuntime();
+  runtime.pendingCauses.set(SESSION, { cause: "task-complete", at: 0 });
+  registerCompactionHook(context, DEPS, runtime);
+  const hook = sessionHook.mock.calls[0]?.[1] as (event: TestEvent) => Promise<void>;
+
+  await hook(compactionEvent(1));
+
+  const receipts = await readReceipts(`${STATE}/context-log`, SESSION);
+  expect(receipts.ok ? receipts.value[0] : null).toMatchObject({
+    kind: "compact",
+    trigger: "manual",
+  });
   expect(runtime.pendingCauses.has(SESSION)).toBe(false);
 });
 

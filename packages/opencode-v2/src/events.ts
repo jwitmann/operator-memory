@@ -194,7 +194,7 @@ export function requestSessionCompaction(
   if (typeof session.compact !== "function") {
     return;
   }
-  runtime.pendingCauses.set(sessionID, cause);
+  runtime.pendingCauses.set(sessionID, { cause, at: Date.now() });
   void session.compact({ sessionID }).catch(() => {
     runtime.pendingCauses.delete(sessionID);
   });
