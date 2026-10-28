@@ -1,4 +1,5 @@
-import { failure, type Result, success } from "./utils.ts";
+import { success, type Result } from "./utils.ts";
+import { readOptionBlock, readOptionBoolean, readOptionNumber } from "./options.ts";
 import type { TriggerConfig } from "@aerovato/operator-core/context/triggers";
 
 // Parses the operator.contextManagement block from ctx.options. Absent means
@@ -42,7 +43,7 @@ export type ConfigError = {
 export function parseContextManagementConfig(
   options: unknown,
 ): Result<ContextManagementConfig, ConfigError> {
-  const block = readBlock(options);
+  const block = readOptionBlock(options, "contextManagement");
   if (!block.ok) {
     return block;
   }
@@ -50,24 +51,39 @@ export function parseContextManagementConfig(
     return success(DEFAULT_CONTEXT_MANAGEMENT_CONFIG);
   }
 
-  const enabled = readBoolean(block.value, "enabled", DEFAULT_CONTEXT_MANAGEMENT_CONFIG.enabled);
-  const ratio = readNumber(block.value, "ratio", DEFAULT_CONTEXT_MANAGEMENT_CONFIG.ratio);
-  const hardCapTokens = readNumber(
+  const path = "operator.contextManagement";
+  const enabled = readOptionBoolean(
+    path,
+    block.value,
+    "enabled",
+    DEFAULT_CONTEXT_MANAGEMENT_CONFIG.enabled,
+  );
+  const ratio = readOptionNumber(
+    path,
+    block.value,
+    "ratio",
+    DEFAULT_CONTEXT_MANAGEMENT_CONFIG.ratio,
+  );
+  const hardCapTokens = readOptionNumber(
+    path,
     block.value,
     "hardCapTokens",
     DEFAULT_CONTEXT_MANAGEMENT_CONFIG.hardCapTokens,
   );
-  const keepRecentTurns = readNumber(
+  const keepRecentTurns = readOptionNumber(
+    path,
     block.value,
     "keepRecentTurns",
     DEFAULT_CONTEXT_MANAGEMENT_CONFIG.keepRecentTurns,
   );
-  const compactOnComplete = readBoolean(
+  const compactOnComplete = readOptionBoolean(
+    path,
     block.value,
     "compactOnComplete",
     DEFAULT_CONTEXT_MANAGEMENT_CONFIG.compactOnComplete,
   );
-  const compactFloorTokens = readNumber(
+  const compactFloorTokens = readOptionNumber(
+    path,
     block.value,
     "compactFloorTokens",
     DEFAULT_CONTEXT_MANAGEMENT_CONFIG.compactFloorTokens,
@@ -88,57 +104,4 @@ export function parseContextManagementConfig(
     compactOnComplete: compactOnComplete.value,
     compactFloorTokens: compactFloorTokens.value,
   });
-}
-
-function readBlock(options: unknown): Result<Record<string, unknown> | null, ConfigError> {
-  if (typeof options !== "object" || options === null) {
-    return success(null);
-  }
-  const operator = "operator" in options ? options.operator : null;
-  if (operator === null || operator === undefined) {
-    return success(null);
-  }
-  if (typeof operator !== "object" || Array.isArray(operator)) {
-    return failure({ message: 'The "operator" plugin option must be an object.' });
-  }
-  const contextManagement = "contextManagement" in operator ? operator.contextManagement : null;
-  if (contextManagement === null || contextManagement === undefined) {
-    return success(null);
-  }
-  if (typeof contextManagement !== "object" || Array.isArray(contextManagement)) {
-    return failure({ message: 'The "operator.contextManagement" option must be an object.' });
-  }
-  return success(contextManagement as Record<string, unknown>);
-}
-
-function readNumber(
-  block: Record<string, unknown>,
-  key: string,
-  defaultValue: number,
-): Result<number, ConfigError> {
-  const value = block[key];
-  if (value === undefined) {
-    return success(defaultValue);
-  }
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    return failure({ message: `The "operator.contextManagement.${key}" option must be a number.` });
-  }
-  return success(value);
-}
-
-function readBoolean(
-  block: Record<string, unknown>,
-  key: string,
-  defaultValue: boolean,
-): Result<boolean, ConfigError> {
-  const value = block[key];
-  if (value === undefined) {
-    return success(defaultValue);
-  }
-  if (typeof value !== "boolean") {
-    return failure({
-      message: `The "operator.contextManagement.${key}" option must be a boolean.`,
-    });
-  }
-  return success(value);
 }

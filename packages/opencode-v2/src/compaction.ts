@@ -27,6 +27,9 @@ export const DEFAULT_BRAIN_PATHS = ["~/.operator/user", ".operator", ".operator-
 
 export type CompactionHookDeps = Omit<ContextManagementDeps, "requestCompaction"> & {
   readonly brainPaths: readonly string[];
+  // Preamble refresh runs its own opt-in switch; the compaction hook only
+  // arms the post-compaction re-render when refresh is enabled.
+  readonly refreshEnabled: boolean;
 };
 
 export function registerCompactionHook(
@@ -50,6 +53,11 @@ export function registerCompactionHook(
       return;
     }
     const session = sessionRuntime(runtime, sessionID);
+    if (deps.refreshEnabled) {
+      // Compaction already flushed the provider cache, so the next
+      // preamble check re-renders from current Brain state for free.
+      session.preambleRefreshPending = true;
+    }
 
     const estimatedTokens = estimateContextTokens(
       session.estimator,

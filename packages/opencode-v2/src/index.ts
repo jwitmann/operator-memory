@@ -14,6 +14,8 @@ import { registerContextHook } from "./context.ts";
 import { parseContextManagementConfig } from "./context-config.ts";
 import { registerCompletionTrigger, requestSessionCompaction } from "./events.ts";
 import { loadPreamble } from "./preamble.ts";
+import { maybeRefreshPreamble } from "./refresh.ts";
+import { DEFAULT_PREAMBLE_REFRESH_CONFIG, parsePreambleRefreshConfig } from "./refresh-config.ts";
 import { sharedContextRuntime } from "./runtime.ts";
 import { registerPruneTool, registerReadOmittedTool } from "./tool.ts";
 import {
@@ -37,6 +39,7 @@ const OperatorPlugin = Plugin.define({
     const isCurrent = () => generation === setupGeneration;
     const cache = new Map<string, ReturnType<typeof loadPreamble>>();
     const recoveryNotices = new Set<string>();
+    const refreshNotices = new Set<string>();
     let status: Promise<OperatorStatus> | null = null;
     const notifications = await context.rpc.register(OperatorNotifications, {
       status: async input => {
@@ -52,6 +55,17 @@ const OperatorPlugin = Plugin.define({
       },
     });
     const showToast = (toast: OperatorToast) => notifications.events.emit("toast", toast);
+    // Preamble refresh is opt-in and off by default, like context
+    // management. Parsed up front so the preamble hook below can use it.
+    const refreshParsed = parsePreambleRefreshConfig(context.options);
+    if (!refreshParsed.ok) {
+      await showToast({
+        title: "Operator Error",
+        message: refreshParsed.error.message,
+        variant: "error",
+      }).catch(() => undefined);
+    }
+    const refreshConfig = refreshParsed.ok ? refreshParsed.value : DEFAULT_PREAMBLE_REFRESH_CONFIG;
     await registerCommands(context);
     // Brain availability per session, from preamble loads. Context management
     // gates on it: the feature stays off without the Brain.
@@ -87,7 +101,33 @@ const OperatorPlugin = Plugin.define({
           variant: "error",
         }).catch(() => undefined);
       }
-      event.system.push({ type: "text", text: result.value.content });
+      let content = result.value.content;
+      if (refreshConfig.enabled) {
+        const refresh = await maybeRefreshPreamble(
+          {
+            config: refreshConfig,
+            stateDirectory: join(homedir(), ".operator", "state"),
+            isBrainAvailable: sessionID => brainAvailable.get(sessionID) === true,
+            isCurrent,
+          },
+          sharedContextRuntime(),
+          event.sessionID,
+          context.location.directory,
+          homedir(),
+          cache,
+        );
+        if (refresh.refreshed) {
+          content = refresh.content;
+        } else if (refresh.failed && !refreshNotices.has(event.sessionID)) {
+          refreshNotices.add(event.sessionID);
+          await showToast({
+            title: "Operator Error",
+            message: "Operator preamble refresh failed. Continuing with the session preamble.",
+            variant: "error",
+          }).catch(() => undefined);
+        }
+      }
+      event.system.push({ type: "text", text: content });
     });
 
     // Context management is opt-in and off by default; vanilla Operator
@@ -149,6 +189,7 @@ const OperatorPlugin = Plugin.define({
           brainPaths: DEFAULT_BRAIN_PATHS,
           isBrainAvailable,
           reportReceiptFailure,
+          refreshEnabled: refreshConfig.enabled,
           isCurrent,
         },
         runtime,

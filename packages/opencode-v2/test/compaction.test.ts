@@ -4,7 +4,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 
 import type { ContextManagementConfig } from "../src/context-config.ts";
 import { DEFAULT_BRAIN_PATHS, registerCompactionHook } from "../src/compaction.ts";
-import { createContextRuntime } from "../src/runtime.ts";
+import { createContextRuntime, sessionRuntime } from "../src/runtime.ts";
 
 vi.mock("node:fs/promises", async () => {
   const { fs: memoryFileSystem } = await import("memfs");
@@ -78,6 +78,7 @@ const DEPS = {
   brainPaths: DEFAULT_BRAIN_PATHS,
   isBrainAvailable: () => true,
   reportReceiptFailure: () => undefined,
+  refreshEnabled: false,
 };
 
 beforeEach(() => {
@@ -165,4 +166,26 @@ test("leaves the request alone and refuses when the Brain is unavailable", async
     kind: "refusal",
     reason: "brain-unavailable",
   });
+});
+
+test("arms a post-compaction preamble refresh when refresh is enabled", async () => {
+  const { context, sessionHook } = hookFake();
+  const runtime = createContextRuntime();
+  registerCompactionHook(context, { ...DEPS, refreshEnabled: true }, runtime);
+  const hook = sessionHook.mock.calls[0]?.[1] as (event: TestEvent) => Promise<void>;
+
+  await hook(compactionEvent(1));
+
+  expect(sessionRuntime(runtime, SESSION).preambleRefreshPending).toBe(true);
+});
+
+test("leaves the refresh flag alone when refresh is disabled", async () => {
+  const { context, sessionHook } = hookFake();
+  const runtime = createContextRuntime();
+  registerCompactionHook(context, DEPS, runtime);
+  const hook = sessionHook.mock.calls[0]?.[1] as (event: TestEvent) => Promise<void>;
+
+  await hook(compactionEvent(1));
+
+  expect(sessionRuntime(runtime, SESSION).preambleRefreshPending).toBe(false);
 });

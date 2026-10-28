@@ -169,8 +169,10 @@ function handleStepEnded(
   }
 
   // The step's provider total covers the most recent request the context hook
-  // observed, so it anchors that many messages.
+  // observed, so it anchors that many messages. The raw counts also feed
+  // cache-coldness checks for preamble refresh.
   const session = sessionRuntime(runtime, sessionID);
+  session.lastStepTokens = tokens;
   session.estimator = anchorEstimator(tokens, session.lastMessageCount);
 }
 

@@ -3,7 +3,11 @@ import {
   type TriggerKind,
   type TriggerState,
 } from "@aerovato/operator-core/context/triggers";
-import { EMPTY_ESTIMATOR, type ContextEstimator } from "@aerovato/operator-core/context/tokens";
+import {
+  EMPTY_ESTIMATOR,
+  type ContextEstimator,
+  type StepTokenCounts,
+} from "@aerovato/operator-core/context/tokens";
 import { appendReceipt, readReceipts } from "@aerovato/operator-core/context/receipts";
 import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
@@ -31,6 +35,16 @@ export type SessionRuntime = {
   // and the step anchor (message count).
   lastEstimate: number | null;
   lastMessageCount: number;
+  // Latest finished step's provider token counts, for cache-coldness checks.
+  // Written by the step-ended handler; read by preamble refresh.
+  lastStepTokens: StepTokenCounts | null;
+  // Canonical preamble fingerprint from the last render or check; null until
+  // the first touch seeds the baseline (a fresh process always renders
+  // fresh, so the baseline needs no refresh).
+  preambleFingerprint: string | null;
+  // Set by the compaction hook: the next preamble check re-renders
+  // unconditionally, since compaction already flushed the cache.
+  preambleRefreshPending: boolean;
 };
 
 export type ContextRuntime = {
@@ -134,6 +148,9 @@ export function sessionRuntime(runtime: ContextRuntime, sessionID: string): Sess
     windowFailures: 0,
     lastEstimate: null,
     lastMessageCount: 0,
+    lastStepTokens: null,
+    preambleFingerprint: null,
+    preambleRefreshPending: false,
   };
   runtime.sessions.set(sessionID, created);
   return created;
@@ -206,9 +223,10 @@ export async function ensureSessionHydrated(
       runtime.refusals.add(sessionID);
     } else if (receipt.kind === "trim") {
       fired[receipt.trigger] = receipt.tokens;
-    } else if (receipt.trigger !== "manual") {
+    } else if (receipt.kind === "compact" && receipt.trigger !== "manual") {
       fired[receipt.trigger] = receipt.summarized;
     }
+    // Refresh receipts carry no trigger state and need no seeding.
   }
   session.triggerState = { fired: { ...fired, ...session.triggerState.fired } };
   runtime.hydrated.add(sessionID);
