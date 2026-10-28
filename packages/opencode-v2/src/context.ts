@@ -1,12 +1,8 @@
 import { appendReceipt, type TrimReceipt } from "@aerovato/operator-core/context/receipts";
-import { listOmissions, storeOmission } from "@aerovato/operator-core/context/store";
+import { storeOmissions } from "@aerovato/operator-core/context/store";
 import { evaluateTrigger, exceedsThresholds } from "@aerovato/operator-core/context/triggers";
-import { planTrim, type OmissionRequest } from "@aerovato/operator-core/context/trim";
-import {
-  countTextTokens,
-  estimateContextTokens,
-  type RequestMessage,
-} from "@aerovato/operator-core/context/tokens";
+import { planTrimBatched, type TrimPlan } from "@aerovato/operator-core/context/trim";
+import { estimateContextTokens, type RequestMessage } from "@aerovato/operator-core/context/tokens";
 import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
 
@@ -105,62 +101,38 @@ export function registerContextHook(
 }
 
 type TrimOutcome = {
-  readonly plan: ReturnType<typeof planTrim>;
+  readonly plan: TrimPlan;
   readonly removedTokens: number;
   readonly omissionCount: number;
 };
 
-// Two passes: the first collects the omission requests, the second builds the
-// replacements with real content IDs. planTrim is pure and deterministic, so
-// both passes produce the same plan; running it twice keeps the omission
-// store (async, in core) as the only write path.
+// Single collection walk plus one batch store call: one index read, one
+// append, each payload stringified and encoded exactly once. The build step
+// maps resolved IDs to replacements without re-walking the messages.
 async function trimRequest(
   sessionID: string,
   messages: readonly RequestMessage[],
   deps: ContextManagementDeps,
 ): Promise<TrimOutcome> {
-  const requests: OmissionRequest[] = [];
-  planTrim(messages, { keepRecentTurns: deps.config.keepRecentTurns }, request => {
-    requests.push(request);
-    return "";
-  });
+  const batch = planTrimBatched(messages, { keepRecentTurns: deps.config.keepRecentTurns });
 
   const omittedRoot = join(deps.stateDirectory, "omitted");
-  const index = await listOmissions(omittedRoot, sessionID);
-  const knownKeys = new Set(index.ok ? index.value.map(entry => entry.key) : []);
+  const stored = await storeOmissions(omittedRoot, sessionID, batch.requests);
 
-  const contentIDs = new Map<string, string>();
-  const seen = new Set<string>();
-  const failedKeys = new Set<string>();
+  // The store is best-effort: payloads that cannot be persisted stay in
+  // context instead of failing the request. A failed whole-batch store
+  // resolves nothing, so the build leaves every part intact.
+  const ids = stored.ok ? stored.value.ids : new Map<string, string>();
+  const fresh = stored.ok ? stored.value.stored : new Set<string>();
+
   let omissionCount = 0;
   let removedTokens = 0;
-
-  for (const request of requests) {
-    if (seen.has(request.key)) {
-      continue;
-    }
-    seen.add(request.key);
-
-    const stored = await storeOmission(omittedRoot, sessionID, request.key, request.content);
-    if (stored.ok) {
-      contentIDs.set(request.key, stored.value);
-      if (!knownKeys.has(request.key)) {
-        omissionCount += 1;
-        removedTokens += countTextTokens(request.content);
-      }
-    } else {
-      // The store is best-effort: payloads that cannot be persisted stay in
-      // context instead of failing the request.
-      failedKeys.add(request.key);
+  for (const request of batch.requests) {
+    if (fresh.has(request.key)) {
+      omissionCount += 1;
+      removedTokens += request.tokens;
     }
   }
 
-  const plan = planTrim(messages, { keepRecentTurns: deps.config.keepRecentTurns }, request => {
-    if (failedKeys.has(request.key)) {
-      return null;
-    }
-    return contentIDs.get(request.key) ?? null;
-  });
-
-  return { plan, removedTokens, omissionCount };
+  return { plan: batch.build(ids), removedTokens, omissionCount };
 }
