@@ -15,6 +15,7 @@ vi.mock("node:fs/promises", async () => {
     readFile: memoryFileSystem.promises.readFile,
     readdir: memoryFileSystem.promises.readdir,
     stat: memoryFileSystem.promises.stat,
+    unlink: memoryFileSystem.promises.unlink,
     writeFile: memoryFileSystem.promises.writeFile,
   };
 });

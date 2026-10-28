@@ -1,5 +1,9 @@
 import { appendReceipt, type TrimReceipt } from "@aerovato/operator-core/context/receipts";
-import { storeOmissions } from "@aerovato/operator-core/context/store";
+import {
+  DEFAULT_RETENTION,
+  pruneOmissions,
+  storeOmissions,
+} from "@aerovato/operator-core/context/store";
 import { evaluateTrigger, exceedsThresholds } from "@aerovato/operator-core/context/triggers";
 import { planTrimBatched, type TrimPlan } from "@aerovato/operator-core/context/trim";
 import { estimateContextTokens, type RequestMessage } from "@aerovato/operator-core/context/tokens";
@@ -132,6 +136,21 @@ async function trimRequest(
   // resolves nothing, so the build leaves every part intact.
   const ids = stored.ok ? stored.value.ids : new Map<string, string>();
   const fresh = stored.ok ? stored.value.stored : new Set<string>();
+
+  // Bound per-session growth on the write path: a count-only sweep needs no
+  // payload stats. Pruning is best-effort hygiene, never fatal to the request.
+  if (stored.ok && stored.value.ids.size > DEFAULT_RETENTION.maxPayloads) {
+    await pruneOmissions(
+      omittedRoot,
+      sessionID,
+      {
+        maxAgeMs: null,
+        maxPayloads: DEFAULT_RETENTION.maxPayloads,
+        maxBytes: null,
+      },
+      Date.now(),
+    );
+  }
 
   let omissionCount = 0;
   let removedTokens = 0;

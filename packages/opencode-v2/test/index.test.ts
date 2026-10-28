@@ -27,6 +27,7 @@ vi.mock("node:fs/promises", async () => {
     readFile: memoryFileSystem.promises.readFile,
     readdir: memoryFileSystem.promises.readdir,
     stat: memoryFileSystem.promises.stat,
+    unlink: memoryFileSystem.promises.unlink,
     writeFile: memoryFileSystem.promises.writeFile,
   };
 });
@@ -144,7 +145,7 @@ test("registers context management hooks and tools when enabled", async () => {
     "compaction",
   ]);
   expect(subscribe).toHaveBeenCalled();
-  expect(toolTransform).toHaveBeenCalledOnce();
+  expect(toolTransform).toHaveBeenCalledTimes(2);
 });
 
 test("stays inert when disabled", async () => {

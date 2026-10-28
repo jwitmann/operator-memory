@@ -1,4 +1,8 @@
-import { readOmission } from "@aerovato/operator-core/context/store";
+import {
+  DEFAULT_RETENTION,
+  pruneOmissions,
+  readOmission,
+} from "@aerovato/operator-core/context/store";
 import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
 
@@ -68,4 +72,85 @@ export async function registerReadOmittedTool(
       },
     });
   });
+}
+
+// Registers operator:prune: enforces the retention policy on the current
+// session's omission store (age, count, and byte caps from
+// DEFAULT_RETENTION unless overridden). Payloads omitted from context stay
+// recoverable through operator:read_omitted only while retained; receipts
+// keep their content IDs regardless, and pruning never touches receipts.
+export async function registerPruneTool(context: Context, deps: ReadOmittedDeps): Promise<void> {
+  await context.tool.transform(editor => {
+    editor.namespace({
+      name: "operator",
+      description: "Operator Memory context management tools.",
+    });
+    editor.add({
+      name: "prune",
+      description:
+        "Prune the current session's omitted tool input and output store "
+        + "by age, count, and size. Recover pruned payloads first if they are "
+        + "still needed: pruning deletes the files operator:read_omitted serves.",
+      input: {
+        type: "object",
+        properties: {
+          maxAgeDays: {
+            type: "number",
+            description: "Drop payloads older than this many days.",
+          },
+          maxPayloads: {
+            type: "number",
+            description: "Keep at most this many payloads, newest first.",
+          },
+          maxBytes: {
+            type: "number",
+            description: "Keep at most this many payload bytes, newest first.",
+          },
+        },
+      },
+      execute: async (input, toolContext) => {
+        const options = asPruneOptions(input);
+        const pruned = await pruneOmissions(
+          join(deps.stateDirectory, "omitted"),
+          toolContext.sessionID,
+          {
+            maxAgeMs: options.maxAgeDays * 24 * 60 * 60 * 1000,
+            maxPayloads: options.maxPayloads,
+            maxBytes: options.maxBytes,
+          },
+          Date.now(),
+        );
+        if (!pruned.ok) {
+          return { content: "Could not prune omitted content for this session." };
+        }
+        return {
+          content:
+            `Pruned ${pruned.value.removed.length} payload(s), `
+            + `freed ${pruned.value.freedBytes} byte(s), `
+            + `${pruned.value.remaining} remaining.`,
+        };
+      },
+    });
+  });
+}
+
+function asPruneOptions(input: unknown): {
+  readonly maxAgeDays: number;
+  readonly maxPayloads: number;
+  readonly maxBytes: number;
+} {
+  const record = typeof input === "object" && input !== null ? input : {};
+  return {
+    maxAgeDays: readNonNegativeNumber(record, "maxAgeDays", DEFAULT_RETENTION.maxAgeMs / 86400000),
+    maxPayloads: readNonNegativeNumber(record, "maxPayloads", DEFAULT_RETENTION.maxPayloads),
+    maxBytes: readNonNegativeNumber(record, "maxBytes", DEFAULT_RETENTION.maxBytes),
+  };
+}
+
+function readNonNegativeNumber(record: object, key: string, fallback: number): number {
+  if (!(key in record)) {
+    return fallback;
+  }
+  const value = (record as Record<string, unknown>)[key];
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : fallback;
 }

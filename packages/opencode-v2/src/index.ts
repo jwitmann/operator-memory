@@ -15,7 +15,7 @@ import { parseContextManagementConfig } from "./context-config.ts";
 import { registerCompletionTrigger, requestSessionCompaction } from "./events.ts";
 import { loadPreamble } from "./preamble.ts";
 import { sharedContextRuntime } from "./runtime.ts";
-import { registerReadOmittedTool } from "./tool.ts";
+import { registerPruneTool, registerReadOmittedTool } from "./tool.ts";
 import {
   OperatorNotifications,
   type OperatorStatus,
@@ -156,6 +156,7 @@ const OperatorPlugin = Plugin.define({
       const controller = new AbortController();
       registerCompletionTrigger(context, deps, runtime, { signal: controller.signal });
       await registerReadOmittedTool(context, { stateDirectory });
+      await registerPruneTool(context, { stateDirectory });
       // Tearing down stops the event loop and marks this generation stale so
       // surviving closures no-op. Only bump the generation when still
       // current: a newer setup may already have superseded this one.
