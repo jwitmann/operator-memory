@@ -1,12 +1,12 @@
 import { expect, test } from "vitest";
 
-import type { RequestMessage } from "./tokens.ts";
-import { planTrim, type ResolveContentID } from "./trim.ts";
+import { countTextTokens, type RequestMessage } from "./tokens.ts";
+import { planTrim, planTrimBatched, type OmissionRequest, type ResolveContentID } from "./trim.ts";
 
 // A resolver backed by a Map mimics the omission store: the first request for
 // a key allocates an ID; later requests reuse it, which is what makes
 // re-trimming idempotent.
-function mapResolver(calls: { key: string; content: string }[]): ResolveContentID {
+function mapResolver(calls: OmissionRequest[]): ResolveContentID {
   const ids = new Map<string, string>();
   let next = 1;
   return request => {
@@ -69,7 +69,7 @@ test("preserves the requested assistant-turn tail", () => {
     textMessage("user", "third"),
     ...callMessage("read", "toolu_3", { filePath: "/c" }, bigOutput(2000)),
   ];
-  const requests: { key: string; content: string }[] = [];
+  const requests: OmissionRequest[] = [];
 
   const plan = planTrim(messages, { keepRecentTurns: 1 }, mapResolver(requests));
 
@@ -87,7 +87,7 @@ test("re-trimming is idempotent through the resolver", () => {
     textMessage("user", "task"),
     ...callMessage("todowrite", "toolu_1", {}, "verbose todo output"),
   ];
-  const requests: { key: string; content: string }[] = [];
+  const requests: OmissionRequest[] = [];
   const resolver = mapResolver(requests);
 
   const first = planTrim(messages, { keepRecentTurns: 0 }, resolver);
@@ -123,11 +123,13 @@ test("bash commands over 1024 characters truncate to a head excerpt", () => {
     textMessage("user", "run"),
     ...callMessage("bash", "toolu_b", { command }, "exit code 0"),
   ];
-  const requests: { key: string; content: string }[] = [];
+  const requests: OmissionRequest[] = [];
 
   const plan = planTrim(messages, { keepRecentTurns: 0 }, mapResolver(requests));
 
-  expect(requests).toEqual([{ key: "toolu_b:input", content: command }]);
+  expect(requests).toEqual([
+    { key: "toolu_b:input", content: command, tokens: countTextTokens(command) },
+  ]);
 
   const inputPart = plan.replacements.find(replacement => replacement.messageIndex === 1)?.part as {
     input: { command: string };
@@ -155,7 +157,7 @@ test("omits large write, edit, and apply_patch inputs with [Omitted] markers", (
       "edited",
     ),
   ];
-  const requests: { key: string; content: string }[] = [];
+  const requests: OmissionRequest[] = [];
 
   const plan = planTrim(messages, { keepRecentTurns: 0 }, mapResolver(requests));
 
@@ -270,7 +272,7 @@ test("trailing assistantless turn is neither trimmed nor counted as protected", 
 
   // The trailing user-only turn is dropped from planning, so keepRecentTurns 1
   // protects the second answered turn and the first read still trims.
-  const requests: { key: string; content: string }[] = [];
+  const requests: OmissionRequest[] = [];
   const plan = planTrim(messages, { keepRecentTurns: 1 }, mapResolver(requests));
   expect(requests.map(request => request.key)).toEqual(["toolu_1:output"]);
   expect(plan.replacements).toHaveLength(1);
@@ -300,4 +302,70 @@ test("counts words like split on whitespace runs, stopping past the limit", () =
 
   const replaced = plan.replacements.map(replacement => replacement.messageIndex);
   expect(replaced).toEqual([4]);
+});
+
+test("batched build with full IDs matches the resolving planner byte-identically", () => {
+  const content = bigOutput(2000);
+  const messages: RequestMessage[] = [
+    textMessage("user", "work"),
+    ...callMessage("read", "toolu_1", { filePath: "/a" }, content),
+    ...callMessage("bash", "toolu_2", { command: `run ${"x".repeat(2000)}` }, "done"),
+  ];
+
+  const resolved = planTrim(messages, { keepRecentTurns: 0 }, mapResolver([]));
+  const batch = planTrimBatched(messages, { keepRecentTurns: 0 });
+  const ids = new Map<string, string>();
+  for (const [index, request] of batch.requests.entries()) {
+    ids.set(request.key, `omitted-${String(index + 1).padStart(3, "0")}`);
+  }
+  expect(batch.build(ids)).toEqual(resolved);
+});
+
+test("batched build leaves parts without IDs intact", () => {
+  const messages: RequestMessage[] = [
+    textMessage("user", "look"),
+    ...callMessage("read", "toolu_1", { filePath: "/a" }, bigOutput(2000)),
+    ...callMessage("read", "toolu_2", { filePath: "/b" }, bigOutput(2000)),
+  ];
+
+  const batch = planTrimBatched(messages, { keepRecentTurns: 0 });
+  expect(batch.requests).toHaveLength(2);
+
+  // Only the first payload persisted; the second keeps its original output.
+  const plan = batch.build(new Map([[batch.requests[0]?.key ?? "", "omitted-001"]]));
+  expect(plan.replacements).toHaveLength(1);
+  expect(plan.replacements[0]?.messageIndex).toBe(2);
+});
+
+test("batched requests carry single-encoded token counts", () => {
+  const output = bigOutput(2000);
+  const messages: RequestMessage[] = [
+    textMessage("user", "read"),
+    ...callMessage("read", "toolu_1", { filePath: "/a" }, output),
+  ];
+
+  const batch = planTrimBatched(messages, { keepRecentTurns: 0 });
+  expect(batch.requests).toHaveLength(1);
+  expect(batch.requests[0]?.tokens).toBe(countTextTokens(output));
+});
+
+test("batched build applies input and output omissions independently", () => {
+  const command = `run ${"x".repeat(2000)}`;
+  const messages: RequestMessage[] = [
+    textMessage("user", "run"),
+    ...callMessage("bash", "toolu_1", { command }, bigOutput(2000)),
+  ];
+
+  const batch = planTrimBatched(messages, { keepRecentTurns: 0 });
+  expect(batch.requests.map(request => request.key)).toEqual(["toolu_1:input", "toolu_1:output"]);
+
+  // Only the input persisted: the input is replaced and its notice is
+  // prepended to the otherwise intact original output.
+  const inputID = batch.requests[0]?.key ?? "";
+  const plan = batch.build(new Map([[inputID, "omitted-001"]]));
+  expect(plan.replacements).toHaveLength(2);
+  const resultPart = plan.replacements.find(replacement => replacement.messageIndex === 2)
+    ?.part as { result: { value: string } };
+  expect(resultPart.result.value).toContain("<tool-input-omission-notice>");
+  expect(resultPart.result.value).toContain("omitted-001");
 });

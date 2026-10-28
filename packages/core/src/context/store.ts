@@ -22,17 +22,34 @@ export type OmissionIndexEntry = {
   readonly id: string;
 };
 
+// One omission payload to persist. Tokens are precomputed by the trim
+// planner's single walk so receipt accounting never re-encodes content.
+export type OmissionBatchItem = {
+  readonly key: string;
+  readonly content: string;
+};
+
+export type BatchStoreResult = {
+  // Resolved content ID for every requested key that persisted or already
+  // existed. Keys that failed have no entry.
+  readonly ids: ReadonlyMap<string, string>;
+  // Keys newly persisted by this call (pre-existing keys resolve but are
+  // not counted, matching the adapter's receipt semantics).
+  readonly stored: ReadonlySet<string>;
+  // Keys that could not be persisted; the caller leaves those parts intact.
+  readonly failed: ReadonlySet<string>;
+};
+
 const INDEX_FILE = "index.jsonl";
 const ID_PREFIX = "omitted-";
 
-export async function storeOmission(
+export async function storeOmissions(
   root: string,
   sessionID: string,
-  key: string,
-  content: string,
-): Promise<Result<string, OmissionStoreError>> {
+  items: readonly OmissionBatchItem[],
+): Promise<Result<BatchStoreResult, OmissionStoreError>> {
   const sessionRoot = join(root, sessionID);
-  if (!isSafePathSegment(sessionID) || !isSafePathSegment(key)) {
+  if (!isSafePathSegment(sessionID)) {
     return failure({ path: sessionRoot, cause: new Error("Unsafe path segment") });
   }
 
@@ -46,21 +63,71 @@ export async function storeOmission(
     return entriesResult;
   }
 
-  const existing = entriesResult.value.find(entry => entry.key === key);
-  if (existing !== undefined) {
-    return success(existing.id);
+  const known = new Map<string, string>();
+  for (const entry of entriesResult.value) {
+    if (!known.has(entry.key)) {
+      known.set(entry.key, entry.id);
+    }
   }
 
-  const id = formatContentID(nextId(entriesResult.value));
-  const payloadPath = join(sessionRoot, id);
+  const ids = new Map<string, string>(known);
+  const stored = new Set<string>();
+  const failed = new Set<string>();
+  const fresh: OmissionIndexEntry[] = [];
+  let next = nextId(entriesResult.value);
 
-  try {
-    await writeFile(payloadPath, content, "utf8");
-    await appendFile(indexPath(sessionRoot), `${JSON.stringify({ key, id })}\n`, "utf8");
-  } catch (cause) {
-    return failure({ path: payloadPath, cause });
+  for (const item of items) {
+    if (ids.has(item.key)) {
+      continue;
+    }
+    if (!isSafePathSegment(item.key)) {
+      failed.add(item.key);
+      continue;
+    }
+    const id = formatContentID(next);
+    next += 1;
+    try {
+      await writeFile(join(sessionRoot, id), item.content, "utf8");
+    } catch {
+      failed.add(item.key);
+      continue;
+    }
+    ids.set(item.key, id);
+    stored.add(item.key);
+    fresh.push({ key: item.key, id });
   }
 
+  if (fresh.length > 0) {
+    const lines = fresh.map(entry => `${JSON.stringify(entry)}\n`).join("");
+    try {
+      await appendFile(indexPath(sessionRoot), lines, "utf8");
+    } catch (cause) {
+      for (const entry of fresh) {
+        ids.delete(entry.key);
+        stored.delete(entry.key);
+        failed.add(entry.key);
+      }
+      return failure({ path: indexPath(sessionRoot), cause });
+    }
+  }
+
+  return success({ ids, stored, failed });
+}
+
+export async function storeOmission(
+  root: string,
+  sessionID: string,
+  key: string,
+  content: string,
+): Promise<Result<string, OmissionStoreError>> {
+  const batched = await storeOmissions(root, sessionID, [{ key, content }]);
+  if (!batched.ok) {
+    return batched;
+  }
+  const id = batched.value.ids.get(key);
+  if (id === undefined) {
+    return failure({ path: join(root, sessionID), cause: new Error("Omission not persisted") });
+  }
   return success(id);
 }
 

@@ -1,7 +1,7 @@
 import { fs, vol } from "memfs";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { listOmissions, readOmission, storeOmission } from "./store.ts";
+import { listOmissions, readOmission, storeOmission, storeOmissions } from "./store.ts";
 
 vi.mock("node:fs/promises", async () => {
   const { fs: memoryFileSystem } = await import("memfs");
@@ -83,4 +83,83 @@ test("rejects path traversal segments", async () => {
 
   const badRead = await readOmission(ROOT, SESSION, "../index.jsonl");
   expect(badRead.ok).toBe(false);
+});
+
+test("stores a batch with one index read and one append", async () => {
+  const result = await storeOmissions(ROOT, SESSION, [
+    { key: "toolu_1:output", content: "a" },
+    { key: "toolu_1:input", content: "b" },
+    { key: "toolu_2:output", content: "c" },
+  ]);
+
+  expect(result.ok).toBe(true);
+  if (!result.ok) {
+    return;
+  }
+  expect([...result.value.ids]).toEqual([
+    ["toolu_1:output", "omitted-001"],
+    ["toolu_1:input", "omitted-002"],
+    ["toolu_2:output", "omitted-003"],
+  ]);
+  expect([...result.value.stored]).toEqual(["toolu_1:output", "toolu_1:input", "toolu_2:output"]);
+  expect(result.value.failed.size).toBe(0);
+
+  // One append carried all three lines.
+  const lines = String(fs.readFileSync(`${ROOT}/${SESSION}/index.jsonl`, "utf8"))
+    .trimEnd()
+    .split("\n");
+  expect(lines).toHaveLength(3);
+  expect(fs.readFileSync(`${ROOT}/${SESSION}/omitted-002`, "utf8")).toBe("b");
+});
+
+test("reuses existing IDs and counts only fresh keys as stored", async () => {
+  await storeOmissions(ROOT, SESSION, [{ key: "toolu_1:output", content: "first" }]);
+  const second = await storeOmissions(ROOT, SESSION, [
+    { key: "toolu_1:output", content: "second" },
+    { key: "toolu_2:output", content: "new" },
+  ]);
+
+  expect(second.ok).toBe(true);
+  if (!second.ok) {
+    return;
+  }
+  expect(second.value.ids.get("toolu_1:output")).toBe("omitted-001");
+  expect(second.value.ids.get("toolu_2:output")).toBe("omitted-002");
+  expect([...second.value.stored]).toEqual(["toolu_2:output"]);
+  expect(fs.readFileSync(`${ROOT}/${SESSION}/omitted-001`, "utf8")).toBe("first");
+});
+
+test("first occurrence wins for duplicate keys within one batch", async () => {
+  const result = await storeOmissions(ROOT, SESSION, [
+    { key: "toolu_1:output", content: "first" },
+    { key: "toolu_1:output", content: "second" },
+  ]);
+
+  expect(result.ok).toBe(true);
+  if (!result.ok) {
+    return;
+  }
+  expect(result.value.ids.get("toolu_1:output")).toBe("omitted-001");
+  expect(fs.readFileSync(`${ROOT}/${SESSION}/omitted-001`, "utf8")).toBe("first");
+});
+
+test("marks unsafe keys failed without failing the batch", async () => {
+  const result = await storeOmissions(ROOT, SESSION, [
+    { key: "../escape", content: "evil" },
+    { key: "toolu_1:output", content: "good" },
+  ]);
+
+  expect(result.ok).toBe(true);
+  if (!result.ok) {
+    return;
+  }
+  expect([...result.value.failed]).toEqual(["../escape"]);
+  expect(result.value.ids.get("toolu_1:output")).toBe("omitted-001");
+  expect(fs.existsSync(`${ROOT}/escape`)).toBe(false);
+});
+
+test("rejects an unsafe session for the whole batch", async () => {
+  const result = await storeOmissions(ROOT, "../escape", [{ key: "k", content: "v" }]);
+
+  expect(result.ok).toBe(false);
 });

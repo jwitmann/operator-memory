@@ -1,5 +1,5 @@
 import { inputOmissionNotice, outputOmissionNotice } from "./notices.ts";
-import { stringifyToolContent, type RequestMessage } from "./tokens.ts";
+import { countTextTokens, stringifyToolContent, type RequestMessage } from "./tokens.ts";
 import { isRecord, readString } from "../utils.ts";
 
 // Pure trim planner. Rule bodies ported from Magic Compact prune.ts
@@ -18,6 +18,9 @@ import { isRecord, readString } from "../utils.ts";
 export type OmissionRequest = {
   readonly key: string;
   readonly content: string;
+  // BPE token count of the content, encoded once during the collection walk
+  // so receipt accounting never re-encodes payloads.
+  readonly tokens: number;
 };
 
 // Returns null when no ID can be allocated; the planner then leaves that
@@ -50,6 +53,30 @@ export function planTrim(
   options: TrimOptions,
   resolveContentID: ResolveContentID,
 ): TrimPlan {
+  const batch = planTrimBatched(messages, options);
+  const ids = new Map<string, string>();
+  for (const request of batch.requests) {
+    const contentID = resolveContentID(request);
+    if (contentID !== null) {
+      ids.set(request.key, contentID);
+    }
+  }
+  return batch.build(ids);
+}
+
+// Single-walk planner. The collection walk evaluates every rule once,
+// encoding each omitted payload exactly once; the returned build step maps
+// resolved content IDs to part replacements without re-walking the messages.
+// A null (or missing) ID leaves that part intact, matching planTrim.
+export type TrimBatch = {
+  readonly requests: readonly OmissionRequest[];
+  readonly build: (ids: ReadonlyMap<string, string>) => TrimPlan;
+};
+
+export function planTrimBatched(
+  messages: readonly RequestMessage[],
+  options: TrimOptions,
+): TrimBatch {
   const turns = computeTurns(messages);
   removeTrailingAssistantlessTurn(turns);
 
@@ -59,7 +86,6 @@ export function planTrim(
   const trimEndIndex = Math.max(0, turns.length - Math.max(0, options.keepRecentTurns));
   const trimmable = turns.slice(0, trimEndIndex);
 
-  const replacements: PartReplacement[] = [];
   const calls = indexCalls(messages);
   const trimmableIndexes = new Set<number>();
   for (const turn of trimmable) {
@@ -68,15 +94,56 @@ export function planTrim(
     }
   }
 
+  const omissions: CallOmissions[] = [];
   for (const call of calls) {
     if (!trimmableIndexes.has(call.messageIndex)) {
       continue;
     }
-    planCall(messages, call, resolveContentID, replacements);
+    if (call.resultMessageIndex === null || call.resultIsError) {
+      // Pending, running, or errored calls are never touched.
+      continue;
+    }
+    const input = planInputOmission(call);
+    const output = planOutputOmission(call);
+    if (input !== null || output !== null) {
+      omissions.push({ call, input, output });
+    }
   }
 
-  return { replacements };
+  const requests: OmissionRequest[] = [];
+  for (const omission of omissions) {
+    if (omission.input !== null) {
+      requests.push({
+        key: omission.input.key,
+        content: omission.input.content,
+        tokens: omission.input.tokens,
+      });
+    }
+    if (omission.output !== null && omission.output.kind === "stored") {
+      requests.push({
+        key: omission.output.key,
+        content: omission.output.content,
+        tokens: omission.output.tokens,
+      });
+    }
+  }
+
+  return { requests, build: ids => buildTrimPlan(messages, omissions, ids) };
 }
+
+type PendingInput = {
+  readonly key: string;
+  readonly content: string;
+  readonly tokens: number;
+  readonly part: (contentID: string) => unknown;
+  readonly outputNotice: (contentID: string) => string;
+};
+
+type CallOmissions = {
+  readonly call: CallIndex;
+  readonly input: PendingInput | null;
+  readonly output: PendingOutput | null;
+};
 
 // --- Turn grouping (ported from Magic Compact plan.ts) ---
 
@@ -194,67 +261,76 @@ function contentAt(
 
 // --- Rule evaluation (ported from Magic Compact prune.ts) ---
 
-function planCall(
+// Second phase: map resolved content IDs to part replacements. A null or
+// missing ID leaves that part intact instead of emitting a dead reference,
+// matching the previous two-pass behavior exactly (input and output are
+// omitted independently).
+function buildTrimPlan(
   messages: readonly RequestMessage[],
-  call: CallIndex,
-  resolveContentID: ResolveContentID,
-  replacements: PartReplacement[],
-): void {
-  if (call.resultMessageIndex === null || call.resultIsError) {
-    // Pending, running, or errored calls are never touched.
-    return;
+  omissions: readonly CallOmissions[],
+  ids: ReadonlyMap<string, string>,
+): TrimPlan {
+  const replacements: PartReplacement[] = [];
+
+  for (const { call, input, output } of omissions) {
+    let inputNotice: string | null = null;
+    if (input !== null) {
+      const contentID = ids.get(input.key) ?? null;
+      if (contentID !== null) {
+        replacements.push({
+          messageIndex: call.messageIndex,
+          partIndex: call.partIndex,
+          part: input.part(contentID),
+        });
+        inputNotice = input.outputNotice(contentID);
+      }
+    }
+
+    if (call.resultMessageIndex === null || call.resultPartIndex === null) {
+      continue;
+    }
+
+    const originalOutput = stringifyToolContent(call.resultValue);
+    let nextOutput = originalOutput;
+    let replaced = false;
+
+    if (output !== null) {
+      if (output.kind === "direct") {
+        nextOutput = output.text;
+        replaced = true;
+      } else {
+        const contentID = ids.get(output.key) ?? null;
+        if (contentID !== null) {
+          nextOutput = output.text(contentID);
+          replaced = true;
+        }
+      }
+    }
+
+    if (inputNotice !== null) {
+      nextOutput = `${inputNotice}\n\n${nextOutput}`;
+      replaced = true;
+    }
+
+    if (replaced) {
+      replacements.push({
+        messageIndex: call.resultMessageIndex,
+        partIndex: call.resultPartIndex,
+        part: {
+          ...(contentAt(messages, {
+            messageIndex: call.resultMessageIndex,
+            partIndex: call.resultPartIndex,
+          }) as object),
+          result: { type: "text", value: nextOutput },
+        },
+      });
+    }
   }
 
-  const inputPlan = planInputOmission(call, resolveContentID);
-  const outputPlan = planOutputOmission(call, resolveContentID);
-
-  if (inputPlan !== null) {
-    replacements.push({
-      messageIndex: call.messageIndex,
-      partIndex: call.partIndex,
-      part: inputPlan.part,
-    });
-  }
-
-  if (call.resultMessageIndex === null || call.resultPartIndex === null) {
-    return;
-  }
-
-  const originalOutput = stringifyToolContent(call.resultValue);
-  let nextOutput = originalOutput;
-  let replaced = false;
-
-  if (outputPlan !== null) {
-    nextOutput = outputPlan.text;
-    replaced = true;
-  }
-
-  if (inputPlan !== null && inputPlan.outputNotice !== null) {
-    nextOutput = `${inputPlan.outputNotice}\n\n${nextOutput}`;
-    replaced = true;
-  }
-
-  if (replaced) {
-    replacements.push({
-      messageIndex: call.resultMessageIndex,
-      partIndex: call.resultPartIndex,
-      part: {
-        ...(contentAt(messages, {
-          messageIndex: call.resultMessageIndex,
-          partIndex: call.resultPartIndex,
-        }) as object),
-        result: { type: "text", value: nextOutput },
-      },
-    });
-  }
+  return { replacements };
 }
 
-type InputPlan = {
-  readonly part: unknown;
-  readonly outputNotice: string | null;
-};
-
-function planInputOmission(call: CallIndex, resolveContentID: ResolveContentID): InputPlan | null {
+function planInputOmission(call: CallIndex): PendingInput | null {
   if (!isRecord(call.input)) {
     return null;
   }
@@ -265,20 +341,17 @@ function planInputOmission(call: CallIndex, resolveContentID: ResolveContentID):
   if (call.toolName === "write") {
     const content = readString(input, "content");
     if (content !== null && exceeds(content, DEFAULT_LIMIT)) {
-      const contentID = resolveContentID({
+      return {
         key: `${call.callID}:input`,
         content,
-      });
-      if (contentID === null) {
-        return null;
-      }
-      return {
-        part: { ...originalPart, input: { ...input, content: "[Omitted]" } },
-        outputNotice: inputOmissionNotice(
-          "File write contents omitted due to a compaction operation. If necessary, reread file to see current contents.",
-          content.length,
-          contentID,
-        ),
+        tokens: countTextTokens(content),
+        part: () => ({ ...originalPart, input: { ...input, content: "[Omitted]" } }),
+        outputNotice: contentID =>
+          inputOmissionNotice(
+            "File write contents omitted due to a compaction operation. If necessary, reread file to see current contents.",
+            content.length,
+            contentID,
+          ),
       };
     }
   }
@@ -286,20 +359,17 @@ function planInputOmission(call: CallIndex, resolveContentID: ResolveContentID):
   if (call.toolName === "apply_patch") {
     const content = readString(input, "patchText");
     if (content !== null && exceeds(content, DEFAULT_LIMIT)) {
-      const contentID = resolveContentID({
+      return {
         key: `${call.callID}:input`,
         content,
-      });
-      if (contentID === null) {
-        return null;
-      }
-      return {
-        part: { ...originalPart, input: { ...input, patchText: "[Omitted]" } },
-        outputNotice: inputOmissionNotice(
-          "Patch text omitted due to compaction operation. If necessary, reread files to see current contents.",
-          content.length,
-          contentID,
-        ),
+        tokens: countTextTokens(content),
+        part: () => ({ ...originalPart, input: { ...input, patchText: "[Omitted]" } }),
+        outputNotice: contentID =>
+          inputOmissionNotice(
+            "Patch text omitted due to compaction operation. If necessary, reread files to see current contents.",
+            content.length,
+            contentID,
+          ),
       };
     }
   }
@@ -307,26 +377,18 @@ function planInputOmission(call: CallIndex, resolveContentID: ResolveContentID):
   if (call.toolName === "bash") {
     const content = readString(input, "command");
     if (content !== null && content.length > BASH_COMMAND_CHAR_LIMIT) {
-      const contentID = resolveContentID({
+      const truncated = `${content.slice(0, BASH_HEAD_CHAR_LIMIT)}\n[REST OF COMMAND TRUNCATED]`;
+      return {
         key: `${call.callID}:input`,
         content,
-      });
-      if (contentID === null) {
-        return null;
-      }
-      return {
-        part: {
-          ...originalPart,
-          input: {
-            ...input,
-            command: `${content.slice(0, BASH_HEAD_CHAR_LIMIT)}\n[REST OF COMMAND TRUNCATED]`,
-          },
-        },
-        outputNotice: inputOmissionNotice(
-          "Bash command truncated due to compaction operation.",
-          content.length,
-          contentID,
-        ),
+        tokens: countTextTokens(content),
+        part: () => ({ ...originalPart, input: { ...input, command: truncated } }),
+        outputNotice: contentID =>
+          inputOmissionNotice(
+            "Bash command truncated due to compaction operation.",
+            content.length,
+            contentID,
+          ),
       };
     }
   }
@@ -337,23 +399,20 @@ function planInputOmission(call: CallIndex, resolveContentID: ResolveContentID):
     if (oldString !== null && newString !== null) {
       const combined = `${oldString}\n${newString}`;
       if (exceeds(combined, DEFAULT_LIMIT)) {
-        const contentID = resolveContentID({
+        return {
           key: `${call.callID}:input`,
           content: combined,
-        });
-        if (contentID === null) {
-          return null;
-        }
-        return {
-          part: {
+          tokens: countTextTokens(combined),
+          part: () => ({
             ...originalPart,
             input: { ...input, oldString: "[Omitted]", newString: "[Omitted]" },
-          },
-          outputNotice: inputOmissionNotice(
-            "File edit oldString and newString omitted due to compaction operation. If necessary, reread file to see current contents.",
-            combined.length,
-            contentID,
-          ),
+          }),
+          outputNotice: contentID =>
+            inputOmissionNotice(
+              "File edit oldString and newString omitted due to compaction operation. If necessary, reread file to see current contents.",
+              combined.length,
+              contentID,
+            ),
         };
       }
     }
@@ -362,14 +421,17 @@ function planInputOmission(call: CallIndex, resolveContentID: ResolveContentID):
   return null;
 }
 
-type OutputPlan = {
-  readonly text: string;
-};
+type PendingOutput =
+  | {
+      readonly kind: "stored";
+      readonly key: string;
+      readonly content: string;
+      readonly tokens: number;
+      readonly text: (contentID: string) => string;
+    }
+  | { readonly kind: "direct"; readonly text: string };
 
-function planOutputOmission(
-  call: CallIndex,
-  resolveContentID: ResolveContentID,
-): OutputPlan | null {
+function planOutputOmission(call: CallIndex): PendingOutput | null {
   const output = stringifyToolContent(call.resultValue);
 
   if (call.toolName === "question") {
@@ -379,43 +441,46 @@ function planOutputOmission(
 
   if (call.toolName === "todowrite") {
     // Redundant; discarded without caching.
-    return { text: "Successfully updated todos." };
+    return { kind: "direct", text: "Successfully updated todos." };
   }
 
   if (call.toolName === "skill") {
     // Reloadable; discarded without caching.
     return {
+      kind: "direct",
       text: "Skill contents omitted due to compaction operation. If necessary, recall skill.",
     };
   }
 
   if (call.toolName === "read") {
     // File contents are reloadable; always omitted.
-    const contentID = resolveContentID({ key: `${call.callID}:output`, content: output });
-    if (contentID === null) {
-      return null;
-    }
     return {
-      text: outputOmissionNotice(
-        "Stale read contents omitted due to compaction operation. If necessary, reread to see current contents.",
-        output.length,
-        contentID,
-      ),
+      kind: "stored",
+      key: `${call.callID}:output`,
+      content: output,
+      tokens: countTextTokens(output),
+      text: contentID =>
+        outputOmissionNotice(
+          "Stale read contents omitted due to compaction operation. If necessary, reread to see current contents.",
+          output.length,
+          contentID,
+        ),
     };
   }
 
   if (call.toolName === "task") {
     if (exceeds(output, TASK_OUTPUT_LIMIT)) {
-      const contentID = resolveContentID({ key: `${call.callID}:output`, content: output });
-      if (contentID === null) {
-        return null;
-      }
       return {
-        text: outputOmissionNotice(
-          "Task output omitted due to a compaction operation. If necessary, reread output via the operator:read_omitted tool.",
-          output.length,
-          contentID,
-        ),
+        kind: "stored",
+        key: `${call.callID}:output`,
+        content: output,
+        tokens: countTextTokens(output),
+        text: contentID =>
+          outputOmissionNotice(
+            "Task output omitted due to a compaction operation. If necessary, reread output via the operator:read_omitted tool.",
+            output.length,
+            contentID,
+          ),
       };
     }
     return null;
@@ -425,12 +490,12 @@ function planOutputOmission(
     return null;
   }
 
-  const contentID = resolveContentID({ key: `${call.callID}:output`, content: output });
-  if (contentID === null) {
-    return null;
-  }
   return {
-    text: outputOmissionNotice(DEFAULT_OUTPUT_DESCRIPTION, output.length, contentID),
+    kind: "stored",
+    key: `${call.callID}:output`,
+    content: output,
+    tokens: countTextTokens(output),
+    text: contentID => outputOmissionNotice(DEFAULT_OUTPUT_DESCRIPTION, output.length, contentID),
   };
 }
 
