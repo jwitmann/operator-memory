@@ -58,3 +58,13 @@ Frequent load failures:
 #### Private Files Appear In Git
 
 Run `/operator:repair`. Helper ensures the exact `.operator/` entry is in the global Git ignore, but it does not untrack files that were already committed or staged. Repair can identify those paths and guide removal from repository tracking.
+
+### Context Management
+
+#### Refusal Receipt Names A Missing Brain
+
+When context management is enabled without an initialized Brain, the feature stays off and records one refusal receipt per session at `~/.operator/state/context-log/<sessionID>.log` with `reason` `brain-unavailable`. Run `/operator:user-init` or `/operator:project-init`, then start a new conversation. Only one refusal is recorded per session, so a continuing session keeps working from existing history without further notices.
+
+#### Compaction Lost At The End Of `opencode run`
+
+Under `opencode run`, a compaction requested at the very end of the run can lose a race with standalone server teardown while mid-run compactions and interactive sessions are unaffected. The next session still opens on prior history, so rerun the task or compact again. No repair step is needed.
