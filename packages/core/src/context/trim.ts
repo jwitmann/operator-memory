@@ -1,5 +1,11 @@
 import { inputOmissionNotice, outputOmissionNotice } from "./notices.ts";
-import { countTextTokens, stringifyToolContent, type RequestMessage } from "./tokens.ts";
+import {
+  countTextTokens,
+  isToolCallPart,
+  isToolResultPart,
+  stringifyToolContent,
+  type RequestMessage,
+} from "./tokens.ts";
 import { isRecord, readString } from "../utils.ts";
 
 // Pure trim planner. Rule bodies ported from Magic Compact prune.ts
@@ -528,38 +534,4 @@ function countWords(text: string, maxWords: number): number {
     }
   }
   return count;
-}
-
-type ToolCallPart = {
-  readonly type: "tool-call";
-  readonly id: string;
-  readonly name: string;
-  readonly input: unknown;
-};
-
-type ToolResultPart = {
-  readonly type: "tool-result";
-  readonly id: string;
-  readonly name: string;
-  readonly result: { readonly type: string; readonly value: unknown };
-};
-
-function isToolCallPart(part: unknown): part is ToolCallPart {
-  return (
-    isRecord(part)
-    && part.type === "tool-call"
-    && typeof part.id === "string"
-    && typeof part.name === "string"
-    && "input" in part
-  );
-}
-
-function isToolResultPart(part: unknown): part is ToolResultPart {
-  return (
-    isRecord(part)
-    && part.type === "tool-result"
-    && typeof part.id === "string"
-    && isRecord(part.result)
-    && "value" in part.result
-  );
 }

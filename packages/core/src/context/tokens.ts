@@ -1,5 +1,7 @@
 import { encode } from "gpt-tokenizer";
 
+import { isRecord } from "../utils.ts";
+
 // Structural model of a harness request-view message. Field-exact against the
 // OpenCode V2 hook event (@opencode/ai 2.0.14 Message schema): a message has a
 // role and a `content` array whose elements are discriminated parts. Core
@@ -15,6 +17,43 @@ export type SystemPromptPart = {
   readonly type: "text";
   readonly text: string;
 };
+
+export type ToolCallPart = {
+  readonly type: "tool-call";
+  readonly id: string;
+  readonly name: string;
+  readonly namespace?: unknown;
+  readonly input: unknown;
+};
+
+export type ToolResultPart = {
+  readonly type: "tool-result";
+  readonly id: string;
+  readonly name: string;
+  readonly namespace?: unknown;
+  readonly result: { readonly type: string; readonly value: unknown };
+};
+
+export function isToolCallPart(part: unknown): part is ToolCallPart {
+  return (
+    isRecord(part)
+    && part.type === "tool-call"
+    && typeof part.id === "string"
+    && typeof part.name === "string"
+    && "input" in part
+  );
+}
+
+export function isToolResultPart(part: unknown): part is ToolResultPart {
+  return (
+    isRecord(part)
+    && part.type === "tool-result"
+    && typeof part.id === "string"
+    && typeof part.name === "string"
+    && isRecord(part.result)
+    && "value" in part.result
+  );
+}
 
 // Provider-reported counts for one finished step, as carried by the host's
 // session.step.ended event. A request's true size on v2.0.22 was input plus
