@@ -50,3 +50,7 @@ Memory stops being a database you bolt onto the agent and becomes a workspace yo
 No vector databases. No embeddings. No summarizers, curators, or dreamers. No black-box retrieval.
 
 RAG agents recall. Operator understands.
+
+### Where Context Management Fits
+
+Context management removes bulk while documentation preserves knowledge. Trim stores omitted tool input and output on disk under `~/.operator/state/omitted/` with content IDs recoverable through `operator:read_omitted`, and every trim or compaction appends a plain-text JSON receipt under `~/.operator/state/context-log/`. Compaction summaries reference Brain partition paths instead of inlining content, so durable knowledge stays in the documents the agent maintains. Nothing is ranked, retrieved by similarity, or sent over the network.
