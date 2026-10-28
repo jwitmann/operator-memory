@@ -1,7 +1,13 @@
 import { fs, vol } from "memfs";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { listOmissions, readOmission, storeOmission, storeOmissions } from "./store.ts";
+import {
+  listOmissions,
+  pruneOmissions,
+  readOmission,
+  storeOmission,
+  storeOmissions,
+} from "./store.ts";
 
 vi.mock("node:fs/promises", async () => {
   const { fs: memoryFileSystem } = await import("memfs");
@@ -9,6 +15,8 @@ vi.mock("node:fs/promises", async () => {
     appendFile: memoryFileSystem.promises.appendFile,
     mkdir: memoryFileSystem.promises.mkdir,
     readFile: memoryFileSystem.promises.readFile,
+    stat: memoryFileSystem.promises.stat,
+    unlink: memoryFileSystem.promises.unlink,
     writeFile: memoryFileSystem.promises.writeFile,
   };
 });
@@ -160,6 +168,147 @@ test("marks unsafe keys failed without failing the batch", async () => {
 
 test("rejects an unsafe session for the whole batch", async () => {
   const result = await storeOmissions(ROOT, "../escape", [{ key: "k", content: "v" }]);
+
+  expect(result.ok).toBe(false);
+});
+
+test("pruning an empty store is a no-op", async () => {
+  const result = await pruneOmissions(
+    ROOT,
+    SESSION,
+    { maxAgeMs: 1, maxPayloads: 1, maxBytes: 1 },
+    Date.now(),
+  );
+
+  expect(result.ok).toBe(true);
+  if (!result.ok) {
+    return;
+  }
+  expect(result.value).toEqual({ removed: [], freedBytes: 0, remaining: 0 });
+});
+
+test("pruning drops expired payloads oldest first and rewrites the index", async () => {
+  await storeOmissions(ROOT, SESSION, [
+    { key: "toolu_1:output", content: "aaa" },
+    { key: "toolu_2:output", content: "bb" },
+  ]);
+  const old = await storeOmissions(ROOT, SESSION, [{ key: "toolu_3:output", content: "c" }]);
+  expect(old.ok).toBe(true);
+
+  // Everything is freshly written, so nothing expires at the current time.
+  const fresh = await pruneOmissions(
+    ROOT,
+    SESSION,
+    { maxAgeMs: 60 * 1000, maxPayloads: null, maxBytes: null },
+    Date.now(),
+  );
+  expect(fresh.ok && fresh.value.remaining).toBe(3);
+
+  // Far in the future the same payloads are all expired.
+  const expired = await pruneOmissions(
+    ROOT,
+    SESSION,
+    { maxAgeMs: 60 * 1000, maxPayloads: null, maxBytes: null },
+    Date.now() + 3600 * 1000,
+  );
+  expect(expired.ok).toBe(true);
+  if (!expired.ok) {
+    return;
+  }
+  expect(expired.value.removed).toEqual(["omitted-001", "omitted-002", "omitted-003"]);
+  expect(expired.value.freedBytes).toBe(6);
+  expect(expired.value.remaining).toBe(0);
+  expect(fs.existsSync(`${ROOT}/${SESSION}/omitted-001`)).toBe(false);
+  expect(fs.readFileSync(`${ROOT}/${SESSION}/index.jsonl`, "utf8")).toBe("");
+});
+
+test("pruning enforces the payload count cap on the oldest entries", async () => {
+  await storeOmissions(ROOT, SESSION, [
+    { key: "toolu_1:output", content: "a" },
+    { key: "toolu_2:output", content: "b" },
+    { key: "toolu_3:output", content: "c" },
+  ]);
+
+  const result = await pruneOmissions(
+    ROOT,
+    SESSION,
+    { maxAgeMs: null, maxPayloads: 2, maxBytes: null },
+    Date.now(),
+  );
+  expect(result.ok).toBe(true);
+  if (!result.ok) {
+    return;
+  }
+  expect(result.value.removed).toEqual(["omitted-001"]);
+  expect(result.value.remaining).toBe(2);
+  expect(fs.existsSync(`${ROOT}/${SESSION}/omitted-001`)).toBe(false);
+  expect(fs.existsSync(`${ROOT}/${SESSION}/omitted-003`)).toBe(true);
+});
+
+test("pruning enforces the byte cap keeping the newest payloads", async () => {
+  await storeOmissions(ROOT, SESSION, [
+    { key: "toolu_1:output", content: "aaaa" },
+    { key: "toolu_2:output", content: "bb" },
+  ]);
+
+  const result = await pruneOmissions(
+    ROOT,
+    SESSION,
+    { maxAgeMs: null, maxPayloads: null, maxBytes: 3 },
+    Date.now(),
+  );
+  expect(result.ok).toBe(true);
+  if (!result.ok) {
+    return;
+  }
+  expect(result.value.removed).toEqual(["omitted-001"]);
+  expect(result.value.freedBytes).toBe(4);
+  expect(result.value.remaining).toBe(1);
+});
+
+test("pruning drops index entries whose payload files are already gone", async () => {
+  await storeOmissions(ROOT, SESSION, [{ key: "toolu_1:output", content: "a" }]);
+  fs.unlinkSync(`${ROOT}/${SESSION}/omitted-001`);
+
+  // A sized sweep stats payloads and heals the dangling index entry; a
+  // count-only sweep skips stats and leaves it for the next sized run.
+  const result = await pruneOmissions(
+    ROOT,
+    SESSION,
+    { maxAgeMs: null, maxPayloads: 10, maxBytes: 1024 },
+    Date.now(),
+  );
+  expect(result.ok).toBe(true);
+  if (!result.ok) {
+    return;
+  }
+  expect(result.value.removed).toEqual(["omitted-001"]);
+  expect(result.value.remaining).toBe(0);
+});
+
+test("pruning with an all-null policy changes nothing", async () => {
+  await storeOmissions(ROOT, SESSION, [{ key: "toolu_1:output", content: "a" }]);
+
+  const result = await pruneOmissions(
+    ROOT,
+    SESSION,
+    { maxAgeMs: null, maxPayloads: null, maxBytes: null },
+    Date.now(),
+  );
+  expect(result.ok).toBe(true);
+  if (!result.ok) {
+    return;
+  }
+  expect(result.value).toEqual({ removed: [], freedBytes: 0, remaining: 1 });
+});
+
+test("pruning rejects an unsafe session", async () => {
+  const result = await pruneOmissions(
+    ROOT,
+    "../escape",
+    { maxAgeMs: 1, maxPayloads: 1, maxBytes: 1 },
+    Date.now(),
+  );
 
   expect(result.ok).toBe(false);
 });

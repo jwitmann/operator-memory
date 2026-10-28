@@ -1,4 +1,4 @@
-import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import { failure, hasNodeErrorCode, type Result, success } from "../utils.ts";
@@ -158,6 +158,143 @@ export async function listOmissions(
     return failure({ path: join(root, sessionID), cause: new Error("Unsafe path segment") });
   }
   return readIndex(join(root, sessionID));
+}
+
+// Default retention for one session's omission store. A BIG.txt-class
+// omission runs ~50 KB, so 200 payloads stay near 10 MiB with 32 MiB of
+// headroom for large-output sessions; a month keeps recovery useful without
+// growing forever. The adapter enforces the count cap on every store and
+// exposes the full policy through the operator:prune tool.
+export const DEFAULT_RETENTION = {
+  maxAgeMs: 30 * 24 * 60 * 60 * 1000,
+  maxPayloads: 200,
+  maxBytes: 32 * 1024 * 1024,
+};
+
+// Retention policy for one prune run. Null dimensions are skipped, so a
+// count-only sweep needs no payload stats and an age-only sweep needs no
+// size accounting. All bounds prefer the newest entries: the index is
+// append-only, so later lines are newer payloads.
+export type RetentionPolicy = {
+  readonly maxAgeMs: number | null;
+  readonly maxPayloads: number | null;
+  readonly maxBytes: number | null;
+};
+
+export type PruneResult = {
+  // Content IDs removed in this run, oldest first.
+  readonly removed: readonly string[];
+  readonly freedBytes: number;
+  readonly remaining: number;
+};
+
+// Removes expired and over-cap payloads for one session, then rewrites the
+// index without them. Payload writes precede the index append, so a crash
+// between them can only leave unindexed payload files (ignored, never
+// served). Later deletion can still leave index entries pointing at missing
+// files; this sweep drops those dangling entries.
+export async function pruneOmissions(
+  root: string,
+  sessionID: string,
+  policy: RetentionPolicy,
+  now: number,
+): Promise<Result<PruneResult, OmissionStoreError>> {
+  const sessionRoot = join(root, sessionID);
+  if (!isSafePathSegment(sessionID)) {
+    return failure({ path: sessionRoot, cause: new Error("Unsafe path segment") });
+  }
+
+  const entriesResult = await readIndex(sessionRoot);
+  if (!entriesResult.ok) {
+    return entriesResult;
+  }
+  if (entriesResult.value.length === 0) {
+    return success({ removed: [], freedBytes: 0, remaining: 0 });
+  }
+
+  // Index entries whose payload files are already gone are always dropped
+  // on sweeps that gather stats; count-only sweeps skip stats and leave them
+  // for the next sized run.
+  const drop = new Set<string>();
+  const stats = new Map<string, { size: number; ageMs: number }>();
+  const needsStats = policy.maxAgeMs !== null || policy.maxBytes !== null;
+  if (needsStats) {
+    for (const entry of entriesResult.value) {
+      try {
+        const info = await stat(join(sessionRoot, entry.id));
+        stats.set(entry.id, { size: info.size, ageMs: now - info.mtimeMs });
+      } catch (cause) {
+        if (!hasNodeErrorCode(cause, "ENOENT")) {
+          return failure({ path: join(sessionRoot, entry.id), cause });
+        }
+        // Already gone on disk: drop the dangling index entry below.
+        drop.add(entry.id);
+      }
+    }
+  }
+
+  if (policy.maxAgeMs !== null) {
+    const maxAgeMs = policy.maxAgeMs;
+    for (const entry of entriesResult.value) {
+      const info = stats.get(entry.id);
+      if (info === undefined || info.ageMs > maxAgeMs) {
+        drop.add(entry.id);
+      }
+    }
+  }
+
+  const survivors = () => entriesResult.value.filter(entry => !drop.has(entry.id));
+  if (policy.maxPayloads !== null) {
+    const over = survivors();
+    for (const entry of over.slice(0, Math.max(0, over.length - policy.maxPayloads))) {
+      drop.add(entry.id);
+    }
+  }
+  if (policy.maxBytes !== null) {
+    let bytes = 0;
+    for (const entry of [...survivors()].reverse()) {
+      bytes += stats.get(entry.id)?.size ?? 0;
+    }
+    for (const entry of survivors()) {
+      if (bytes <= policy.maxBytes) {
+        break;
+      }
+      bytes -= stats.get(entry.id)?.size ?? 0;
+      drop.add(entry.id);
+    }
+  }
+
+  let freedBytes = 0;
+  for (const entry of entriesResult.value) {
+    if (!drop.has(entry.id)) {
+      continue;
+    }
+    freedBytes += stats.get(entry.id)?.size ?? 0;
+    try {
+      await unlink(join(sessionRoot, entry.id));
+    } catch (cause) {
+      if (!hasNodeErrorCode(cause, "ENOENT")) {
+        return failure({ path: join(sessionRoot, entry.id), cause });
+      }
+    }
+  }
+
+  const remaining = entriesResult.value.filter(entry => !drop.has(entry.id));
+  try {
+    await writeFile(
+      indexPath(sessionRoot),
+      remaining.map(entry => `${JSON.stringify(entry)}\n`).join(""),
+      "utf8",
+    );
+  } catch (cause) {
+    return failure({ path: indexPath(sessionRoot), cause });
+  }
+
+  return success({
+    removed: entriesResult.value.filter(entry => drop.has(entry.id)).map(entry => entry.id),
+    freedBytes,
+    remaining: remaining.length,
+  });
 }
 
 async function readIndex(
