@@ -55,6 +55,17 @@ function bulkyMessages() {
   ];
 }
 
+// Rewrites the catalog with a forced mtime bump: fingerprints read mtime at
+// millisecond granularity, so a same-tick rewrite would leave the
+// fingerprint unmoved and the refresh would (correctly) stay quiet,
+// making move-asserting tests timing-flaky.
+function rewriteCatalog(text: string): void {
+  const path = `${PROJECT}/.operator/catalog.md`;
+  fs.writeFileSync(path, text);
+  const later = new Date(Date.now() + 1000);
+  fs.utimesSync(path, later, later);
+}
+
 test("stays inert when disabled", async () => {
   seedBrain();
   const runtime = createContextRuntime();
@@ -99,7 +110,7 @@ test("refreshes on Brain change with a cold cache and records a receipt", async 
   const cache = new Map();
   await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache, bulkyMessages());
 
-  fs.writeFileSync(`${PROJECT}/.operator/catalog.md`, "# catalog with FRESHMARKER");
+  rewriteCatalog("# catalog with FRESHMARKER");
 
   const outcome = await maybeRefreshPreamble(
     deps(),
@@ -182,7 +193,7 @@ test("post-compaction pending bypasses the floor but not freshness", async () =>
   expect(unchanged).toEqual({ refreshed: false, failed: false });
   expect(sessionRuntime(runtime, SESSION).preambleRefreshPending).toBe(false);
 
-  fs.writeFileSync(`${PROJECT}/.operator/catalog.md`, "# changed after compact");
+  rewriteCatalog("# changed after compact");
   sessionRuntime(runtime, SESSION).preambleRefreshPending = true;
   const outcome = await maybeRefreshPreamble(
     deps(),
