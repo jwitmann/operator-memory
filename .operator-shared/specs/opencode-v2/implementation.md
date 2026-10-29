@@ -69,6 +69,8 @@ All keys live under `operator.contextManagement` in the plugin entry's `options`
 
 Trim replaces bulky completed tool input and output with omission notices and stores the originals on disk, recoverable in the same session through the `operator:read_omitted` tool. Pending, running, and errored tool calls, user messages, and the injected preamble are never trimmed. Every trim and compaction appends one JSON line to `~/.operator/state/context-log/<sessionID>.log`; failures and refusals are recorded in the same file, never silent.
 
+Omitted payloads are retained per session up to 200 payloads, 32 MiB, and 30 days, with the count cap enforced automatically on every store; the `operator:prune` tool applies the same policy on demand. Receipts are never pruned. Both locations live under `~/.operator/state/`, operational state outside the Brain partitions that is safe to delete when a session is done with.
+
 ## Differences From Reference
 
 Pathway selections: bundled-core resolution, transform injection as an appended system text part, slash commands, status UI, and harness-native updates. All are accepted reference pathways; there are no behavioral deviations. The appended system part versus a prepended synthetic user message is a documented placement choice within the transform pathway.
