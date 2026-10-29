@@ -18,6 +18,7 @@ import {
   reportReceiptFailureOnce,
   resolveWindowTokens,
   sessionRuntime,
+  shouldSuppressCompactionRequest,
   type ContextManagementDeps,
   type ContextRuntime,
 } from "./runtime.ts";
@@ -106,9 +107,16 @@ export function registerContextHook(
     }
 
     const estimateAfterTrim = estimatedTokens - trimResult.removedTokens;
-    if (exceedsThresholds(estimateAfterTrim, windowTokens ?? 0, config)) {
-      deps.requestCompaction(sessionID, fired);
+    if (!exceedsThresholds(estimateAfterTrim, windowTokens ?? 0, config)) {
+      return;
     }
+    if (shouldSuppressCompactionRequest(session, estimatedTokens, windowTokens ?? 0, Date.now())) {
+      // The host already failed a compaction at this estimate: the trim
+      // above still applies and stays receipted, but re-requesting would
+      // add a second driver to its retry loop.
+      return;
+    }
+    deps.requestCompaction(sessionID, fired);
   });
 }
 
