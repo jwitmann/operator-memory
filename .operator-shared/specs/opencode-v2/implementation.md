@@ -71,6 +71,22 @@ Trim replaces bulky completed tool input and output with omission notices and st
 
 Omitted payloads are retained per session up to 200 payloads, 32 MiB, and 30 days, with the count cap enforced automatically on every store; the `operator:prune` tool applies the same policy on demand. Receipts are never pruned. Both locations live under `~/.operator/state/`, operational state outside the Brain partitions that is safe to delete when a session is done with.
 
+## Preamble Refresh
+
+Opt-in mid-session preamble re-render when the Brain changes on disk. Disabled by default and independent from context management: preamble rendering is Brain behavior, not context reduction. Its own switch lives under `operator.preambleRefresh`:
+
+```jsonc
+{
+  "operator": {
+    "preambleRefresh": {
+      "enabled": true
+    }
+  }
+}
+```
+
+A fingerprint move (per-partition instructions, catalogs, and index files) re-renders from current disk state only when the provider's prompt cache is cold — rewriting the request prefix invalidates the cache, so a hot-cache refresh burns tokens for nothing. A moved fingerprint with a hot cache waits for the next cold request. The first request after a compaction refreshes unconditionally: compaction already flushed the cache. Trim never touches injected system parts, and a refresh never triggers trim or compaction evaluation by itself. Every refresh appends one JSON line to the session context log; re-render failures keep the old preamble and surface through the existing error channel.
+
 ## Differences From Reference
 
 Pathway selections: bundled-core resolution, transform injection as an appended system text part, slash commands, status UI, and harness-native updates. All are accepted reference pathways; there are no behavioral deviations. The appended system part versus a prepended synthetic user message is a documented placement choice within the transform pathway.
