@@ -51,6 +51,17 @@ function completedMessages(count: number): RequestMessage[] {
   ];
 }
 
+// Rewrites the catalog with a forced mtime bump: fingerprints read mtime at
+// millisecond granularity, so a same-tick rewrite would leave the
+// fingerprint unmoved and the reset-asserting test would (incorrectly for
+// its purpose) see a threshold crossing instead of a quiet reset.
+function rewriteCatalog(text: string): void {
+  const path = `${PROJECT}/.operator/catalog.md`;
+  fs.writeFileSync(path, text);
+  const later = new Date(Date.now() + 1000);
+  fs.utimesSync(path, later, later);
+}
+
 function deps(overrides: Record<string, unknown> = {}) {
   return {
     config: { enabled: true, toolCallThreshold: 25 },
@@ -173,7 +184,7 @@ test("a Brain change resets the baseline without reminding", async () => {
   await maybeAppendBrainUpdateReminder(deps(), runtime, SESSION, completedMessages(0), "preamble");
   await maybeAppendBrainUpdateReminder(deps(), runtime, SESSION, completedMessages(25), "preamble");
 
-  fs.writeFileSync(`${PROJECT}/.operator/catalog.md`, "# changed");
+  rewriteCatalog("# changed");
 
   const reset = await maybeAppendBrainUpdateReminder(
     deps(),
