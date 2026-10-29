@@ -87,6 +87,23 @@ Opt-in mid-session preamble re-render when the Brain changes on disk. Disabled b
 
 A fingerprint move (per-partition instructions, catalogs, and index files) re-renders from current disk state only when the provider's prompt cache is cold — rewriting the request prefix invalidates the cache, so a hot-cache refresh burns tokens for nothing. A moved fingerprint with a hot cache waits for the next cold request. The first request after a compaction refreshes unconditionally: compaction already flushed the cache. Trim never touches injected system parts, and a refresh never triggers trim or compaction evaluation by itself. Every refresh appends one JSON line to the session context log; re-render failures keep the old preamble and surface through the existing error channel.
 
+## Brain Updates
+
+Opt-in nudge to record durable knowledge, never an automatic Brain writer. Disabled by default with its own switch under `operator.brainUpdates`:
+
+```jsonc
+{
+  "operator": {
+    "brainUpdates": {
+      "enabled": true,
+      "toolCallThreshold": 25
+    }
+  }
+}
+```
+
+The adapter counts distinct completed tool calls since the last Brain fingerprint move — error results count, pending or unpaired calls and Operator's own helper calls do not — and appends one static reminder on the first request crossing `toolCallThreshold` (a positive integer, 25 by default). The reminder names no content and requires no edit: when nothing durable emerged, the agent makes none. A Brain change resets the baseline without reminding, and later crossings stay quiet until the Brain moves again. The feature stays inert when disabled, Brainless, stale, or when the fingerprint cannot be read.
+
 ## Differences From Reference
 
 Pathway selections: bundled-core resolution, transform injection as an appended system text part, slash commands, status UI, and harness-native updates. All are accepted reference pathways; there are no behavioral deviations. The appended system part versus a prepended synthetic user message is a documented placement choice within the transform pathway.
