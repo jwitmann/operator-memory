@@ -456,3 +456,99 @@ test("surfaces a failed refusal receipt instead of failing silently", async () =
   expect(reportReceiptFailure).toHaveBeenCalledTimes(1);
   expect(reportReceiptFailure).toHaveBeenCalledWith(SESSION, "refusal");
 });
+
+function failedCompactionEvent(sessionID: string) {
+  return { type: "session.compaction.failed", data: { sessionID } };
+}
+
+function endedCompactionEvent(sessionID: string) {
+  return { type: "session.compaction.ended", data: { sessionID } };
+}
+
+test("ignores a failed compaction when no request was observed", async () => {
+  const runtime = createContextRuntime();
+  const requestCompaction = vi.fn();
+  const deps = {
+    config: CONFIG,
+    stateDirectory: STATE,
+    isBrainAvailable: () => true,
+    requestCompaction,
+  };
+
+  // A host-initiated failure on a fresh session stamps nothing: there is no
+  // estimate we would re-request on, so the first legitimate request must
+  // not burn the cooldown window.
+  await dispatchEvent(failedCompactionEvent(SESSION), deps, runtime);
+  expect(sessionRuntime(runtime, SESSION).lastCompactionFailure).toBeNull();
+
+  observe(runtime, 100000);
+  await dispatchEvent(succeededEvent(SESSION), deps, runtime);
+
+  expect(requestCompaction).toHaveBeenCalledTimes(1);
+});
+
+test("suppresses a repeat request after the host reports a failed compaction", async () => {
+  const runtime = createContextRuntime();
+  observe(runtime, 100000);
+  const requestCompaction = vi.fn();
+  const deps = {
+    config: CONFIG,
+    stateDirectory: STATE,
+    isBrainAvailable: () => true,
+    requestCompaction,
+  };
+
+  await dispatchEvent(succeededEvent(SESSION), deps, runtime);
+  expect(requestCompaction).toHaveBeenCalledTimes(1);
+
+  // The host attempted our compaction and failed before the compaction hook
+  // ran (nothing to compact): re-requesting on the same estimate would add a
+  // second driver to the host's own retry loop.
+  await dispatchEvent(failedCompactionEvent(SESSION), deps, runtime);
+  observe(runtime, 200000);
+  await dispatchEvent(succeededEvent(SESSION), deps, runtime);
+
+  expect(requestCompaction).toHaveBeenCalledTimes(1);
+});
+
+test("requests again after a successful compaction clears the failure", async () => {
+  const runtime = createContextRuntime();
+  observe(runtime, 100000);
+  const requestCompaction = vi.fn();
+  const deps = {
+    config: CONFIG,
+    stateDirectory: STATE,
+    isBrainAvailable: () => true,
+    requestCompaction,
+  };
+
+  await dispatchEvent(succeededEvent(SESSION), deps, runtime);
+  await dispatchEvent(failedCompactionEvent(SESSION), deps, runtime);
+  await dispatchEvent(endedCompactionEvent(SESSION), deps, runtime);
+  observe(runtime, 200000);
+  await dispatchEvent(succeededEvent(SESSION), deps, runtime);
+
+  expect(requestCompaction).toHaveBeenCalledTimes(2);
+});
+
+test("skips a second request while one is already outstanding", () => {
+  const compact = vi.fn(async (_input: unknown) => ({}));
+  const context = { session: { compact } } as never;
+  const runtime = createContextRuntime();
+  runtime.pendingCauses.set(SESSION, { cause: "task-complete", at: Date.now() });
+
+  requestSessionCompaction(context, runtime, SESSION, "task-complete");
+
+  expect(compact).not.toHaveBeenCalled();
+});
+
+test("requests again after the outstanding entry expires", () => {
+  const compact = vi.fn(async (_input: unknown) => ({}));
+  const context = { session: { compact } } as never;
+  const runtime = createContextRuntime();
+  runtime.pendingCauses.set(SESSION, { cause: "task-complete", at: 0 });
+
+  requestSessionCompaction(context, runtime, SESSION, "task-complete");
+
+  expect(compact).toHaveBeenCalledWith({ sessionID: SESSION });
+});

@@ -226,3 +226,11 @@ test("a stale generation never consumes the reporting budget", () => {
   reportReceiptFailureOnce(runtime, { reportReceiptFailure }, "ses_test", "trim");
   expect(reportReceiptFailure).toHaveBeenCalledTimes(1);
 });
+
+test("shared runtime is pinned to globalThis so a module reload keeps it", () => {
+  const runtime = sharedContextRuntime();
+
+  expect(
+    (globalThis as unknown as { __operatorContextRuntime: unknown }).__operatorContextRuntime,
+  ).toBe(runtime);
+});

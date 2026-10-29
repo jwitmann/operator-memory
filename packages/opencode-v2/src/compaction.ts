@@ -53,6 +53,11 @@ export function registerCompactionHook(
       return;
     }
     const session = sessionRuntime(runtime, sessionID);
+    // The host honored a compaction attempt (ours or its own): the failure
+    // backoff served its purpose, and a later failure re-arms it from
+    // scratch. The ended event clears independently for attempts that never
+    // reach this hook.
+    session.lastCompactionFailure = null;
     if (deps.refreshEnabled) {
       // Compaction flushed the cache, so the next preamble check refreshes
       // on a fingerprint move without the cold-cache and floor gates.
