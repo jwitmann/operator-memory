@@ -4,7 +4,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 
 import type { ContextManagementConfig } from "../src/context-config.ts";
 import { DEFAULT_BRAIN_PATHS, registerCompactionHook } from "../src/compaction.ts";
-import { createContextRuntime } from "../src/runtime.ts";
+import { createContextRuntime, sessionRuntime } from "../src/runtime.ts";
 
 vi.mock("node:fs/promises", async () => {
   const { fs: memoryFileSystem } = await import("memfs");
@@ -136,12 +136,27 @@ test("labels a stale recorded cause manual instead of reusing it", async () => {
 
   await hook(compactionEvent(1));
 
+  // A requested-but-never-executed compaction must not label a far-future
+  // host-initiated compaction with its stale trigger.
   const receipts = await readReceipts(`${STATE}/context-log`, SESSION);
   expect(receipts.ok ? receipts.value[0] : null).toMatchObject({
     kind: "compact",
     trigger: "manual",
   });
   expect(runtime.pendingCauses.has(SESSION)).toBe(false);
+});
+
+test("clears the failure backoff when a compaction attempt runs", async () => {
+  const { context, sessionHook } = hookFake();
+  const runtime = createContextRuntime();
+  sessionRuntime(runtime, SESSION).lastCompactionFailure = { at: Date.now(), estimate: 100000 };
+  registerCompactionHook(context, DEPS, runtime);
+  const hook = sessionHook.mock.calls[0]?.[1] as (event: TestEvent) => Promise<void>;
+
+  await hook(compactionEvent(1));
+
+  // The attempt was honored: a later failure re-arms the backoff from scratch.
+  expect(sessionRuntime(runtime, SESSION).lastCompactionFailure).toBeNull();
 });
 
 test("leaves the request alone and refuses when the Brain is unavailable", async () => {

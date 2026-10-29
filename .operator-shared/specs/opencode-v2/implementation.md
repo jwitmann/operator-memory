@@ -71,6 +71,8 @@ Trim replaces bulky completed tool input and output with omission notices and st
 
 Omitted payloads are retained per session up to 200 payloads, 32 MiB, and 30 days, with the count cap enforced automatically on every store; the `operator:prune` tool applies the same policy on demand. Receipts are never pruned. Both locations live under `~/.operator/state/`, operational state outside the Brain partitions that is safe to delete when a session is done with.
 
+A host-reported failed compaction (`session.compaction.failed`) arms a per-session backoff: new requests are suppressed for ten minutes, then only real growth past the failure-point estimate re-arms. A compaction attempt running (or `session.compaction.ended`) clears the backoff. Requests are also single-flight: a second admission while one request is outstanding with an unknown outcome is skipped. The shared runtime lives on `globalThis` so a host bundle re-import on config change keeps dedup and backoff state instead of refiring. None of this stops a host-side retry loop already in progress — that needs the server stopped and the stuck inbox row deleted — it only stops our plugin from feeding it.
+
 ## Differences From Reference
 
 Pathway selections: bundled-core resolution, transform injection as an appended system text part, slash commands, status UI, and harness-native updates. All are accepted reference pathways; there are no behavioral deviations. The appended system part versus a prepended synthetic user message is a documented placement choice within the transform pathway.

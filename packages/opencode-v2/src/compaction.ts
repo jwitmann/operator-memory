@@ -50,6 +50,11 @@ export function registerCompactionHook(
       return;
     }
     const session = sessionRuntime(runtime, sessionID);
+    // The host honored a compaction attempt (ours or its own): the failure
+    // backoff served its purpose, and a later failure re-arms it from
+    // scratch. The ended event clears independently for attempts that never
+    // reach this hook.
+    session.lastCompactionFailure = null;
 
     const estimatedTokens = estimateContextTokens(
       session.estimator,
