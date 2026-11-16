@@ -29,18 +29,29 @@ export async function maybeAppendBrainUpdateReminder(
   runtime: DshRuntime,
   sessionId: string,
   content: string,
+  precomputedFingerprint?: string | null,
 ): Promise<string> {
   if (!deps.config.enabled || isDshStale(deps) || !deps.isBrainAvailable(sessionId)) {
     return content;
   }
 
   const session = sessionRuntime(runtime, sessionId);
-  const fingerprinted = await fingerprintPreamble(deps.projectDirectory, deps.homeDirectory);
-  if (!fingerprinted.ok) return content;
+  // Shared-fingerprint fast path (see maybeRefreshPreamble): `null` means
+  // the shared computation failed upstream — stay quiet without re-statting.
+  // `undefined` preserves standalone use (compute internally).
+  let fingerprint: string;
+  if (precomputedFingerprint !== undefined) {
+    if (precomputedFingerprint === null) return content;
+    fingerprint = precomputedFingerprint;
+  } else {
+    const fingerprinted = await fingerprintPreamble(deps.projectDirectory, deps.homeDirectory);
+    if (!fingerprinted.ok) return content;
+    fingerprint = fingerprinted.value;
+  }
 
   const decision = evaluateBrainUpdateActivity(
     session.brainUpdateActivity,
-    fingerprinted.value,
+    fingerprint,
     countSessionCompletedCalls(session),
     deps.config.toolCallThreshold,
   );

@@ -42,14 +42,25 @@ export async function maybeRefreshPreamble(
   projectDirectory: string,
   homeDirectory: string,
   reload: () => Promise<{ ok: boolean; content: string }>,
+  precomputedFingerprint?: string | null,
 ): Promise<RefreshOutcome> {
   const idle: RefreshOutcome = { refreshed: false, failed: false };
   if (!deps.config.enabled || isDshStale(deps) || !deps.isBrainAvailable(sessionId)) return idle;
   const session = sessionRuntime(runtime, sessionId);
 
-  const fingerprinted = await fingerprintPreamble(projectDirectory, homeDirectory);
-  if (!fingerprinted.ok) return idle;
-  const fingerprint = fingerprinted.value;
+  // Shared-fingerprint fast path: the assemble hook computes one
+  // fingerprint per cycle and passes it down. `null` means the shared
+  // computation failed upstream — stay idle without re-statting.
+  // `undefined` preserves standalone use (compute internally).
+  let fingerprint: string;
+  if (precomputedFingerprint !== undefined) {
+    if (precomputedFingerprint === null) return idle;
+    fingerprint = precomputedFingerprint;
+  } else {
+    const fingerprinted = await fingerprintPreamble(projectDirectory, homeDirectory);
+    if (!fingerprinted.ok) return idle;
+    fingerprint = fingerprinted.value;
+  }
 
   const postCompaction = session.preambleRefreshPending;
   session.preambleRefreshPending = false;

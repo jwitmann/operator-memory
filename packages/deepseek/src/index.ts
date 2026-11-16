@@ -100,18 +100,28 @@ export function apply(context: Context, rawConfig?: unknown): void {
 
     if (sessionId !== null) {
       brainAvailable.set(sessionId, rendered.available);
-      // Seed the refresh fingerprint baseline from the first render so a
-      // later move is meaningful. Only when a consumer needs it.
-      if (config.preambleRefresh.enabled || config.brainUpdates.enabled) {
+    }
+
+    // One fingerprint per assemble, shared by the refresh seed below plus
+    // both consumers. Without this the cycle pays up to three full
+    // fingerprint passes (≈60–80 sequential stats each). `null` means the
+    // shared computation failed — both consumers stay idle on it without
+    // re-statting. Computed whenever either consumer is enabled (even when
+    // the Brain is unavailable) so the refresh baseline seeds exactly as
+    // before; the consumers still gate on availability themselves.
+    let sharedFingerprint: string | null | undefined;
+    if (sessionId !== null && (config.preambleRefresh.enabled || config.brainUpdates.enabled)) {
+      const fingerprinted = await fingerprintPreamble(projectDirectory, homedir()).catch(
+        () => null,
+      );
+      if (fingerprinted?.ok) {
+        sharedFingerprint = fingerprinted.value;
         const entry = sessionRuntime(runtime, sessionId);
         if (entry.preambleFingerprint === null) {
-          const fingerprinted = await fingerprintPreamble(projectDirectory, homedir()).catch(
-            () => null,
-          );
-          if (fingerprinted?.ok) {
-            entry.preambleFingerprint = fingerprinted.value;
-          }
+          entry.preambleFingerprint = fingerprinted.value;
         }
+      } else {
+        sharedFingerprint = null;
       }
     }
 
@@ -133,6 +143,7 @@ export function apply(context: Context, rawConfig?: unknown): void {
             return { ok: false, content: "" };
           }
         },
+        sharedFingerprint,
       ).catch((): { refreshed: false; failed: true } => ({ refreshed: false, failed: true }));
       if (outcome.refreshed) text = outcome.content;
     }
@@ -148,6 +159,7 @@ export function apply(context: Context, rawConfig?: unknown): void {
         runtime,
         sessionId,
         text,
+        sharedFingerprint,
       ).catch(() => text);
     }
 
