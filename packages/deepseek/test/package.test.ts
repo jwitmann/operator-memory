@@ -195,16 +195,28 @@ describe("DeepSeek adapter package", () => {
     expect(assembly.sections[0]?.text).toBe("canonical diagnostic");
   });
 
-  test("blocks prompt assembly after an unexpected render failure", async () => {
+  test("skips the section after an unexpected render failure without poisoning later renders", async () => {
     const failure = new Error("read failed");
-    core.loadMemorySnapshot.mockRejectedValue(failure);
+    core.loadMemorySnapshot.mockRejectedValueOnce(failure);
     const agent = createAgent("/project");
     const runtime = createRuntime();
     apply(runtime.context);
 
-    await expect(runtime.assemble(agent)).rejects.toThrow(failure);
-    await expect(runtime.assemble(agent)).rejects.toThrow(failure);
-    expect(core.loadMemorySnapshot).toHaveBeenCalledOnce();
+    // One transient failure skips the section instead of rejecting into the
+    // host, and the rejection is never cached.
+    const skipped = await runtime.assemble(agent);
+    expect(skipped.sections).toEqual([]);
+
+    // A later render for the same agent recovers.
+    core.loadMemorySnapshot.mockResolvedValue({});
+    core.renderPreamble.mockReturnValue({ loaded: true, content: "recovered" });
+    const recovered = await runtime.assemble(agent);
+    expect(recovered.sections[0]).toEqual({
+      name: "operator:memory",
+      text: "recovered",
+      interpolate: false,
+    });
+    expect(core.loadMemorySnapshot).toHaveBeenCalledTimes(2);
   });
 });
 

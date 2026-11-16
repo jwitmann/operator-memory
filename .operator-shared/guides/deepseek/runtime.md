@@ -1,6 +1,6 @@
 # DeepSeek Harness Runtime and Preamble Seams
 
-Last Updated: October 1, 2026
+Last Updated: November 16, 2026
 
 Read with [`overview.md`](overview.md). Sources below are relative to `<reference>/deepseek-harness/`.
 
@@ -27,6 +27,10 @@ Operator prefers one byte-stable render per session applied outside persisted hi
 In-process spawn creates a new session with inherited cwd and a fresh scope, not inherited parent registrations or transcript. In-process fork seeds only completed parent turns, including any logged system messages; it still creates a new scoped world. A global plugin contribution can reach local children when that plugin is composed; a per-agent cache needs explicit child identity handling. Continuable children can cold-resume. ACP, SDK, Codex, and Claude Code providers run other processes/runtimes and need independent Operator installation or an explicitly verified handoff; do not promise inheritance through the parent plugin.
 
 Sources: `packages/subagent/subagent/README.md`, `subagent-spawn-in-process/README.md`, `subagent-fork-in-process/README.md`, `subagent-in-process-driver/README.md`.
+
+## Service Resolution From Host Plugins
+
+Direct service property access (`ctx.tokenMeter`) throws `cannot get property "..." without inject` unless the plugin declares the service in its `inject` array, which makes it required: profiles without the service fail the plugin entry. `ctx.reflect.get(name)` does not throw but cannot see cross-layer services from a bundle-plugin fiber (verified live: returns `undefined` for `tokenMeter` where the backend resolves it). The host-blessed read for optional services is a scoped `context.inject(["service"], scoped => ...)` registration: the callback runs only where the services exist, so minimal profiles keep working without them. Verified live November 16, 2026.
 
 ## Existing Instruction Loader
 

@@ -1,0 +1,247 @@
+import { appendReceipt } from "@aerovato/operator-core/context/receipts";
+import { evaluateTrigger } from "@aerovato/operator-core/context/triggers";
+import type { Context } from "@deepseek-ai/cordis";
+import { join } from "node:path";
+
+import { type ContextManagementConfig, toTriggerConfig } from "./config.ts";
+import {
+  type DshDeps,
+  type DshRuntime,
+  ensureRefusalReceipt,
+  ensureSessionHydrated,
+  isDshStale,
+  PENDING_CAUSE_TTL_MS,
+  reportReceiptFailureOnce,
+  sessionRuntime,
+  shouldSuppressCompactionRequest,
+} from "./runtime.ts";
+
+// Single observer on `session/event` (post-commit feed). DSH has no stream
+// to die, so unlike the opencode port there is no resubscribe bound:
+// teardown is effect disposal. Failures are contained per event; the
+// observer never throws into the host.
+//
+// Observed (all via the durable log, so exactly what landed in history):
+// - tool/call + tool/result join by callId for the brain-update counter.
+// - assistant/message usage for the refresh cold-cache check.
+// - turn/end{completed} for trigger evaluation (failed/error turns never
+//   compact — parity with opencode's succeeded-only subscription).
+// - compaction/summary + compaction/end for receipts, failure backoff, and
+//   the preamble-refresh pending flag.
+
+export type TokenMeterLike = {
+  measure(session: unknown): { readonly totalTokens: number };
+  contextPressure(session: unknown): { readonly contextWindow?: number };
+};
+
+export type EventsDeps = DshDeps & {
+  readonly config: ContextManagementConfig;
+  readonly tokenMeter: TokenMeterLike;
+};
+
+export function registerSessionObservers(
+  context: Context,
+  deps: EventsDeps,
+  runtime: DshRuntime,
+): void {
+  context.on("session/event", (session: unknown, event: unknown) => {
+    void dispatchSessionEvent(session, event, deps, runtime).catch(() => undefined);
+  });
+}
+
+type SessionRef = { readonly id: string };
+
+function asSession(value: unknown): SessionRef | null {
+  if (typeof value !== "object" || value === null || !("id" in value)) return null;
+  const id = (value as Record<string, unknown>).id;
+  return typeof id === "string" ? { id } : null;
+}
+
+type EventRef = { readonly type: string; readonly data: Record<string, unknown> };
+
+function asEvent(value: unknown): EventRef | null {
+  if (typeof value !== "object" || value === null || !("type" in value)) return null;
+  const type = (value as Record<string, unknown>).type;
+  if (typeof type !== "string") return null;
+  const raw = (value as Record<string, unknown>).data;
+  const data = typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>) : {};
+  return { type, data };
+}
+
+// Exported for tests. Unknown shapes (future event kinds, malformed
+// payloads) are ignored, never fatal.
+export async function dispatchSessionEvent(
+  rawSession: unknown,
+  rawEvent: unknown,
+  deps: EventsDeps,
+  runtime: DshRuntime,
+): Promise<void> {
+  if (isDshStale(deps)) return;
+  const session = asSession(rawSession);
+  const event = asEvent(rawEvent);
+  if (session === null || event === null) return;
+
+  switch (event.type) {
+    case "tool/call": {
+      const callId = typeof event.data.callId === "string" ? (event.data.callId as string) : null;
+      const name = typeof event.data.name === "string" ? (event.data.name as string) : null;
+      if (callId === null || name === null) return;
+      sessionRuntime(runtime, session.id).pendingCallNames.set(callId, name);
+      return;
+    }
+    case "tool/result": {
+      const message = event.data.message;
+      const toolCallId =
+        typeof message === "object"
+        && message !== null
+        && "toolCallId" in message
+        && typeof (message as Record<string, unknown>).toolCallId === "string"
+          ? ((message as Record<string, unknown>).toolCallId as string)
+          : null;
+      if (toolCallId === null) return;
+      sessionRuntime(runtime, session.id).completedCallIds.add(toolCallId);
+      return;
+    }
+    case "assistant/message": {
+      const message = event.data.message;
+      const usage =
+        typeof message === "object" && message !== null && "usage" in message
+          ? ((message as Record<string, unknown>).usage as Record<string, unknown> | undefined)
+          : undefined;
+      if (usage === undefined || usage === null || typeof usage !== "object") return;
+      const entry = sessionRuntime(runtime, session.id);
+      const cacheRead = usage.cacheReadTokens;
+      entry.lastStepCacheRead =
+        typeof cacheRead === "number" && Number.isFinite(cacheRead) ? cacheRead : 0;
+      return;
+    }
+    case "turn/end": {
+      await handleTurnEnd(session.id, rawSession, event.data, deps, runtime);
+      return;
+    }
+    case "compaction/summary": {
+      // A summary landed; the checkpoint will follow in compaction/end.
+      // Nothing to record until the bracket closes.
+      return;
+    }
+    case "compaction/end": {
+      await handleCompactionEnd(session.id, rawSession, event.data, deps, runtime).catch(
+        () => undefined,
+      );
+      return;
+    }
+    default:
+      return;
+  }
+}
+
+async function handleTurnEnd(
+  sessionId: string,
+  rawSession: unknown,
+  data: Record<string, unknown>,
+  deps: EventsDeps,
+  runtime: DshRuntime,
+): Promise<void> {
+  const reason = data.reason;
+  const kind =
+    typeof reason === "object" && reason !== null && "kind" in reason
+      ? ((reason as Record<string, unknown>).kind as unknown)
+      : null;
+  if (kind !== "completed") return;
+  if (!deps.config.enabled) return;
+
+  await ensureSessionHydrated(deps.stateDirectory, runtime, sessionId);
+  if (isDshStale(deps)) return;
+
+  if (!deps.isBrainAvailable(sessionId)) {
+    await ensureRefusalReceipt(deps.stateDirectory, runtime, sessionId, deps);
+    return;
+  }
+
+  // Host numbers are validated: one malformed reading must not poison the
+  // session's estimate or receipts for its lifetime.
+  let estimate: number;
+  let window: number | null;
+  try {
+    estimate = deps.tokenMeter.measure(rawSession).totalTokens;
+    const rawWindow = deps.tokenMeter.contextPressure(rawSession).contextWindow;
+    if (!Number.isFinite(estimate)) return;
+    window = rawWindow === undefined ? null : Number.isFinite(rawWindow) ? rawWindow : null;
+  } catch {
+    return;
+  }
+
+  const session = sessionRuntime(runtime, sessionId);
+  session.lastEstimate = estimate;
+  session.contextWindow = window;
+
+  const decision = evaluateTrigger(
+    session.triggerState,
+    "task-complete",
+    estimate,
+    window ?? 0,
+    toTriggerConfig(deps.config),
+  );
+  session.triggerState = decision.state;
+  if (decision.fire === null) return;
+  if (shouldSuppressCompactionRequest(session, estimate, window ?? 0, Date.now())) return;
+
+  // Intent only. The cause is recorded by the pre-step enforcer at the
+  // dispatch site: a stashed-but-never-enforced intent must never mislabel
+  // a later host-initiated compaction. The stash expires on read.
+  session.pendingCompaction = { cause: "task-complete", estimate, at: Date.now() };
+}
+
+async function handleCompactionEnd(
+  sessionId: string,
+  rawSession: unknown,
+  data: Record<string, unknown>,
+  deps: EventsDeps,
+  runtime: DshRuntime,
+): Promise<void> {
+  const session = sessionRuntime(runtime, sessionId);
+  const error = data.error;
+  if (typeof error === "string" && error.length > 0) {
+    if (session.lastEstimate !== null) {
+      session.lastCompactionFailure = { at: Date.now(), estimate: session.lastEstimate };
+    }
+    session.pendingCompaction = null;
+    return;
+  }
+  session.lastCompactionFailure = null;
+  session.pendingCompaction = null;
+  // The checkpoint rewrote history: refresh the preamble without gates.
+  session.preambleRefreshPending = true;
+
+  // Price the receipt off a fresh host measurement: mid-turn pressure
+  // compactions land before any turn/end evaluation, so lastEstimate may
+  // still be null here. Best-effort; a failed read keeps the prior value.
+  try {
+    const measured = deps.tokenMeter.measure(rawSession).totalTokens;
+    if (Number.isFinite(measured)) session.lastEstimate = measured;
+  } catch {
+    // Keep the prior estimate; the receipt below clamps regardless.
+  }
+
+  // Best-effort audit trail. The cause is recorded by our own pre-step
+  // enforcer; a host-initiated compaction (or a stale entry from a
+  // stashed-but-never-enforced intent past its TTL) is labeled manual.
+  if (!deps.config.enabled) return;
+  const pending = runtime.pendingCauses.get(sessionId);
+  const cause =
+    pending !== undefined && Date.now() - pending.at <= PENDING_CAUSE_TTL_MS
+      ? pending.cause
+      : "manual";
+  runtime.pendingCauses.delete(sessionId);
+  const written = await appendReceipt(join(deps.stateDirectory, "context-log"), sessionId, {
+    kind: "compact",
+    trigger: cause,
+    at: new Date().toISOString(),
+    summarized: Math.max(0, session.lastEstimate ?? 0),
+  });
+  if (!written.ok) reportReceiptFailureOnce(runtime, deps, sessionId, "compact");
+}
+
+export function reportEventStreamFailure(runtime: DshRuntime, deps: EventsDeps): void {
+  reportReceiptFailureOnce(runtime, deps, null, "event-stream");
+}
