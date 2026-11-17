@@ -251,13 +251,19 @@ export function apply(context: Context, rawConfig?: unknown): void {
   // then the command-scope capture — with the `/compact` command dispatch
   // as the last resort. Misses leave the stash intact for the next step
   // (self-healing once the backend starts).
-  const agentMeters = new Map<string, TokenMeterLike>();
-  const agentCompactions = new Map<string, CompactionService>();
-  // Agent scopes for live-read recovery: an agent created before plugin
-  // registration (reload, resumed session) never fires `agent/created`
+  //
+  // One record per session: the agent scope for live-read recovery (an
+  // agent created before plugin registration never fires `agent/created`
   // under us, so its ctx must be readable at evaluation time, not only at
-  // creation time. Never holds the agent itself — just the scope.
-  const agentContexts = new Map<string, { get: (name: string) => unknown }>();
+  // creation time) plus whatever services have resolved so far. Never holds
+  // the agent itself — just the scope and service refs. Bounded below with
+  // disposal eviction alongside the FIFO cap.
+  type AgentServices = {
+    ctx: { get: (name: string) => unknown };
+    meter?: TokenMeterLike;
+    compaction?: CompactionService;
+  };
+  const agentServices = new Map<string, AgentServices>();
   // Single-service captures at whatever layer exposes them; each fires
   // independently (unlike the dead joint inject). Callback bodies guard
   // their reads: a host scope may invoke without the service present.
@@ -300,19 +306,21 @@ export function apply(context: Context, rawConfig?: unknown): void {
         if (id === null) return;
         const ctx = record.ctx as { get?: (name: string) => unknown } | null;
         if (ctx === null || typeof ctx !== "object" || typeof ctx.get !== "function") return;
-        boundedSet(agentContexts, id, ctx as { get: (name: string) => unknown });
+        const narrowed = ctx as { get: (name: string) => unknown };
+        const services: AgentServices = { ctx: narrowed };
         try {
-          const meter = ctx.get("tokenMeter");
-          if (isTokenMeterLike(meter)) boundedSet(agentMeters, id, meter);
+          const meter = narrowed.get("tokenMeter");
+          if (isTokenMeterLike(meter)) services.meter = meter;
         } catch {
           // One unreadable scope must not block the other.
         }
         try {
-          const service = ctx.get("compaction");
-          if (isCompactionServiceLike(service)) boundedSet(agentCompactions, id, service);
+          const service = narrowed.get("compaction");
+          if (isCompactionServiceLike(service)) services.compaction = service;
         } catch {
           // Absent backend here; the command-scope capture may still cover it.
         }
+        boundedSet(agentServices, id, services);
       } catch {
         // Never break the host for a cache miss.
       }
@@ -321,7 +329,7 @@ export function apply(context: Context, rawConfig?: unknown): void {
     // The cache is an optimization; live reads below still apply.
   }
   // Session teardown eviction: a long-lived TUI creates one cache entry per
-  // session, so drops keep the maps bounded alongside the FIFO cap below.
+  // session, so drops keep the map bounded alongside the FIFO cap below.
   try {
     context.on("agent/disposed", (payload: unknown) => {
       try {
@@ -330,9 +338,7 @@ export function apply(context: Context, rawConfig?: unknown): void {
         if (typeof raw !== "object" || raw === null) return;
         const id = readRecordSessionId(raw as Record<string, unknown>);
         if (id === null) return;
-        agentMeters.delete(id);
-        agentCompactions.delete(id);
-        agentContexts.delete(id);
+        agentServices.delete(id);
       } catch {
         // Never break the host for cache hygiene.
       }
@@ -344,10 +350,8 @@ export function apply(context: Context, rawConfig?: unknown): void {
     if (typeof agent === "object" && agent !== null) {
       const record = agent as Record<string, unknown>;
       const id = readRecordSessionId(record);
-      if (id !== null) {
-        const cached = agentCompactions.get(id);
-        if (cached !== undefined) return cached;
-      }
+      const cached = id === null ? undefined : agentServices.get(id)?.compaction;
+      if (cached !== undefined) return cached;
       // Live read: the backend starts on first use, so an agent created
       // before startup must not pin a miss into the cache.
       const ctx = record.ctx as { get?: (name: string) => unknown } | null;
@@ -355,7 +359,13 @@ export function apply(context: Context, rawConfig?: unknown): void {
         try {
           const service = ctx.get("compaction");
           if (isCompactionServiceLike(service)) {
-            if (id !== null) boundedSet(agentCompactions, id, service);
+            if (id !== null) {
+              const services = agentServices.get(id) ?? {
+                ctx: ctx as { get: (name: string) => unknown },
+              };
+              services.compaction = service;
+              boundedSet(agentServices, id, services);
+            }
             return service;
           }
         } catch {
@@ -389,19 +399,17 @@ export function apply(context: Context, rawConfig?: unknown): void {
   // then the root capture. Absent everywhere skips evaluation with the
   // stash untouched.
   const meterForSession = (sessionId: string): TokenMeterLike | null => {
-    const cached = agentMeters.get(sessionId);
-    if (cached !== undefined) return cached;
-    const ctx = agentContexts.get(sessionId);
-    if (ctx !== undefined) {
-      try {
-        const meter = ctx.get("tokenMeter");
-        if (isTokenMeterLike(meter)) {
-          boundedSet(agentMeters, sessionId, meter);
-          return meter;
-        }
-      } catch {
-        // Fall through to the root capture.
+    const services = agentServices.get(sessionId);
+    if (services === undefined) return rootServices.meter;
+    if (services.meter !== undefined) return services.meter;
+    try {
+      const meter = services.ctx.get("tokenMeter");
+      if (isTokenMeterLike(meter)) {
+        services.meter = meter;
+        return meter;
       }
+    } catch {
+      // Fall through to the root capture.
     }
     return rootServices.meter;
   };
