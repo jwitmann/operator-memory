@@ -36,10 +36,14 @@ export type TokenMeterLike = {
 
 export type EventsDeps = DshDeps & {
   readonly config: ContextManagementConfig;
-  readonly tokenMeter: TokenMeterLike;
+  // Resolved per evaluation, never cached here: the meter starts with the
+  // session's agent scope, so an early miss must not pin the failure. Either
+  // source suffices; absent both skips evaluation without stashing.
+  readonly tokenMeter?: TokenMeterLike;
   // Optional per-project override: resolves the effective block for a
   // session project. Absent = profile block (pre-override behavior).
   readonly resolveConfig?: (projectDirectory: string) => Promise<ContextManagementConfig>;
+  readonly meterForSession?: (sessionId: string) => TokenMeterLike | null;
 };
 
 export function registerSessionObservers(
@@ -162,13 +166,19 @@ async function handleTurnEnd(
     return;
   }
 
+  // The meter resolves per evaluation and is never cached here: a miss
+  // skips evaluation without stashing, so the next turn/end retries once
+  // the agent scope has cached the service (self-healing on startup).
+  const meter = deps.meterForSession?.(sessionId) ?? deps.tokenMeter ?? null;
+  if (meter === null) return;
+
   // Host numbers are validated: one malformed reading must not poison the
   // session's estimate or receipts for its lifetime.
   let estimate: number;
   let window: number | null;
   try {
-    estimate = deps.tokenMeter.measure(rawSession).totalTokens;
-    const rawWindow = deps.tokenMeter.contextPressure(rawSession).contextWindow;
+    estimate = meter.measure(rawSession).totalTokens;
+    const rawWindow = meter.contextPressure(rawSession).contextWindow;
     if (!Number.isFinite(estimate)) return;
     window = rawWindow === undefined ? null : Number.isFinite(rawWindow) ? rawWindow : null;
   } catch {
@@ -235,11 +245,16 @@ async function handleCompactionEnd(
   // Price the receipt off a fresh host measurement: mid-turn pressure
   // compactions land before any turn/end evaluation, so lastEstimate may
   // still be null here. Best-effort; a failed read keeps the prior value.
-  try {
-    const measured = deps.tokenMeter.measure(rawSession).totalTokens;
-    if (Number.isFinite(measured)) session.lastEstimate = measured;
-  } catch {
-    // Keep the prior estimate; the receipt below clamps regardless.
+  // The meter resolves per event like the turn/end path; a miss keeps the
+  // prior estimate.
+  const meter = deps.meterForSession?.(sessionId) ?? deps.tokenMeter ?? null;
+  if (meter !== null) {
+    try {
+      const measured = meter.measure(rawSession).totalTokens;
+      if (Number.isFinite(measured)) session.lastEstimate = measured;
+    } catch {
+      // Keep the prior estimate; the receipt below clamps regardless.
+    }
   }
 
   // Best-effort audit trail. The cause is recorded by our own pre-step

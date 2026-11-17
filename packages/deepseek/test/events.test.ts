@@ -225,4 +225,37 @@ describe("session-event tool counter", () => {
     await dispatchSessionEvent(session, completedTurn(), d, runtime);
     expect(sessionRuntime(runtime, session.id).pendingCompaction).toBe(null);
   });
+
+  test("a missing meter skips evaluation without stashing or throwing", async () => {
+    const runtime = createDshRuntime();
+    const d = deps({
+      config: {
+        ...DEFAULT_CONTEXT_MANAGEMENT_CONFIG,
+        enabled: true,
+        compactOnComplete: true,
+        compactFloorTokens: 0,
+      },
+      tokenMeter: undefined,
+      meterForSession: () => null,
+    });
+    await dispatchSessionEvent(session, completedTurn(), d, runtime);
+    expect(sessionRuntime(runtime, session.id).pendingCompaction).toBe(null);
+  });
+
+  test("a per-session meter covers a missing profile meter", async () => {
+    const runtime = createDshRuntime();
+    const d = deps({
+      config: {
+        ...DEFAULT_CONTEXT_MANAGEMENT_CONFIG,
+        enabled: true,
+        compactOnComplete: true,
+        compactFloorTokens: 1000,
+        ratio: 0.8,
+      },
+      tokenMeter: undefined,
+      meterForSession: () => metered(50000, 100000),
+    });
+    await dispatchSessionEvent(session, completedTurn(), d, runtime);
+    expect(sessionRuntime(runtime, session.id).pendingCompaction?.cause).toBe("task-complete");
+  });
 });
