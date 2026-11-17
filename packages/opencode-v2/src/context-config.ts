@@ -42,51 +42,42 @@ export type ConfigError = {
 
 export function parseContextManagementConfig(
   options: unknown,
+  base: ContextManagementConfig = DEFAULT_CONTEXT_MANAGEMENT_CONFIG,
 ): Result<ContextManagementConfig, ConfigError> {
   const block = readOptionBlock(options, "contextManagement");
   if (!block.ok) {
     return block;
   }
-  if (block.value === null) {
-    return success(DEFAULT_CONTEXT_MANAGEMENT_CONFIG);
+  return parseContextManagementBlock(block.value, base);
+}
+
+// Block-level parser so a project-local file can merge over an already
+// parsed base (absent fields inherit the base). The options wrapper above
+// preserves the opencode.json contract unchanged.
+export function parseContextManagementBlock(
+  block: Record<string, unknown> | null,
+  base: ContextManagementConfig = DEFAULT_CONTEXT_MANAGEMENT_CONFIG,
+): Result<ContextManagementConfig, ConfigError> {
+  if (block === null) {
+    return success(base);
   }
 
   const path = "operator.contextManagement";
-  const enabled = readOptionBoolean(
-    path,
-    block.value,
-    "enabled",
-    DEFAULT_CONTEXT_MANAGEMENT_CONFIG.enabled,
-  );
-  const ratio = readOptionNumber(
-    path,
-    block.value,
-    "ratio",
-    DEFAULT_CONTEXT_MANAGEMENT_CONFIG.ratio,
-  );
-  const hardCapTokens = readOptionNumber(
-    path,
-    block.value,
-    "hardCapTokens",
-    DEFAULT_CONTEXT_MANAGEMENT_CONFIG.hardCapTokens,
-  );
-  const keepRecentTurns = readOptionNumber(
-    path,
-    block.value,
-    "keepRecentTurns",
-    DEFAULT_CONTEXT_MANAGEMENT_CONFIG.keepRecentTurns,
-  );
+  const enabled = readOptionBoolean(path, block, "enabled", base.enabled);
+  const ratio = readOptionNumber(path, block, "ratio", base.ratio);
+  const hardCapTokens = readOptionNumber(path, block, "hardCapTokens", base.hardCapTokens);
+  const keepRecentTurns = readOptionNumber(path, block, "keepRecentTurns", base.keepRecentTurns);
   const compactOnComplete = readOptionBoolean(
     path,
-    block.value,
+    block,
     "compactOnComplete",
-    DEFAULT_CONTEXT_MANAGEMENT_CONFIG.compactOnComplete,
+    base.compactOnComplete,
   );
   const compactFloorTokens = readOptionNumber(
     path,
-    block.value,
+    block,
     "compactFloorTokens",
-    DEFAULT_CONTEXT_MANAGEMENT_CONFIG.compactFloorTokens,
+    base.compactFloorTokens,
   );
 
   if (!enabled.ok) return enabled;

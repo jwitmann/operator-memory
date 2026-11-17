@@ -19,30 +19,38 @@ export const DEFAULT_BRAIN_UPDATES_CONFIG: BrainUpdatesConfig = {
 
 const BRAIN_UPDATES_PATH = "operator.brainUpdates";
 
-export function parseBrainUpdatesConfig(options: unknown): Result<BrainUpdatesConfig, ConfigError> {
+export function parseBrainUpdatesConfig(
+  options: unknown,
+  base: BrainUpdatesConfig = DEFAULT_BRAIN_UPDATES_CONFIG,
+): Result<BrainUpdatesConfig, ConfigError> {
   const block = readOptionBlock(options, "brainUpdates");
   if (!block.ok) {
     return block;
   }
-  if (block.value === null) {
-    return success(DEFAULT_BRAIN_UPDATES_CONFIG);
+  return parseBrainUpdatesBlock(block.value, base);
+}
+
+// Block-level parser so a project-local file can merge over an already
+// parsed base. The options wrapper above preserves the opencode.json
+// contract unchanged.
+export function parseBrainUpdatesBlock(
+  block: Record<string, unknown> | null,
+  base: BrainUpdatesConfig = DEFAULT_BRAIN_UPDATES_CONFIG,
+): Result<BrainUpdatesConfig, ConfigError> {
+  if (block === null) {
+    return success(base);
   }
 
-  const enabled = readOptionBoolean(
-    BRAIN_UPDATES_PATH,
-    block.value,
-    "enabled",
-    DEFAULT_BRAIN_UPDATES_CONFIG.enabled,
-  );
+  const enabled = readOptionBoolean(BRAIN_UPDATES_PATH, block, "enabled", base.enabled);
   if (!enabled.ok) {
     return enabled;
   }
 
   const toolCallThreshold = readOptionNumber(
     BRAIN_UPDATES_PATH,
-    block.value,
+    block,
     "toolCallThreshold",
-    DEFAULT_BRAIN_UPDATES_CONFIG.toolCallThreshold,
+    base.toolCallThreshold,
   );
   if (!toolCallThreshold.ok) {
     return toolCallThreshold;

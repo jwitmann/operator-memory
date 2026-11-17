@@ -1,6 +1,6 @@
 # OpenCode V2 Adapter Implementation
 
-Last Updated: November 3, 2026
+Last Updated: November 17, 2026
 
 How `@aerovato/operator-opencode-v2` binds the general adapter contract as the default OpenCode integration. V2 is an incompatible plugin platform and therefore remains a separate package; the unversioned npm package and source directory still belong to legacy V1. Behavioral deviations are recorded against [`../reference/implementation.md`](../reference/implementation.md), not other bindings.
 
@@ -105,6 +105,10 @@ Opt-in nudge to record durable knowledge, never an automatic Brain writer. Disab
 ```
 
 The adapter counts distinct completed tool calls since the last Brain fingerprint move — error results count, pending or unpaired calls and Operator's own helper calls do not — and appends one static reminder on the first request crossing `toolCallThreshold` (a positive integer, 25 by default). The reminder names no content and requires no edit: when nothing durable emerged, the agent makes none. A Brain change resets the baseline without reminding, and later crossings stay quiet until the Brain moves again. The feature stays inert when disabled, Brainless, stale, or when the fingerprint cannot be read.
+
+## Per-Project Override
+
+A session project may override the `opencode.json` config with an optional `<project>/.operator/config.json`, using the same block and key names without the `operator` wrapper. Present fields merge over the parsed `opencode.json` values; absent file or blocks inherit them. Precedence, lowest first: defaults, global `opencode.json`, project `opencode.json`, `.operator/config.json`. Unparsable content or a non-object root warns with an error toast and keeps everything; an invalid block warns and keeps that block while valid siblings still merge; absent or unreadable files fall back silently. Resolution is setup-time (one setup per project directory), unlike the DSH adapter's per-session resolution — DSH hosts many sessions with different cwds in one process, opencode does not.
 
 ## Differences From Reference
 

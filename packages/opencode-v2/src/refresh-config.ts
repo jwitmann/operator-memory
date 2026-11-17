@@ -18,21 +18,27 @@ export const DEFAULT_PREAMBLE_REFRESH_CONFIG: PreambleRefreshConfig = {
 
 export function parsePreambleRefreshConfig(
   options: unknown,
+  base: PreambleRefreshConfig = DEFAULT_PREAMBLE_REFRESH_CONFIG,
 ): Result<PreambleRefreshConfig, ConfigError> {
   const block = readOptionBlock(options, "preambleRefresh");
   if (!block.ok) {
     return block;
   }
-  if (block.value === null) {
-    return success(DEFAULT_PREAMBLE_REFRESH_CONFIG);
+  return parsePreambleRefreshBlock(block.value, base);
+}
+
+// Block-level parser so a project-local file can merge over an already
+// parsed base. The options wrapper above preserves the opencode.json
+// contract unchanged.
+export function parsePreambleRefreshBlock(
+  block: Record<string, unknown> | null,
+  base: PreambleRefreshConfig = DEFAULT_PREAMBLE_REFRESH_CONFIG,
+): Result<PreambleRefreshConfig, ConfigError> {
+  if (block === null) {
+    return success(base);
   }
 
-  const enabled = readOptionBoolean(
-    "operator.preambleRefresh",
-    block.value,
-    "enabled",
-    DEFAULT_PREAMBLE_REFRESH_CONFIG.enabled,
-  );
+  const enabled = readOptionBoolean("operator.preambleRefresh", block, "enabled", base.enabled);
   if (!enabled.ok) {
     return enabled;
   }

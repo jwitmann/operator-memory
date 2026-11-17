@@ -11,13 +11,17 @@ import packageJson from "../package.json" with { type: "json" };
 import { registerCommands } from "./commands.ts";
 import { DEFAULT_BRAIN_PATHS, registerCompactionHook } from "./compaction.ts";
 import { registerContextHook } from "./context.ts";
-import { parseContextManagementConfig } from "./context-config.ts";
+import {
+  DEFAULT_CONTEXT_MANAGEMENT_CONFIG,
+  parseContextManagementConfig,
+} from "./context-config.ts";
 import {
   registerCompletionTrigger,
   registerStepTracking,
   requestSessionCompaction,
 } from "./events.ts";
 import { loadPreamble } from "./preamble.ts";
+import { resolveProjectConfig } from "./project-config.ts";
 import { refreshPreambleContent } from "./refresh.ts";
 import { DEFAULT_PREAMBLE_REFRESH_CONFIG, parsePreambleRefreshConfig } from "./refresh-config.ts";
 import { maybeAppendBrainUpdateReminder } from "./brain-updates.ts";
@@ -97,7 +101,27 @@ const OperatorPlugin = Plugin.define({
         variant: "error",
       }).catch(() => undefined);
     }
-    const contextManagementEnabled = parsed.ok && parsed.value.enabled;
+    const contextManagementBase = parsed.ok ? parsed.value : DEFAULT_CONTEXT_MANAGEMENT_CONFIG;
+    // Per-project override: `<project>/.operator/config.json` merges over
+    // the opencode.json config (setup-time: one setup per project
+    // directory). Same block and key names without the `operator` wrapper;
+    // present fields win, absent file or blocks inherit opencode.json.
+    const projectOverride = await resolveProjectConfig(context.location.directory, {
+      contextManagement: contextManagementBase,
+      brainUpdates: brainUpdatesConfig,
+      preambleRefresh: refreshConfig,
+    });
+    for (const warning of projectOverride.warnings) {
+      await showToast({
+        title: "Operator Error",
+        message: `Operator project config (.operator/config.json): ${warning}`,
+        variant: "error",
+      }).catch(() => undefined);
+    }
+    const effectiveRefreshConfig = projectOverride.config.preambleRefresh;
+    const effectiveBrainUpdatesConfig = projectOverride.config.brainUpdates;
+    const effectiveContextManagement = projectOverride.config.contextManagement;
+    const contextManagementEnabled = parsed.ok && effectiveContextManagement.enabled;
     await registerCommands(context);
     // Brain availability per session, from preamble loads. Context management
     // gates on it: the feature stays off without the Brain.
@@ -134,10 +158,10 @@ const OperatorPlugin = Plugin.define({
         }).catch(() => undefined);
       }
       let content = result.value.content;
-      if (refreshConfig.enabled) {
+      if (effectiveRefreshConfig.enabled) {
         content = await refreshPreambleContent(
           {
-            config: refreshConfig,
+            config: effectiveRefreshConfig,
             stateDirectory: join(homedir(), ".operator", "state"),
             isBrainAvailable: sessionID => brainAvailable.get(sessionID) === true,
             isCurrent,
@@ -159,10 +183,10 @@ const OperatorPlugin = Plugin.define({
           content,
         );
       }
-      if (brainUpdatesConfig.enabled) {
+      if (effectiveBrainUpdatesConfig.enabled) {
         content = await maybeAppendBrainUpdateReminder(
           {
-            config: brainUpdatesConfig,
+            config: effectiveBrainUpdatesConfig,
             projectDirectory: context.location.directory,
             homeDirectory: homedir(),
             isBrainAvailable: sessionID => brainAvailable.get(sessionID) === true,
@@ -181,8 +205,8 @@ const OperatorPlugin = Plugin.define({
     // floor measures its own estimate on demand inside the refresh path.
     // Enforcement (trim, compaction requests, tool registration) stays
     // behind the context-management switch.
-    if (parsed.ok && (contextManagementEnabled || refreshConfig.enabled)) {
-      const config = parsed.value;
+    if (parsed.ok && (contextManagementEnabled || effectiveRefreshConfig.enabled)) {
+      const config = effectiveContextManagement;
       const stateDirectory = join(homedir(), ".operator", "state");
       // Shared across reloads so trigger dedup survives a teardown/setup
       // cycle; a requested-but-not-yet-executed compaction must still
