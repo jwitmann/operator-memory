@@ -10,6 +10,7 @@ import { registerCommands } from "./commands.ts";
 import { DEFAULT_OPERATOR_DEEPSEEK_CONFIG, parseOperatorConfig } from "./config.ts";
 import { registerSessionObservers, type TokenMeterLike } from "./events.ts";
 import { registerPreStepEnforcement } from "./pre-step.ts";
+import { cachedProjectConfig, resolveProjectConfig } from "./project-config.ts";
 import { maybeRefreshPreamble } from "./refresh.ts";
 import {
   sessionRuntime,
@@ -64,6 +65,22 @@ export function apply(context: Context, rawConfig?: unknown): void {
   };
   const baseDeps = { stateDirectory, isBrainAvailable, reportReceiptFailure };
 
+  const warn = (message: string): void => {
+    try {
+      context.logger?.warn?.(message);
+    } catch {
+      // Logging must never break the hot path.
+    }
+  };
+  // Per-project override: `<project>/.operator/config.json` merges over the
+  // profile config (absent file = profile). Total: IO failures fall back
+  // silently, parse failures warn once per content inside the resolver.
+  const resolveEffectiveConfig = (projectDirectory: string) =>
+    resolveProjectConfig(projectDirectory, config, warn).catch(() => config);
+  // Session cwd map for the synchronous shaping hook, which cannot do IO and
+  // reads the mtime cache warmed by the async sites.
+  const sessionCwds = new Map<string, string>();
+
   // Preamble injection with refresh + brain-update nudge. One Brain load per
   // agent render: availability is derived from the same snapshot, never a
   // second load. The per-agent render cache preserves the existing baseline;
@@ -100,7 +117,13 @@ export function apply(context: Context, rawConfig?: unknown): void {
 
     if (sessionId !== null) {
       brainAvailable.set(sessionId, rendered.available);
+      sessionCwds.set(sessionId, projectDirectory);
     }
+
+    // Effective config for this session's project: the profile config with
+    // the project's `.operator/config.json` merged over it. One stat when
+    // unchanged, re-parse only on content moves.
+    const effective = await resolveEffectiveConfig(projectDirectory);
 
     // One fingerprint per assemble, shared by the refresh seed below plus
     // both consumers. Without this the cycle pays up to three full
@@ -110,7 +133,10 @@ export function apply(context: Context, rawConfig?: unknown): void {
     // the Brain is unavailable) so the refresh baseline seeds exactly as
     // before; the consumers still gate on availability themselves.
     let sharedFingerprint: string | null | undefined;
-    if (sessionId !== null && (config.preambleRefresh.enabled || config.brainUpdates.enabled)) {
+    if (
+      sessionId !== null
+      && (effective.preambleRefresh.enabled || effective.brainUpdates.enabled)
+    ) {
       const fingerprinted = await fingerprintPreamble(projectDirectory, homedir()).catch(
         () => null,
       );
@@ -125,9 +151,14 @@ export function apply(context: Context, rawConfig?: unknown): void {
       }
     }
 
-    if (config.preambleRefresh.enabled && sessionId !== null) {
+    if (effective.preambleRefresh.enabled && sessionId !== null) {
       const outcome = await maybeRefreshPreamble(
-        { config: config.preambleRefresh, stateDirectory, isBrainAvailable, reportReceiptFailure },
+        {
+          config: effective.preambleRefresh,
+          stateDirectory,
+          isBrainAvailable,
+          reportReceiptFailure,
+        },
         runtime,
         sessionId,
         projectDirectory,
@@ -148,10 +179,10 @@ export function apply(context: Context, rawConfig?: unknown): void {
       if (outcome.refreshed) text = outcome.content;
     }
 
-    if (config.brainUpdates.enabled && sessionId !== null) {
+    if (effective.brainUpdates.enabled && sessionId !== null) {
       text = await maybeAppendBrainUpdateReminder(
         {
-          config: config.brainUpdates,
+          config: effective.brainUpdates,
           projectDirectory,
           homeDirectory: homedir(),
           isBrainAvailable,
@@ -194,16 +225,29 @@ export function apply(context: Context, rawConfig?: unknown): void {
       ).compaction;
       // Session observers (tool counter, usage, trigger evaluation,
       // compaction receipts). Pure observer: never calls next(), never
-      // throws into host.
+      // throws into host. The context-management block resolves per session
+      // project; the profile block is the fallback.
       registerSessionObservers(
         scoped,
-        { ...baseDeps, config: config.contextManagement, tokenMeter: meter },
+        {
+          ...baseDeps,
+          config: config.contextManagement,
+          tokenMeter: meter,
+          resolveConfig: projectDirectory =>
+            resolveEffectiveConfig(projectDirectory).then(c => c.contextManagement),
+        },
         runtime,
       );
       // Loop-timed enforcement of stashed compaction intent.
       registerPreStepEnforcement(
         scoped,
-        { ...baseDeps, config: config.contextManagement, compaction: compactionService },
+        {
+          ...baseDeps,
+          config: config.contextManagement,
+          compaction: compactionService,
+          resolveConfig: projectDirectory =>
+            resolveEffectiveConfig(projectDirectory).then(c => c.contextManagement),
+        },
         runtime,
       );
     });
@@ -220,10 +264,17 @@ export function apply(context: Context, rawConfig?: unknown): void {
   // Compaction shaping: extends the trailing summarization instruction.
   // Registered unconditionally (like the preamble hook): it needs no host
   // service, and gates itself on config + Brain availability per request.
+  // The sync hook cannot do IO, so per-project enablement reads the mtime
+  // cache warmed by the async sites; unknown sessions use the profile value.
   registerCompactionShaping(context, {
     enabled: config.contextManagement.enabled,
     brainPaths: [...DEFAULT_BRAIN_PATHS],
     isBrainAvailable,
+    configForSession: sessionId => {
+      const cwd = sessionCwds.get(sessionId);
+      if (cwd === undefined) return undefined;
+      return cachedProjectConfig(cwd, config).contextManagement;
+    },
   });
 }
 

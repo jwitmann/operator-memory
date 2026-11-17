@@ -27,6 +27,10 @@ The plugin takes an optional second `apply` argument validated with defaults. Ev
 
 Wrong-typed or out-of-range values (`ratio` outside `(0, 1]`, negative token counts) fail loudly at startup with a warning; the plugin falls back to all-disabled defaults.
 
+### Per-project override
+
+A session project may override the profile config with an optional `<project>/.operator/config.json`, using the same block and key names. Present fields merge over the profile values, so a project can flip one knob and inherit the rest; absent file or absent blocks mean the profile config. Unparsable content or invalid blocks warn once per file content and fall back (whole file for bad JSON, per block for validation failures); unreadable files fall back silently. Resolution is mtime-cached per project directory (one stat on the prompt path, re-parse only on moves). The synchronous `llm/stream` shaping hook cannot do IO, so it reads the cache warmed by the async sites and falls back to the profile value for unknown sessions — exactly the pre-override behavior.
+
 ## Context Management
 
 Trigger evaluation is host-measured: `ctx.tokenMeter.measure(session).totalTokens` feeds Core's `evaluateTrigger`, and `contextPressure().contextWindow` supplies the model window. No token estimator is ported. A completed `turn/end` with a firing trigger stashes intent; enforcement happens on the next `agent/pre-step` through `ctx.compaction.compactIfNeeded(agent, "pressure")`, the same hook the host backend uses for its pressure path. The host policy stays authoritative. Both entry points resolve through a scoped `context.inject(["tokenMeter", "compaction"])` registration, so profiles without those services keep the preamble-only baseline instead of failing to activate. Compact and refusal receipts reuse Core's receipt shapes; the failure backoff consults the host-reported `compaction/end.error` before every dispatch.

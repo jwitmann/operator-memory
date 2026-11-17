@@ -35,7 +35,16 @@ export const DEFAULT_BRAIN_PATHS = ["~/.operator/user", ".operator", ".operator-
 export type ShapingDeps = Pick<DshDeps, "isBrainAvailable" | "isCurrent"> & {
   readonly enabled: boolean;
   readonly brainPaths: readonly string[];
+  // Optional per-project enablement for the sync hook, which cannot do IO:
+  // reads the mtime cache warmed by the async sites. `undefined` = session
+  // unknown, fall back to the profile `enabled`.
+  readonly configForSession?: (sessionId: string) => { readonly enabled: boolean } | undefined;
 };
+
+function isEnabledForSession(deps: ShapingDeps, sessionId: string): boolean {
+  if (deps.configForSession === undefined) return deps.enabled;
+  return deps.configForSession(sessionId)?.enabled ?? deps.enabled;
+}
 
 export function registerCompactionShaping(context: Context, deps: ShapingDeps): void {
   context.on(
@@ -45,7 +54,6 @@ export function registerCompactionShaping(context: Context, deps: ShapingDeps): 
       next: () => AsyncIterable<StreamChunk>,
     ): AsyncIterable<StreamChunk> => {
       if (isDshStale(deps)) return next();
-      if (!deps.enabled) return next();
       try {
         shapeCompactionRequest(options, deps);
       } catch {
@@ -62,7 +70,6 @@ export function registerCompactionShaping(context: Context, deps: ShapingDeps): 
 // so direct callers inherit the no-throw contract (the waterfall wrapper
 // adds its own guard as well).
 export function shapeCompactionRequest(options: unknown, deps: ShapingDeps): boolean {
-  if (!deps.enabled) return false;
   if (typeof options !== "object" || options === null) return false;
   const record = options as Record<string, unknown>;
   if (record.purpose !== "compaction") return false;
@@ -70,6 +77,7 @@ export function shapeCompactionRequest(options: unknown, deps: ShapingDeps): boo
   // with no session there is no gate to consult.
   const sessionId = record.sessionId;
   if (typeof sessionId !== "string" || !deps.isBrainAvailable(sessionId)) return false;
+  if (!isEnabledForSession(deps, sessionId)) return false;
 
   try {
     return shapeMessages(record, deps);

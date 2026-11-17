@@ -37,6 +37,9 @@ export type TokenMeterLike = {
 export type EventsDeps = DshDeps & {
   readonly config: ContextManagementConfig;
   readonly tokenMeter: TokenMeterLike;
+  // Optional per-project override: resolves the effective block for a
+  // session project. Absent = profile block (pre-override behavior).
+  readonly resolveConfig?: (projectDirectory: string) => Promise<ContextManagementConfig>;
 };
 
 export function registerSessionObservers(
@@ -148,7 +151,8 @@ async function handleTurnEnd(
       ? ((reason as Record<string, unknown>).kind as unknown)
       : null;
   if (kind !== "completed") return;
-  if (!deps.config.enabled) return;
+  const effectiveConfig = await effectiveContextConfig(deps, rawSession);
+  if (!effectiveConfig.enabled) return;
 
   await ensureSessionHydrated(deps.stateDirectory, runtime, sessionId);
   if (isDshStale(deps)) return;
@@ -180,7 +184,7 @@ async function handleTurnEnd(
     "task-complete",
     estimate,
     window ?? 0,
-    toTriggerConfig(deps.config),
+    toTriggerConfig(effectiveConfig),
   );
   session.triggerState = decision.state;
   if (decision.fire === null) return;
@@ -226,7 +230,8 @@ async function handleCompactionEnd(
   // Best-effort audit trail. The cause is recorded by our own pre-step
   // enforcer; a host-initiated compaction (or a stale entry from a
   // stashed-but-never-enforced intent past its TTL) is labeled manual.
-  if (!deps.config.enabled) return;
+  // Receipts gate on the session project's effective config.
+  if (!(await effectiveContextConfig(deps, rawSession)).enabled) return;
   const pending = runtime.pendingCauses.get(sessionId);
   const cause =
     pending !== undefined && Date.now() - pending.at <= PENDING_CAUSE_TTL_MS
@@ -244,4 +249,30 @@ async function handleCompactionEnd(
 
 export function reportEventStreamFailure(runtime: DshRuntime, deps: EventsDeps): void {
   reportReceiptFailureOnce(runtime, deps, null, "event-stream");
+}
+
+// Effective context-management block for this session: the session
+// project's override merged over the profile block, or the profile block
+// when no resolver is wired (tests, pre-override callers) or the session
+// carries no cwd. Never rejects: IO failures fall back to the profile.
+async function effectiveContextConfig(
+  deps: EventsDeps,
+  rawSession: unknown,
+): Promise<ContextManagementConfig> {
+  if (deps.resolveConfig === undefined) return deps.config;
+  const cwd = readSessionCwd(rawSession);
+  if (cwd === null) return deps.config;
+  try {
+    return await deps.resolveConfig(cwd);
+  } catch {
+    return deps.config;
+  }
+}
+
+function readSessionCwd(session: unknown): string | null {
+  if (typeof session !== "object" || session === null) return null;
+  const header = (session as Record<string, unknown>).header;
+  if (typeof header !== "object" || header === null) return null;
+  const cwd = (header as Record<string, unknown>).cwd;
+  return typeof cwd === "string" ? cwd : null;
 }

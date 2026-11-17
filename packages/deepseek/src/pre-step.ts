@@ -24,6 +24,9 @@ export type PreStepDeps = DshDeps & {
   readonly compaction: {
     compactIfNeeded(agent: unknown, trigger: "pressure", signal: AbortSignal): Promise<unknown>;
   };
+  // Optional per-project override: resolves the effective block for an
+  // agent project. Absent = profile block (pre-override behavior).
+  readonly resolveConfig?: (projectDirectory: string) => Promise<ContextManagementConfig>;
 };
 
 export function registerPreStepEnforcement(
@@ -37,11 +40,41 @@ export function registerPreStepEnforcement(
       payload: { readonly agent: unknown; readonly signal: AbortSignal },
       next: () => Promise<PreStepDecision>,
     ): Promise<PreStepDecision> => {
-      if (!deps.config.enabled) return next();
-      await maybeEnforceCompaction(payload, deps, runtime, Date.now()).catch(() => undefined);
+      const effective = await effectiveContextConfig(deps, payload.agent);
+      if (!effective.enabled) return next();
+      await maybeEnforceCompaction(
+        payload,
+        { ...deps, config: effective },
+        runtime,
+        Date.now(),
+      ).catch(() => undefined);
       return next();
     },
   );
+}
+
+// Effective block for this agent's project. Never rejects: IO failures
+// fall back to the profile block.
+async function effectiveContextConfig(
+  deps: PreStepDeps,
+  agent: unknown,
+): Promise<ContextManagementConfig> {
+  if (deps.resolveConfig === undefined) return deps.config;
+  try {
+    return await deps.resolveConfig(readAgentCwd(agent));
+  } catch {
+    return deps.config;
+  }
+}
+
+function readAgentCwd(agent: unknown): string {
+  if (typeof agent !== "object" || agent === null) return process.cwd();
+  const session = (agent as Record<string, unknown>).session;
+  if (typeof session !== "object" || session === null) return process.cwd();
+  const header = (session as Record<string, unknown>).header;
+  if (typeof header !== "object" || header === null) return process.cwd();
+  const cwd = (header as Record<string, unknown>).cwd;
+  return typeof cwd === "string" ? cwd : process.cwd();
 }
 
 // Exported for tests. Callers pass the clock explicitly (no default args).

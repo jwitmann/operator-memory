@@ -137,35 +137,16 @@ export function parseOperatorConfig(input: unknown): Result<OperatorDeepseekConf
 
 function parseContextManagementBlock(
   block: Record<string, unknown> | null,
+  base: ContextManagementConfig = DEFAULT_CONTEXT_MANAGEMENT_CONFIG,
 ): Result<ContextManagementConfig, ConfigError> {
-  if (block === null) return success(DEFAULT_CONTEXT_MANAGEMENT_CONFIG);
+  if (block === null) return success(base);
   const path = "contextManagement";
-  const enabled = readBoolean(path, block, "enabled", false);
-  const ratio = readNumber(path, block, "ratio", DEFAULT_CONTEXT_MANAGEMENT_CONFIG.ratio);
-  const hardCapTokens = readNumber(
-    path,
-    block,
-    "hardCapTokens",
-    DEFAULT_CONTEXT_MANAGEMENT_CONFIG.hardCapTokens,
-  );
-  const keepRecentTurns = readNumber(
-    path,
-    block,
-    "keepRecentTurns",
-    DEFAULT_CONTEXT_MANAGEMENT_CONFIG.keepRecentTurns,
-  );
-  const compactOnComplete = readBoolean(
-    path,
-    block,
-    "compactOnComplete",
-    DEFAULT_CONTEXT_MANAGEMENT_CONFIG.compactOnComplete,
-  );
-  const compactFloorTokens = readNumber(
-    path,
-    block,
-    "compactFloorTokens",
-    DEFAULT_CONTEXT_MANAGEMENT_CONFIG.compactFloorTokens,
-  );
+  const enabled = readBoolean(path, block, "enabled", base.enabled);
+  const ratio = readNumber(path, block, "ratio", base.ratio);
+  const hardCapTokens = readNumber(path, block, "hardCapTokens", base.hardCapTokens);
+  const keepRecentTurns = readNumber(path, block, "keepRecentTurns", base.keepRecentTurns);
+  const compactOnComplete = readBoolean(path, block, "compactOnComplete", base.compactOnComplete);
+  const compactFloorTokens = readNumber(path, block, "compactFloorTokens", base.compactFloorTokens);
   if (!enabled.ok) return enabled;
   if (!ratio.ok) return ratio;
   if (!hardCapTokens.ok) return hardCapTokens;
@@ -199,17 +180,13 @@ function parseContextManagementBlock(
 
 function parseBrainUpdatesBlock(
   block: Record<string, unknown> | null,
+  base: BrainUpdatesConfig = DEFAULT_BRAIN_UPDATES_CONFIG,
 ): Result<BrainUpdatesConfig, ConfigError> {
-  if (block === null) return success(DEFAULT_BRAIN_UPDATES_CONFIG);
+  if (block === null) return success(base);
   const path = "brainUpdates";
-  const enabled = readBoolean(path, block, "enabled", false);
+  const enabled = readBoolean(path, block, "enabled", base.enabled);
   if (!enabled.ok) return enabled;
-  const threshold = readNumber(
-    path,
-    block,
-    "toolCallThreshold",
-    DEFAULT_BRAIN_UPDATES_CONFIG.toolCallThreshold,
-  );
+  const threshold = readNumber(path, block, "toolCallThreshold", base.toolCallThreshold);
   if (!threshold.ok) return threshold;
   if (!Number.isInteger(threshold.value) || threshold.value <= 0) {
     return failure({
@@ -221,11 +198,72 @@ function parseBrainUpdatesBlock(
 
 function parsePreambleRefreshBlock(
   block: Record<string, unknown> | null,
+  base: PreambleRefreshConfig = DEFAULT_PREAMBLE_REFRESH_CONFIG,
 ): Result<PreambleRefreshConfig, ConfigError> {
-  if (block === null) return success(DEFAULT_PREAMBLE_REFRESH_CONFIG);
-  const enabled = readBoolean("preambleRefresh", block, "enabled", false);
+  if (block === null) return success(base);
+  const enabled = readBoolean("preambleRefresh", block, "enabled", base.enabled);
   if (!enabled.ok) return enabled;
   return success({ enabled: enabled.value });
+}
+
+// Project-local override: `.operator/config.json` parsed over a base
+// (normally the profile config) so absent fields inherit the base.
+// Per-block fallback: an invalid block warns and keeps the base block
+// while valid sibling blocks still merge. A non-object root discards the
+// whole file. Unknown keys are ignored, as in the profile parser.
+export type ProjectConfigOutcome = {
+  readonly config: OperatorDeepseekConfig;
+  readonly warnings: readonly string[];
+};
+
+export function parseProjectConfig(
+  raw: unknown,
+  base: OperatorDeepseekConfig,
+): ProjectConfigOutcome {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    return { config: base, warnings: ["The project config must be an object."] };
+  }
+  const input = raw as Record<string, unknown>;
+  const warnings: string[] = [];
+  const contextBlock = readBlock(input, "contextManagement");
+  const brainBlock = readBlock(input, "brainUpdates");
+  const refreshBlock = readBlock(input, "preambleRefresh");
+  for (const block of [contextBlock, brainBlock, refreshBlock]) {
+    if (!block.ok) warnings.push(block.error.message);
+  }
+  const contextManagement = contextBlock.ok
+    ? parseContextManagementBlock(contextBlock.value, base.contextManagement)
+    : null;
+  const brainUpdates = brainBlock.ok
+    ? parseBrainUpdatesBlock(brainBlock.value, base.brainUpdates)
+    : null;
+  const preambleRefresh = refreshBlock.ok
+    ? parsePreambleRefreshBlock(refreshBlock.value, base.preambleRefresh)
+    : null;
+  if (contextManagement !== null && !contextManagement.ok) {
+    warnings.push(contextManagement.error.message);
+  }
+  if (brainUpdates !== null && !brainUpdates.ok) {
+    warnings.push(brainUpdates.error.message);
+  }
+  if (preambleRefresh !== null && !preambleRefresh.ok) {
+    warnings.push(preambleRefresh.error.message);
+  }
+  return {
+    config: {
+      contextManagement:
+        contextManagement !== null && contextManagement.ok
+          ? contextManagement.value
+          : base.contextManagement,
+      brainUpdates:
+        brainUpdates !== null && brainUpdates.ok ? brainUpdates.value : base.brainUpdates,
+      preambleRefresh:
+        preambleRefresh !== null && preambleRefresh.ok
+          ? preambleRefresh.value
+          : base.preambleRefresh,
+    },
+    warnings,
+  };
 }
 
 // Shared trigger-config view for core's evaluateTrigger: the DSH port keeps
