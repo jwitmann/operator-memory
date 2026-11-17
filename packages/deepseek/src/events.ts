@@ -179,13 +179,28 @@ async function handleTurnEnd(
   session.lastEstimate = estimate;
   session.contextWindow = window;
 
-  const decision = evaluateTrigger(
+  // Both candidate sets, sharing one dedup store (mirrors opencode's
+  // per-request hook plus completion trigger, which share runtime state).
+  // DSH has no per-request seam, so the turn-end observer evaluates both:
+  // turn-end totals only grow within a turn, so nothing a per-request check
+  // would catch is missed — enforcement is pre-step either way. Pressure
+  // causes win on ties: they name the real reason.
+  const triggerConfig = toTriggerConfig(effectiveConfig);
+  const pressure = evaluateTrigger(
     session.triggerState,
+    "request",
+    estimate,
+    window ?? 0,
+    triggerConfig,
+  );
+  const complete = evaluateTrigger(
+    pressure.state,
     "task-complete",
     estimate,
     window ?? 0,
-    toTriggerConfig(effectiveConfig),
+    triggerConfig,
   );
+  const decision = pressure.fire !== null ? pressure : complete;
   session.triggerState = decision.state;
   if (decision.fire === null) return;
   if (shouldSuppressCompactionRequest(session, estimate, window ?? 0, Date.now())) return;
@@ -193,7 +208,7 @@ async function handleTurnEnd(
   // Intent only. The cause is recorded by the pre-step enforcer at the
   // dispatch site: a stashed-but-never-enforced intent must never mislabel
   // a later host-initiated compaction. The stash expires on read.
-  session.pendingCompaction = { cause: "task-complete", estimate, at: Date.now() };
+  session.pendingCompaction = { cause: decision.fire, estimate, at: Date.now() };
 }
 
 async function handleCompactionEnd(

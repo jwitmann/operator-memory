@@ -154,4 +154,75 @@ describe("session-event tool counter", () => {
     expect(entry.lastCompactionFailure).toEqual({ at: expect.any(Number), estimate: 4000 });
     expect(entry.pendingCompaction).toBe(null);
   });
+
+  function completedTurn() {
+    return { type: "turn/end", data: { turn: 1, reason: { kind: "completed" } } };
+  }
+
+  function metered(totalTokens: number, contextWindow?: number) {
+    return {
+      measure: () => ({ totalTokens }),
+      contextPressure: () => (contextWindow === undefined ? {} : { contextWindow }),
+    };
+  }
+
+  test("ratio pressure stashes intent even with compactOnComplete off", async () => {
+    const runtime = createDshRuntime();
+    const d = deps({
+      config: {
+        ...DEFAULT_CONTEXT_MANAGEMENT_CONFIG,
+        enabled: true,
+        compactOnComplete: false,
+        ratio: 0.5,
+      },
+      tokenMeter: metered(100000, 100000),
+    });
+    await dispatchSessionEvent(session, completedTurn(), d, runtime);
+    expect(sessionRuntime(runtime, session.id).pendingCompaction).toEqual({
+      cause: "ratio",
+      estimate: 100000,
+      at: expect.any(Number),
+    });
+  });
+
+  test("pressure cause wins when both pressure and floor fire", async () => {
+    const runtime = createDshRuntime();
+    const d = deps({
+      config: {
+        ...DEFAULT_CONTEXT_MANAGEMENT_CONFIG,
+        enabled: true,
+        compactOnComplete: true,
+        compactFloorTokens: 1000,
+        ratio: 0.5,
+      },
+      tokenMeter: metered(100000, 100000),
+    });
+    await dispatchSessionEvent(session, completedTurn(), d, runtime);
+    expect(sessionRuntime(runtime, session.id).pendingCompaction?.cause).toBe("ratio");
+  });
+
+  test("task-complete still fires below ratio when the floor is met", async () => {
+    const runtime = createDshRuntime();
+    const d = deps({
+      config: {
+        ...DEFAULT_CONTEXT_MANAGEMENT_CONFIG,
+        enabled: true,
+        compactOnComplete: true,
+        compactFloorTokens: 1000,
+        ratio: 0.8,
+      },
+      tokenMeter: metered(50000, 100000),
+    });
+    await dispatchSessionEvent(session, completedTurn(), d, runtime);
+    expect(sessionRuntime(runtime, session.id).pendingCompaction?.cause).toBe("task-complete");
+  });
+
+  test("disabled config stashes nothing on a completed turn", async () => {
+    const runtime = createDshRuntime();
+    const d = deps({
+      tokenMeter: metered(100000, 100000),
+    });
+    await dispatchSessionEvent(session, completedTurn(), d, runtime);
+    expect(sessionRuntime(runtime, session.id).pendingCompaction).toBe(null);
+  });
 });

@@ -251,16 +251,9 @@ export function parseProjectConfig(
   }
   return {
     config: {
-      contextManagement:
-        contextManagement !== null && contextManagement.ok
-          ? contextManagement.value
-          : base.contextManagement,
-      brainUpdates:
-        brainUpdates !== null && brainUpdates.ok ? brainUpdates.value : base.brainUpdates,
-      preambleRefresh:
-        preambleRefresh !== null && preambleRefresh.ok
-          ? preambleRefresh.value
-          : base.preambleRefresh,
+      contextManagement: contextManagement?.ok ? contextManagement.value : base.contextManagement,
+      brainUpdates: brainUpdates?.ok ? brainUpdates.value : base.brainUpdates,
+      preambleRefresh: preambleRefresh?.ok ? preambleRefresh.value : base.preambleRefresh,
     },
     warnings,
   };
