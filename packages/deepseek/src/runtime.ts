@@ -66,7 +66,13 @@ export type PendingCause = {
   readonly at: number;
 };
 
-export type ReceiptFailureKind = "trim" | "compact" | "refusal" | "refresh" | "event-stream";
+export type ReceiptFailureKind =
+  | "trim"
+  | "compact"
+  | "refusal"
+  | "refresh"
+  | "brain-reminder"
+  | "event-stream";
 
 export const PENDING_CAUSE_TTL_MS = 10 * 60 * 1000;
 export const FAILED_COMPACTION_COOLDOWN_MS = 10 * 60 * 1000;

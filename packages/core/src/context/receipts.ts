@@ -48,7 +48,24 @@ export type RefusalReceipt = {
   readonly reason: string;
 };
 
-export type ContextReceipt = TrimReceipt | CompactReceipt | RefreshReceipt | RefusalReceipt;
+// Recorded when the Brain-update nudge fires: one per fingerprint era, at
+// most. Joined positionally to the next brain-changed refresh in the same
+// session log, it measures whether reminders produce Brain edits (moved vs
+// unanswered, plus lag from the `at` timestamps). Log-only: reminder text,
+// threshold, and once-per-era quiet are unchanged.
+export type BrainReminderReceipt = {
+  readonly kind: "brain-reminder";
+  readonly at: string;
+  readonly threshold: number;
+  readonly completedSinceBaseline: number;
+};
+
+export type ContextReceipt =
+  | TrimReceipt
+  | CompactReceipt
+  | RefreshReceipt
+  | RefusalReceipt
+  | BrainReminderReceipt;
 
 export async function appendReceipt(
   root: string,
@@ -119,6 +136,9 @@ function isContextReceipt(value: unknown): value is ContextReceipt {
   }
   if (kind === "refresh") {
     return "reason" in value && "at" in value;
+  }
+  if (kind === "brain-reminder") {
+    return "at" in value && "threshold" in value && "completedSinceBaseline" in value;
   }
   return kind === "refusal" && "at" in value && "reason" in value;
 }

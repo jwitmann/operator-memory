@@ -1,11 +1,14 @@
 import { evaluateBrainUpdateActivity } from "@aerovato/operator-core/brain-updates";
+import { appendReceipt, type BrainReminderReceipt } from "@aerovato/operator-core/context/receipts";
 import { fingerprintPreamble } from "@aerovato/operator-core/preamble-refresh";
+import { join } from "node:path";
 import type { BrainUpdatesConfig } from "./config.ts";
 import {
   countSessionCompletedCalls,
   type DshDeps,
   type DshRuntime,
   isDshStale,
+  reportReceiptFailureOnce,
   sessionRuntime,
 } from "./runtime.ts";
 
@@ -15,13 +18,19 @@ import {
 // session/event observer) instead of scanning request messages — the durable
 // log is the source of truth, so pairing is exact and costs no tokenizer
 // pass. Otherwise identical semantics: the Brain fingerprint marks the
-// baseline, crossings remind once per fingerprint era, no Brain writes, no
-// receipts.
+// baseline, crossings remind once per fingerprint era, no Brain writes. Each
+// firing also appends one log-only receipt (best-effort, never fails the
+// request) so reminder compliance can be measured by joining to the next
+// brain-changed refresh in the session log.
 
-export type BrainUpdatesDeps = Pick<DshDeps, "isBrainAvailable" | "isCurrent"> & {
+export type BrainUpdatesDeps = Pick<
+  DshDeps,
+  "isBrainAvailable" | "isCurrent" | "reportReceiptFailure"
+> & {
   readonly config: BrainUpdatesConfig;
   readonly projectDirectory: string;
   readonly homeDirectory: string;
+  readonly stateDirectory: string;
 };
 
 export async function maybeAppendBrainUpdateReminder(
@@ -59,6 +68,17 @@ export async function maybeAppendBrainUpdateReminder(
   if (isDshStale(deps)) return content;
   session.brainUpdateActivity = decision.state;
   if (!decision.crossed) return content;
+
+  const receipt: BrainReminderReceipt = {
+    kind: "brain-reminder",
+    at: new Date().toISOString(),
+    threshold: deps.config.toolCallThreshold,
+    completedSinceBaseline: decision.completedSinceBaseline,
+  };
+  // Best-effort audit trail: a lost receipt is reported once, never fails
+  // the request.
+  const written = await appendReceipt(join(deps.stateDirectory, "context-log"), sessionId, receipt);
+  if (!written.ok) reportReceiptFailureOnce(runtime, deps, sessionId, "brain-reminder");
 
   return `${content}\n\n${brainUpdateReminder(deps.config.toolCallThreshold)}`;
 }

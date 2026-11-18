@@ -189,6 +189,7 @@ const OperatorPlugin = Plugin.define({
             config: effectiveBrainUpdatesConfig,
             projectDirectory: context.location.directory,
             homeDirectory: homedir(),
+            stateDirectory: join(homedir(), ".operator", "state"),
             isBrainAvailable: sessionID => brainAvailable.get(sessionID) === true,
             isCurrent,
           },

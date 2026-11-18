@@ -43,6 +43,13 @@ const REFRESH: ContextReceipt = {
   at: "2026-10-04T14:00:00Z",
 };
 
+const BRAIN_REMINDER: ContextReceipt = {
+  kind: "brain-reminder",
+  at: "2026-10-04T14:30:00Z",
+  threshold: 25,
+  completedSinceBaseline: 25,
+};
+
 beforeEach(() => {
   vol.reset();
 });
@@ -67,6 +74,14 @@ test("round-trips refresh receipts", async () => {
 
   const result = await readReceipts(ROOT, SESSION);
   expect(result.ok && result.value).toEqual([REFRESH]);
+});
+
+test("round-trips brain-reminder receipts", async () => {
+  const written = await appendReceipt(ROOT, SESSION, BRAIN_REMINDER);
+  expect(written.ok).toBe(true);
+
+  const result = await readReceipts(ROOT, SESSION);
+  expect(result.ok && result.value).toEqual([BRAIN_REMINDER]);
 });
 
 test("reads receipts back in order", async () => {

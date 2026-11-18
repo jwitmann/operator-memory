@@ -2,8 +2,10 @@ import {
   countCompletedToolCalls,
   evaluateBrainUpdateActivity,
 } from "@aerovato/operator-core/brain-updates";
+import { appendReceipt, type BrainReminderReceipt } from "@aerovato/operator-core/context/receipts";
 import type { RequestMessage } from "@aerovato/operator-core/context/tokens";
 import { fingerprintPreamble } from "@aerovato/operator-core/preamble-refresh";
+import { join } from "node:path";
 
 import {
   isContextStale,
@@ -17,11 +19,15 @@ import type { BrainUpdatesConfig } from "./brain-updates-config.ts";
 // hook after refresh. The Brain fingerprint marks the baseline; completed tool
 // calls since the last move accumulate against one threshold. A firing request
 // appends one static reminder and stays quiet for the rest of that fingerprint
-// era. No Brain reads beyond the fingerprint, no Brain writes, no receipts.
+// era. No Brain reads beyond the fingerprint, no Brain writes. Each firing
+// also appends one log-only receipt (best-effort, never fails the request)
+// so reminder compliance can be measured by joining to the next brain-changed
+// refresh in the session log.
 export type BrainUpdatesDeps = Pick<ContextManagementDeps, "isBrainAvailable" | "isCurrent"> & {
   readonly config: BrainUpdatesConfig;
   readonly projectDirectory: string;
   readonly homeDirectory: string;
+  readonly stateDirectory: string;
 };
 
 export async function maybeAppendBrainUpdateReminder(
@@ -60,6 +66,15 @@ export async function maybeAppendBrainUpdateReminder(
   if (!decision.crossed) {
     return content;
   }
+
+  const receipt: BrainReminderReceipt = {
+    kind: "brain-reminder",
+    at: new Date().toISOString(),
+    threshold: deps.config.toolCallThreshold,
+    completedSinceBaseline: decision.completedSinceBaseline,
+  };
+  // Best-effort audit trail: a lost receipt never fails the request.
+  await appendReceipt(join(deps.stateDirectory, "context-log"), sessionID, receipt);
 
   return `${content}\n\n${brainUpdateReminder(deps.config.toolCallThreshold)}`;
 }

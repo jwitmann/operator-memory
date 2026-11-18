@@ -2,6 +2,7 @@ import { fs, vol } from "memfs";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import type { RequestMessage } from "@aerovato/operator-core/context/tokens";
+import { readReceipts } from "@aerovato/operator-core/context/receipts";
 
 import { createContextRuntime, sessionRuntime } from "../src/runtime.ts";
 import { maybeAppendBrainUpdateReminder } from "../src/brain-updates.ts";
@@ -9,8 +10,10 @@ import { maybeAppendBrainUpdateReminder } from "../src/brain-updates.ts";
 vi.mock("node:fs/promises", async () => {
   const { fs: memoryFileSystem } = await import("memfs");
   return {
+    appendFile: memoryFileSystem.promises.appendFile,
     mkdir: memoryFileSystem.promises.mkdir,
     readdir: memoryFileSystem.promises.readdir,
+    readFile: memoryFileSystem.promises.readFile,
     stat: memoryFileSystem.promises.stat,
     writeFile: memoryFileSystem.promises.writeFile,
   };
@@ -19,6 +22,7 @@ vi.mock("node:fs/promises", async () => {
 const SESSION = "ses_test";
 const PROJECT = "/project";
 const HOME = "/home/user";
+const STATE = "/state";
 
 function seedBrain(): void {
   for (const root of [`${PROJECT}/.operator`, `${PROJECT}/.operator-shared`]) {
@@ -67,6 +71,7 @@ function deps(overrides: Record<string, unknown> = {}) {
     config: { enabled: true, toolCallThreshold: 25 },
     projectDirectory: PROJECT,
     homeDirectory: HOME,
+    stateDirectory: STATE,
     isBrainAvailable: () => true,
     ...overrides,
   };
@@ -213,4 +218,66 @@ test("stays quiet when the fingerprint cannot be read", async () => {
 
   expect(unchanged).toBe("preamble");
   expect(sessionRuntime(runtime, SESSION).brainUpdateActivity.fingerprint).toBeNull();
+});
+
+test("writes one log-only receipt when the reminder fires", async () => {
+  seedBrain();
+  const runtime = createContextRuntime();
+  await maybeAppendBrainUpdateReminder(deps(), runtime, SESSION, completedMessages(0), "preamble");
+  const reminded = await maybeAppendBrainUpdateReminder(
+    deps(),
+    runtime,
+    SESSION,
+    completedMessages(25),
+    "preamble",
+  );
+  expect(reminded).toContain("<operator-brain-update-reminder>");
+
+  const logged = await readReceipts(`${STATE}/context-log`, SESSION);
+  expect(logged.ok && logged.value).toEqual([
+    {
+      kind: "brain-reminder",
+      at: expect.any(String),
+      threshold: 25,
+      completedSinceBaseline: 25,
+    },
+  ]);
+});
+
+test("writes no receipt when quiet", async () => {
+  seedBrain();
+  const runtime = createContextRuntime();
+  await maybeAppendBrainUpdateReminder(deps(), runtime, SESSION, completedMessages(0), "preamble");
+  const below = await maybeAppendBrainUpdateReminder(
+    deps(),
+    runtime,
+    SESSION,
+    completedMessages(10),
+    "preamble",
+  );
+  expect(below).toBe("preamble");
+
+  const logged = await readReceipts(`${STATE}/context-log`, SESSION);
+  expect(logged.ok && logged.value).toEqual([]);
+});
+
+test("a lost receipt never fails the reminder", async () => {
+  seedBrain();
+  const runtime = createContextRuntime();
+  await maybeAppendBrainUpdateReminder(
+    deps(),
+    runtime,
+    "../escape",
+    completedMessages(0),
+    "preamble",
+  );
+  // An unsafe session ID refuses the receipt write but must not block content.
+  const reminded = await maybeAppendBrainUpdateReminder(
+    deps(),
+    runtime,
+    "../escape",
+    completedMessages(25),
+    "preamble",
+  );
+  expect(reminded).toContain("<operator-brain-update-reminder>");
 });
