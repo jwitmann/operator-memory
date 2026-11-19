@@ -11,6 +11,7 @@ import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
 
 import { toTriggerConfig } from "./context-config.ts";
+import { rememberSnapshot } from "./compaction-snapshot.ts";
 import {
   ensureRefusalReceipt,
   ensureSessionHydrated,
@@ -47,6 +48,30 @@ export function registerContextHook(
       return;
     }
     const session = sessionRuntime(runtime, sessionID);
+
+    // Per-turn snapshot maintenance: the recall/search tools read the
+    // last-written snapshot, so every request refreshes it while the
+    // feature is active. Runs on the untrimmed messages (trim below
+    // replaces content with omission notices) and is growth-guarded, so
+    // unchanged conversations skip the rewrite. Best-effort: a failed
+    // write leaves the previous snapshot in place. A reload may have
+    // landed during hydration above: re-check before the disk write, and
+    // again before touching shared state, so a superseded generation
+    // neither regresses the file nor the guard.
+    if (isContextStale(deps)) {
+      return;
+    }
+    const remembered = await rememberSnapshot(
+      join(deps.stateDirectory, "context-snapshot"),
+      sessionID,
+      event.messages as readonly unknown[],
+      new Date().toISOString(),
+      session.snapshotSeen,
+    );
+    if (isContextStale(deps)) {
+      return;
+    }
+    session.snapshotSeen = remembered.seen;
 
     const estimatedTokens = estimateContextTokens(session.estimator, event.messages);
     const windowTokens = await resolveWindowTokens(context, session, event.model);

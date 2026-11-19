@@ -11,16 +11,19 @@
 // - Storage is a per-session JSON file under the adapter state directory
 //   (`context-snapshot/<sessionID>.json`), not host `ctx.storage`: this
 //   adapter persists through the filesystem like receipts and omissions.
-// - Writes land in the compaction hook only (per-compaction, not per-turn):
-//   recall promises post-compaction recovery, and pre-compaction turns are
-//   still live history. No in-memory `seen` map: compactions are rare enough
-//   that an unconditional write per compaction needs no growth guard.
+// - Writes are maintained per turn by the context hook (growth-guarded by
+//   version/count/lastID, best-effort file write); the compaction hook
+//   refreshes unconditionally — the guard makes an unchanged conversation
+//   a no-op, and the refresh heals a failed per-turn write at the moment
+//   freshness matters most (deliberately stricter than the oracle's
+//   seen-presence skip, which would freeze such staleness in). The
+//   oracle's >1MB warn tripwire has no console here, so the constant is
+//   kept for observability and the write still lands.
 // - Surface is agent tools (`operator:recall`, `operator:search`), not slash
 //   commands: the checkpoint guide promises agent-callable recovery, and
 //   tools follow the `operator:read_omitted` precedent. No status formatter:
 //   the file itself is the status.
-// - No `console` output anywhere: the 1MB tripwire constant and byte measure
-//   are kept for observability, but the write path reports through Result.
+// - No `console` output anywhere: failures resolve through Result, never warn.
 
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -199,9 +202,9 @@ export function buildSnapshot(messages: readonly unknown[]): Omit<SnapshotEnvelo
   };
 }
 
-// Decide whether a snapshot write is needed (growth guard). The compaction
-// hook writes unconditionally, so this exists for future per-turn writers
-// and for tests.
+// Decide whether a snapshot write is needed (growth guard). The context
+// hook maintains the snapshot per turn through `rememberSnapshot`; this
+// stays exported for tests.
 export function snapshotNeedsWrite(
   previous:
     | { readonly version?: number; readonly count?: number; readonly lastID?: string }
@@ -224,6 +227,52 @@ export function snapshotWriteBytes(envelope: unknown): number {
     return typeof text === "string" ? text.length : 0;
   } catch {
     return 0;
+  }
+}
+
+// Growth-guard state for per-turn snapshot maintenance: the last
+// successfully written snapshot's identity. The session runtime holds one
+// per session; the compaction hook treats non-null as proof the context
+// hook already covers the session.
+export type SnapshotSeen = {
+  readonly version: number;
+  readonly count: number;
+  readonly lastID?: string;
+};
+
+// Per-turn snapshot maintenance shared by the context hook (every request)
+// and the compaction hook (fallback when no context-hook snapshot exists
+// for the session yet). Growth-guarded: an unchanged conversation (same
+// version/count/lastID as `prev`) skips the rewrite, so idle turns cost no
+// I/O. Best-effort and never throws: every failure resolves to unwritten
+// with the previous seen state kept, so the next turn retries.
+export async function rememberSnapshot(
+  root: string,
+  sessionID: string,
+  messages: readonly unknown[],
+  at: string,
+  prev: SnapshotSeen | null | undefined,
+): Promise<{ readonly wrote: boolean; readonly seen: SnapshotSeen | null }> {
+  const kept = prev ?? null;
+  try {
+    const snap = buildSnapshot(messages);
+    if (!snapshotNeedsWrite(kept, snap)) {
+      return { wrote: false, seen: kept };
+    }
+    const written = await writeCompactionSnapshot(root, sessionID, messages, at);
+    if (!written.ok) {
+      return { wrote: false, seen: kept };
+    }
+    return {
+      wrote: true,
+      seen: {
+        version: snap.version,
+        count: snap.count,
+        ...(snap.lastID === undefined ? {} : { lastID: snap.lastID }),
+      },
+    };
+  } catch {
+    return { wrote: false, seen: kept };
   }
 }
 

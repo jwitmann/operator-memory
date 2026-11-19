@@ -18,6 +18,7 @@ import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
 
 import type { ContextManagementConfig } from "./context-config.ts";
+import type { SnapshotSeen } from "./compaction-snapshot.ts";
 
 // Per-session runtime state for context management. Kept in memory: dedup and
 // the provider anchor are heuristics, so losing them on restart is safe (the
@@ -61,6 +62,13 @@ export type SessionRuntime = {
   // move under cache gates, while the reminder consumes moves after a
   // completed-call threshold with no re-arm.
   brainUpdateActivity: BrainUpdateActivityState;
+  // Snapshot growth-guard state for per-turn recall/search maintenance.
+  // Advanced by the context hook on every request and refreshed by the
+  // compaction hook (growth-guarded, so an unchanged conversation is a
+  // no-op). Null until the first successful snapshot write in this
+  // process. In-memory like the rest: losing it only costs one redundant
+  // rewrite.
+  snapshotSeen: SnapshotSeen | null;
 };
 
 export type ContextRuntime = {
@@ -199,9 +207,15 @@ export function sessionRuntime(runtime: ContextRuntime, sessionID: string): Sess
     // Backfill for sessions created before this field existed (a pinned
     // globalThis runtime outlives a bundle upgrade): without it the
     // suppression check would read undefined and throw on `.at`.
-    const legacy = existing as unknown as { lastCompactionFailure?: unknown };
+    const legacy = existing as unknown as {
+      lastCompactionFailure?: unknown;
+      snapshotSeen?: unknown;
+    };
     if (legacy.lastCompactionFailure === undefined) {
       existing.lastCompactionFailure = null;
+    }
+    if (legacy.snapshotSeen === undefined) {
+      existing.snapshotSeen = null;
     }
     return existing;
   }
@@ -219,6 +233,7 @@ export function sessionRuntime(runtime: ContextRuntime, sessionID: string): Sess
     preambleFingerprint: null,
     preambleRefreshPending: false,
     brainUpdateActivity: EMPTY_BRAIN_UPDATE_ACTIVITY_STATE,
+    snapshotSeen: null,
   };
   runtime.sessions.set(sessionID, created);
   return created;

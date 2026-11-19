@@ -235,10 +235,36 @@ test("writes a compaction snapshot for recall on both paths", async () => {
   expect(overrideSnap.ok && overrideSnap.value?.count).toBe(26);
   expect(overrideSnap.ok && overrideSnap.value?.lastID).toBe("t4");
 
+  // A wiped state directory with a live in-memory guard is not a real host
+  // state (hosts never wipe the directory mid-process), so the second leg
+  // uses a fresh runtime like a new process would.
   vol.reset();
-  await hook(compactionEvent(3));
+  registerCompactionHook(context, DEPS, createContextRuntime());
+  const hook2 = sessionHook.mock.calls[1]?.[1] as (event: TestEvent) => Promise<void>;
+  await hook2(compactionEvent(3));
   const shapedSnap = await readCompactionSnapshot(`${STATE}/context-snapshot`, SESSION);
   expect(shapedSnap.ok && shapedSnap.value?.count).toBe(3);
+});
+
+test("heals a lagging snapshot on compaction when the per-turn write failed", async () => {
+  const { context, sessionHook } = hookFake();
+  const runtime = createContextRuntime();
+  // Simulate a session whose last per-turn write failed: the guard lags
+  // the conversation, and the file is missing.
+  sessionRuntime(runtime, SESSION).snapshotSeen = { version: 1, count: 1 };
+  registerCompactionHook(context, DEPS, runtime);
+  const hook = sessionHook.mock.calls[0]?.[1] as (event: TestEvent) => Promise<void>;
+
+  await hook(compactionEvent(3));
+
+  const snap = await readCompactionSnapshot(`${STATE}/context-snapshot`, SESSION);
+  expect(snap.ok && snap.value?.count).toBe(3);
+  expect(sessionRuntime(runtime, SESSION).snapshotSeen?.count).toBe(3);
+
+  // An unchanged conversation is a growth-guarded no-op (same seen reference).
+  const seenAfterHeal = sessionRuntime(runtime, SESSION).snapshotSeen;
+  await hook(compactionEvent(3));
+  expect(sessionRuntime(runtime, SESSION).snapshotSeen).toBe(seenAfterHeal);
 });
 
 test("labels the receipt with the recorded request cause", async () => {

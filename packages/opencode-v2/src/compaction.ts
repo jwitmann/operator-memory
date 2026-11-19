@@ -9,7 +9,7 @@ import {
   DEFAULT_VCC_KEEP_MESSAGES,
   resolveVccCompilerConfig,
 } from "./compaction-compiler.ts";
-import { writeCompactionSnapshot } from "./compaction-snapshot.ts";
+import { rememberSnapshot } from "./compaction-snapshot.ts";
 
 import {
   ensureRefusalReceipt,
@@ -134,14 +134,28 @@ export function registerCompactionHook(
     if (!written.ok) {
       reportReceiptFailureOnce(runtime, deps, sessionID, "compact");
     }
-    // Best-effort snapshot of the pre-compaction request: the lossless
-    // counterpart the recall/search tools read. A failed write is never
-    // fatal — the tools reply that recall is unavailable.
-    await writeCompactionSnapshot(
+    // Snapshot refresh: the context hook maintains the snapshot on every
+    // turn, and this call is growth-guarded, so an unchanged conversation
+    // skips the rewrite at zero I/O cost. It runs unconditionally (rather
+    // than skipping when the guard is non-null, as the oracle does) so a
+    // failed per-turn write heals here, at the moment freshness matters
+    // most. Best-effort like the rest: a failed write is never fatal —
+    // the tools reply that recall is unavailable. A reload may have landed
+    // during the receipt write above: re-check before the disk write, and
+    // again before touching shared state.
+    if (isContextStale(deps)) {
+      return;
+    }
+    const remembered = await rememberSnapshot(
       join(deps.stateDirectory, "context-snapshot"),
       sessionID,
       event.messages as readonly unknown[],
       new Date().toISOString(),
+      session.snapshotSeen,
     );
+    if (isContextStale(deps)) {
+      return;
+    }
+    session.snapshotSeen = remembered.seen;
   });
 }

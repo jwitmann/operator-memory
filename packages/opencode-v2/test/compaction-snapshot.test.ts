@@ -14,6 +14,7 @@ import {
   MAX_SNAPSHOT_WRITE_BYTES,
   readCompactionSnapshot,
   recallFromSnapshot,
+  rememberSnapshot,
   resolveRecallSelections,
   searchSnapshot,
   snapshotMessageToRecall,
@@ -185,6 +186,33 @@ test("snapshot recall tolerates missing input and default budgets", () => {
     recallFromSnapshot(buildSnapshot(SNAP_MSGS).messages, [{ start: 1, end: 1 }], undefined)
       .recalled,
   ).toBe(1);
+});
+
+test("rememberSnapshot writes once, then skips until growth", async () => {
+  const first = await rememberSnapshot(ROOT, SESSION, SNAP_MSGS, "2026-11-20T00:00:00Z", null);
+  expect(first.wrote).toBe(true);
+  expect(first.seen).toEqual({ version: 1, count: 5, lastID: "m6" });
+
+  const same = await rememberSnapshot(ROOT, SESSION, SNAP_MSGS, "2026-11-20T00:00:01Z", first.seen);
+  expect(same.wrote).toBe(false);
+  expect(same.seen).toBe(first.seen);
+
+  const grown = await rememberSnapshot(
+    ROOT,
+    SESSION,
+    [...SNAP_MSGS, { id: "m7", role: "user", content: [{ type: "text", text: "more" }] }],
+    "2026-11-20T00:00:02Z",
+    same.seen,
+  );
+  expect(grown.wrote).toBe(true);
+  expect(grown.seen?.count).toBe(6);
+});
+
+test("rememberSnapshot is best-effort on unsafe segments", async () => {
+  expect(await rememberSnapshot(ROOT, "../evil", SNAP_MSGS, "t", null)).toEqual({
+    wrote: false,
+    seen: null,
+  });
 });
 
 test("snapshot replies label provenance", () => {

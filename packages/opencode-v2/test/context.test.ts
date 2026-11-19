@@ -4,8 +4,9 @@ import { beforeEach, expect, test, vi } from "vitest";
 
 import type { ContextManagementConfig } from "../src/context-config.ts";
 import { registerContextHook } from "../src/context.ts";
+import { readCompactionSnapshot } from "../src/compaction-snapshot.ts";
 import { dispatchEvent } from "../src/events.ts";
-import { createContextRuntime } from "../src/runtime.ts";
+import { createContextRuntime, sessionRuntime } from "../src/runtime.ts";
 
 vi.mock("node:fs/promises", async () => {
   const { fs: memoryFileSystem } = await import("memfs");
@@ -15,6 +16,7 @@ vi.mock("node:fs/promises", async () => {
     mkdir: memoryFileSystem.promises.mkdir,
     readFile: memoryFileSystem.promises.readFile,
     readdir: memoryFileSystem.promises.readdir,
+    rename: memoryFileSystem.promises.rename,
     stat: memoryFileSystem.promises.stat,
     unlink: memoryFileSystem.promises.unlink,
     writeFile: memoryFileSystem.promises.writeFile,
@@ -116,6 +118,56 @@ test("leaves small sessions untouched and writes no receipt", async () => {
   expect(event.messages[0]?.content[0]).toEqual({ type: "text", text: "hello" });
   expect(fs.existsSync(`${STATE}/context-log/${SESSION}.log`)).toBe(false);
   expect(requestCompaction).not.toHaveBeenCalled();
+});
+
+test("maintains the recall snapshot on every turn, even below threshold", async () => {
+  const { context, sessionHook } = contextHookFake(100000);
+  const runtime = createContextRuntime();
+  registerContextHook(
+    context,
+    {
+      config: CONFIG,
+      stateDirectory: STATE,
+      isBrainAvailable: () => true,
+      reportReceiptFailure: () => undefined,
+      requestCompaction: () => undefined,
+    },
+    runtime,
+  );
+
+  const hook = sessionHook.mock.calls[0]?.[1] as (event: unknown) => Promise<void>;
+  const event = fakeEvent([[{ type: "text", text: "hello" }]], null);
+
+  await hook(event);
+
+  // No receipt for a small session, but the snapshot is maintained so
+  // post-compaction turns stay searchable.
+  expect(fs.existsSync(`${STATE}/context-log/${SESSION}.log`)).toBe(false);
+  const snap = await readCompactionSnapshot(`${STATE}/context-snapshot`, SESSION);
+  expect(snap.ok && snap.value?.count).toBe(1);
+  expect(JSON.stringify(snap.ok && snap.value !== null ? snap.value.messages : null)).toContain(
+    "hello",
+  );
+  const seenAfterFirst = sessionRuntime(runtime, SESSION).snapshotSeen;
+  expect(seenAfterFirst?.count).toBe(1);
+
+  // An unchanged conversation skips the rewrite (same seen reference).
+  await hook(event);
+  expect(sessionRuntime(runtime, SESSION).snapshotSeen).toBe(seenAfterFirst);
+
+  // Growth refreshes the snapshot.
+  const grown = fakeEvent(
+    [[{ type: "text", text: "hello" }], [{ type: "text", text: "and more" }]],
+    null,
+  );
+  await hook(grown);
+  const refreshed = sessionRuntime(runtime, SESSION).snapshotSeen;
+  expect(refreshed).not.toBe(seenAfterFirst);
+  expect(refreshed?.count).toBe(2);
+  const reread = await readCompactionSnapshot(`${STATE}/context-snapshot`, SESSION);
+  expect(
+    JSON.stringify(reread.ok && reread.value !== null ? reread.value.messages : null),
+  ).toContain("and more");
 });
 
 test("trims past the ratio threshold and writes a trim receipt", async () => {
