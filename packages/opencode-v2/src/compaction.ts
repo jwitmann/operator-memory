@@ -16,11 +16,14 @@ import {
 
 // Shapes the host compaction request with Brain-referencing instructions on
 // the system prompt. Messages go through intact: the host replaces the
-// request-view history with exactly the summary it produces, so neither
-// short-circuiting via `result` (which would substitute a content-free note
-// for the history) nor excluding a "protected tail" (which would hide it
-// from the summarizer and drop it from view) preserves anything. Verified
-// live on v2.0.22.
+// request-view history with exactly the summary it produces. Overriding via
+// `result` without `metadata.keepID` substitutes a content-free note for the
+// history (observed live on v2.0.22); with `metadata.keepID` the host
+// persists the supplied summary verbatim, rebuilds the tail from the kept ID,
+// and makes no model call (proven live on v2.3.2 — see the opencode-vcc-port
+// probe, `probe-results/compaction-result-override.jsonl`). Excluding a
+// "protected tail" from the request still preserves nothing: hidden from the
+// summarizer, it drops from view (v2.0.22 finding, not re-probed).
 
 export const DEFAULT_BRAIN_PATHS = ["~/.operator/user", ".operator", ".operator-shared"];
 
