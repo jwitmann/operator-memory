@@ -46,14 +46,19 @@ function compactionEvent(messageCount: number): TestEvent {
   return makeEvent(messages);
 }
 
-function makeEvent(
-  messages: { role: string; content: { type: string; text: string }[] }[],
-): TestEvent {
+type TestMessage = {
+  readonly id?: string;
+  readonly role: string;
+  readonly content: readonly unknown[];
+  readonly toolCallId?: string;
+};
+
+function makeEvent(messages: readonly TestMessage[]): TestEvent {
   return {
     sessionID: SESSION,
     model: { id: "anthropic/claude-sonnet-4", providerID: "anthropic" },
     system: [{ type: "text", text: "summarize" }],
-    messages,
+    messages: [...messages],
     options: {},
     tools: {},
     agent: "build",
@@ -61,15 +66,54 @@ function makeEvent(
   };
 }
 
+function largeIdEvent(): TestEvent {
+  const messages: TestMessage[] = [];
+  for (let index = 0; index < 10; index += 1) {
+    messages.push({
+      id: `a${index}`,
+      role: "assistant",
+      content: [
+        {
+          type: "tool-call",
+          id: `c${index}`,
+          name: "read",
+          input: JSON.stringify({ file_path: "f.js" }),
+        },
+      ],
+    });
+    messages.push({
+      id: `b${index}`,
+      role: "tool",
+      toolCallId: `c${index}`,
+      content: [
+        {
+          type: "tool-result",
+          id: `c${index}`,
+          result: { type: "text", value: `output line ${index} `.repeat(500) },
+        },
+      ],
+    });
+  }
+  messages.push({ id: "tail1", role: "user", content: [{ type: "text", text: "continue" }] });
+  for (let index = 0; index < 5; index += 1) {
+    messages.push({
+      id: `t${index}`,
+      role: "user",
+      content: [{ type: "text", text: `tail ${index}` }],
+    });
+  }
+  return makeEvent(messages);
+}
+
 type TestEvent = {
   sessionID: string;
   model: { id: string; providerID: string };
   system: { type: string; text: string }[];
-  messages: { role: string; content: { type: string; text: string }[] }[];
+  messages: TestMessage[];
   options: Record<string, never>;
   tools: Record<string, never>;
   agent: string;
-  result: { summary: string } | null;
+  result: { summary: string; metadata?: { keepID?: string } } | null;
 };
 
 const DEPS = {
@@ -107,6 +151,75 @@ test("shapes the request and leaves messages intact", async () => {
   expect(receipts.ok ? receipts.value[0] : null).toMatchObject({
     kind: "compact",
     trigger: "manual",
+    engine: "shaped",
+  });
+});
+
+test("overrides with a compiled checkpoint and keepID when the span shrinks", async () => {
+  const { context, sessionHook } = hookFake();
+  registerCompactionHook(context, DEPS, createContextRuntime());
+  const hook = sessionHook.mock.calls[0]?.[1] as (event: TestEvent) => Promise<void>;
+
+  const event = largeIdEvent();
+  await hook(event);
+
+  // Deterministic override: verbatim summary plus tail pointer, no extra
+  // system shaping.
+  expect(event.result !== null).toBe(true);
+  expect(event.result?.summary).toContain("RECALL");
+  expect(event.result?.metadata?.keepID).toBe("tail1");
+  expect(event.system).toHaveLength(1);
+  expect(event.messages).toHaveLength(26);
+
+  const receipts = await readReceipts(`${STATE}/context-log`, SESSION);
+  expect(receipts.ok ? receipts.value[0] : null).toMatchObject({
+    kind: "compact",
+    trigger: "manual",
+    engine: "vcc",
+  });
+  const summaryTokens =
+    receipts.ok && receipts.value[0]?.kind === "compact" ? receipts.value[0].summaryTokens : null;
+  expect(typeof summaryTokens).toBe("number");
+});
+
+test("falls back to shaping when no message id exists at or after the cut", async () => {
+  const { context, sessionHook } = hookFake();
+  registerCompactionHook(context, DEPS, createContextRuntime());
+  const hook = sessionHook.mock.calls[0]?.[1] as (event: TestEvent) => Promise<void>;
+
+  // Same bulk as the override span but without ids: no keepID, so abstain.
+  const messages = Array.from({ length: 10 }, (_, index) => ({
+    role: "user",
+    content: [{ type: "text", text: `older history ${index} `.repeat(60) }],
+  }));
+  const event = makeEvent(messages);
+  await hook(event);
+
+  expect(event.result).toBeNull();
+  expect(event.system).toHaveLength(2);
+  const receipts = await readReceipts(`${STATE}/context-log`, SESSION);
+  expect(receipts.ok ? receipts.value[0] : null).toMatchObject({
+    kind: "compact",
+    engine: "shaped",
+    summaryTokens: null,
+  });
+});
+
+test("falls back to shaping when the framed checkpoint would not shrink the request", async () => {
+  const { context, sessionHook } = hookFake();
+  registerCompactionHook(context, DEPS, createContextRuntime());
+  const hook = sessionHook.mock.calls[0]?.[1] as (event: TestEvent) => Promise<void>;
+
+  const event = makeEvent([{ id: "m1", role: "user", content: [{ type: "text", text: "hi" }] }]);
+  await hook(event);
+
+  expect(event.result).toBeNull();
+  expect(event.system).toHaveLength(2);
+  const receipts = await readReceipts(`${STATE}/context-log`, SESSION);
+  expect(receipts.ok ? receipts.value[0] : null).toMatchObject({
+    kind: "compact",
+    engine: "shaped",
+    summaryTokens: null,
   });
 });
 

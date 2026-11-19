@@ -29,6 +29,16 @@ export type CompactReceipt = {
   readonly trigger: CompactionCause;
   readonly at: string;
   readonly summarized: number;
+  // Which engine produced the replacement history: the deterministic VCC
+  // compiler ("vcc"), the host model under our shaped prompt ("shaped"), or
+  // a host-chosen backend the adapter cannot see ("unknown", DSH). Old logs
+  // predate the field and still validate; it exists so later analysis can
+  // tell compiled checkpoints from prose ones without parsing text.
+  readonly engine: "vcc" | "shaped" | "unknown";
+  // Estimated tokens of the replacement summary, or null when the adapter
+  // never sees it (shaped path: the host model summarizes; DSH: the backend
+  // compiles internally).
+  readonly summaryTokens: number | null;
 };
 
 // Recorded when the preamble re-renders mid-session: the Brain changed on

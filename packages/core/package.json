@@ -13,6 +13,8 @@
     "./context/receipts": "./src/context/receipts.ts",
     "./context/triggers": "./src/context/triggers.ts",
     "./context/compaction": "./src/context/compaction.ts",
+    "./context/compiler": "./src/context/compiler.ts",
+    "./utils": "./src/utils.ts",
     "./memory/frontmatter": "./src/memory/frontmatter.ts",
     "./memory/load": "./src/memory/load.ts",
     "./preamble": "./src/preamble.ts",

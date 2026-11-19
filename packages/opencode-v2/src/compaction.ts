@@ -5,6 +5,12 @@ import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
 
 import {
+  compileCompaction,
+  DEFAULT_VCC_KEEP_MESSAGES,
+  resolveVccCompilerConfig,
+} from "./compaction-compiler.ts";
+
+import {
   ensureRefusalReceipt,
   ensureSessionHydrated,
   isContextStale,
@@ -15,16 +21,18 @@ import {
   type ContextRuntime,
 } from "./runtime.ts";
 
-// Shapes the host compaction request with Brain-referencing instructions on
-// the system prompt. Messages go through intact: the host replaces the
-// request-view history with exactly the summary it produces. Overriding via
-// `result` without `metadata.keepID` substitutes a content-free note for the
-// history (observed live on v2.0.22); with `metadata.keepID` the host
-// persists the supplied summary verbatim, rebuilds the tail from the kept ID,
-// and makes no model call (proven live on v2.3.2 — see the opencode-vcc-port
-// probe, `probe-results/compaction-result-override.jsonl`). Excluding a
-// "protected tail" from the request still preserves nothing: hidden from the
-// summarizer, it drops from view (v2.0.22 finding, not re-probed).
+// Deterministic instant-compaction first, shaped model compaction as
+// fallback. The hook compiles the request messages with the VCC region
+// compiler and, when the framed checkpoint is smaller than the request and a
+// keepID tail pointer exists, persists it verbatim via `event.result` with
+// no model call (proven live on v2.3.2 — see the opencode-vcc-port probe,
+// `probe-results/compaction-result-override.jsonl`). Otherwise the hook
+// shapes the host compaction request with Brain-referencing instructions on
+// the system prompt and the host summarizes. Overriding via `result`
+// without `metadata.keepID` substitutes a content-free note for the history
+// (observed live on v2.0.22); excluding a "protected tail" from the request
+// still preserves nothing: hidden from the summarizer, it drops from view
+// (v2.0.22 finding, not re-probed).
 
 export const DEFAULT_BRAIN_PATHS = ["~/.operator/user", ".operator", ".operator-shared"];
 
@@ -72,11 +80,6 @@ export function registerCompactionHook(
       event.messages as readonly RequestMessage[],
     );
 
-    event.system.push({
-      type: "text",
-      text: buildCompactionPrompt({ brainPaths: deps.brainPaths }),
-    });
-
     // The cause is recorded by our own compaction requesters; a host-initiated
     // compaction carries none and is labeled manual, as is a stale entry from
     // a requested-but-never-executed compaction past its TTL.
@@ -87,12 +90,41 @@ export function registerCompactionHook(
         : "manual";
     runtime.pendingCauses.delete(sessionID);
 
-    const receipt: CompactReceipt = {
-      kind: "compact",
-      trigger: cause,
-      at: new Date().toISOString(),
-      summarized: Math.max(0, estimatedTokens),
-    };
+    // Deterministic override first: when the compiler produces a smaller
+    // checkpoint with a keepID tail pointer, persist it verbatim with no
+    // model call. Otherwise fall back to shaping the host's own summary.
+    const vcc = compileCompaction(
+      event.messages as readonly unknown[],
+      resolveVccCompilerConfig(),
+      DEFAULT_VCC_KEEP_MESSAGES,
+      Math.max(0, estimatedTokens),
+    );
+    const receipt: CompactReceipt =
+      vcc === undefined
+        ? {
+            kind: "compact",
+            trigger: cause,
+            at: new Date().toISOString(),
+            summarized: Math.max(0, estimatedTokens),
+            engine: "shaped",
+            summaryTokens: null,
+          }
+        : {
+            kind: "compact",
+            trigger: cause,
+            at: new Date().toISOString(),
+            summarized: Math.max(0, estimatedTokens),
+            engine: "vcc",
+            summaryTokens: vcc.summaryTokens,
+          };
+    if (vcc !== undefined) {
+      event.result = { summary: vcc.summary, metadata: { keepID: vcc.keepID } };
+    } else {
+      event.system.push({
+        type: "text",
+        text: buildCompactionPrompt({ brainPaths: deps.brainPaths }),
+      });
+    }
     const written = await appendReceipt(
       join(deps.stateDirectory, "context-log"),
       sessionID,

@@ -47,12 +47,16 @@ test("seeds trigger state from trim and compact receipts, skipping manual", asyn
     trigger: "task-complete",
     at: "2026-10-04T12:30:00Z",
     summarized: 100000,
+    engine: "vcc",
+    summaryTokens: 20000,
   });
   await appendReceipt(`${STATE}/context-log`, SESSION, {
     kind: "compact",
     trigger: "manual",
     at: "2026-10-04T12:31:00Z",
     summarized: 90000,
+    engine: "shaped",
+    summaryTokens: null,
   });
 
   const runtime = createContextRuntime();

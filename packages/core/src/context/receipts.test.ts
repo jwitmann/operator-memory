@@ -29,6 +29,8 @@ const COMPACT: ContextReceipt = {
   trigger: "task-complete",
   at: "2026-10-04T12:30:00Z",
   summarized: 188000,
+  engine: "vcc",
+  summaryTokens: 42000,
 };
 
 const REFUSAL: ContextReceipt = {

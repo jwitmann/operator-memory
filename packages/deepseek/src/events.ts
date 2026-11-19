@@ -273,6 +273,10 @@ async function handleCompactionEnd(
     trigger: cause,
     at: new Date().toISOString(),
     summarized: Math.max(0, session.lastEstimate ?? 0),
+    // This adapter cannot see which host backend compiled (vcc or basic),
+    // so the engine stays unattributed here.
+    engine: "unknown",
+    summaryTokens: null,
   });
   if (!written.ok) reportReceiptFailureOnce(runtime, deps, sessionId, "compact");
 }
