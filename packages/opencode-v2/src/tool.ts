@@ -3,8 +3,20 @@ import {
   pruneOmissions,
   readOmission,
 } from "@aerovato/operator-core/context/store";
+import { InvalidSearchPatternError } from "@aerovato/operator-core/context/search";
+import { isRecord } from "@aerovato/operator-core/utils";
 import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
+
+import {
+  classifySnapshotStore,
+  formatRecallReply,
+  formatSearchReply,
+  readCompactionSnapshot,
+  recallFromSnapshot,
+  resolveRecallSelections,
+  searchSnapshot,
+} from "./compaction-snapshot.ts";
 
 export type ReadOmittedDeps = {
   // ~/.operator/state; the adapter computes it from the user home.
@@ -153,4 +165,131 @@ function readNonNegativeNumber(record: object, key: string, fallback: number): n
   }
   const value = (record as Record<string, unknown>)[key];
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : fallback;
+}
+
+// Registers operator:recall: restores the exact original content of compacted
+// history from the per-session snapshot by seq selection, tool-result
+// reference, or checkpoint ordinal. The checkpoint guide names this tool, so
+// a compiled summary's `(seq N)` pointers stay dereferenceable.
+export async function registerRecallTool(context: Context, deps: ReadOmittedDeps): Promise<void> {
+  await context.tool.transform(editor => {
+    editor.namespace({
+      name: "operator",
+      description: "Operator Memory context management tools.",
+    });
+    editor.add({
+      name: "recall",
+      description:
+        "Restore exact original content compacted away by Operator instant-compaction. "
+        + 'Takes a reference type and id: type "seq" with a seq selection like "3-7"; '
+        + 'type "result" with a tool-result seq like "3"; type "checkpoint" with an '
+        + 'ordinal like "1" (1 = oldest). Only works after the first compaction in this session.',
+      input: {
+        type: "object",
+        properties: {
+          type: {
+            type: "string",
+            description: "Reference type: seq, result, or checkpoint.",
+          },
+          id: {
+            type: "string",
+            description: 'Type-dependent reference. E.g.: "3-7", "3", "1".',
+          },
+        },
+        required: ["type", "id"],
+      },
+      execute: async (input, toolContext) => {
+        if (
+          !isRecord(input)
+          || (input.type !== "seq" && input.type !== "result" && input.type !== "checkpoint")
+        ) {
+          return {
+            content: "Missing or invalid input: type must be one of seq, result, checkpoint.",
+          };
+        }
+        if (typeof input.id !== "string" || input.id.trim() === "") {
+          return { content: "Missing required input: id." };
+        }
+        const read = await readCompactionSnapshot(
+          join(deps.stateDirectory, "context-snapshot"),
+          toolContext.sessionID,
+        );
+        const classified = classifySnapshotStore(read);
+        if (classified.status === "failed") {
+          return { content: "Could not read compaction snapshot for this session." };
+        }
+        if (classified.status === "empty") {
+          return {
+            content:
+              "No compaction snapshot yet for this session. Recall is available after the first compaction.",
+          };
+        }
+        const resolved = resolveRecallSelections(classified.messages, input.type, input.id);
+        if (resolved.errors.length > 0 || resolved.selections.length === 0) {
+          return {
+            content: resolved.errors.length > 0 ? resolved.errors.join("; ") : "Nothing to recall.",
+          };
+        }
+        const recalled = recallFromSnapshot(classified.messages, resolved.selections);
+        return { content: formatRecallReply(input.type, input.id, recalled) };
+      },
+    });
+  });
+}
+
+// Registers operator:search: keyword/regex search over the compacted
+// session history in the per-session snapshot. Hits carry `(seq N)` pointers
+// that operator:recall restores in full.
+export async function registerSearchTool(context: Context, deps: ReadOmittedDeps): Promise<void> {
+  await context.tool.transform(editor => {
+    editor.namespace({
+      name: "operator",
+      description: "Operator Memory context management tools.",
+    });
+    editor.add({
+      name: "search",
+      description:
+        "Search this session's compacted history by keyword or regex. "
+        + "Returns matching events with (seq N) pointers; use operator:recall to "
+        + "restore any hit's full original content. Only works after the first compaction in this session.",
+      input: {
+        type: "object",
+        properties: {
+          pattern: {
+            type: "string",
+            description: 'Keyword or regex to search for. E.g.: "login".',
+          },
+        },
+        required: ["pattern"],
+      },
+      execute: async (input, toolContext) => {
+        if (!isRecord(input) || typeof input.pattern !== "string" || input.pattern.trim() === "") {
+          return { content: "Missing required input: pattern." };
+        }
+        const read = await readCompactionSnapshot(
+          join(deps.stateDirectory, "context-snapshot"),
+          toolContext.sessionID,
+        );
+        const classified = classifySnapshotStore(read);
+        if (classified.status === "failed") {
+          return { content: "Could not read compaction snapshot for this session." };
+        }
+        if (classified.status === "empty") {
+          return {
+            content:
+              "No compaction snapshot yet for this session. Search is available after the first compaction.",
+          };
+        }
+        try {
+          const found = searchSnapshot(classified.messages, input.pattern);
+          return { content: formatSearchReply(input.pattern, found) };
+        } catch (error) {
+          if (error instanceof InvalidSearchPatternError) {
+            return { content: `Invalid search pattern: ${error.source}.` };
+          }
+          throw error;
+        }
+      },
+    });
+  });
 }

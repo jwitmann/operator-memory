@@ -9,6 +9,7 @@ import {
   DEFAULT_VCC_KEEP_MESSAGES,
   resolveVccCompilerConfig,
 } from "./compaction-compiler.ts";
+import { writeCompactionSnapshot } from "./compaction-snapshot.ts";
 
 import {
   ensureRefusalReceipt,
@@ -133,5 +134,14 @@ export function registerCompactionHook(
     if (!written.ok) {
       reportReceiptFailureOnce(runtime, deps, sessionID, "compact");
     }
+    // Best-effort snapshot of the pre-compaction request: the lossless
+    // counterpart the recall/search tools read. A failed write is never
+    // fatal — the tools reply that recall is unavailable.
+    await writeCompactionSnapshot(
+      join(deps.stateDirectory, "context-snapshot"),
+      sessionID,
+      event.messages as readonly unknown[],
+      new Date().toISOString(),
+    );
   });
 }

@@ -27,7 +27,12 @@ import { DEFAULT_PREAMBLE_REFRESH_CONFIG, parsePreambleRefreshConfig } from "./r
 import { maybeAppendBrainUpdateReminder } from "./brain-updates.ts";
 import { DEFAULT_BRAIN_UPDATES_CONFIG, parseBrainUpdatesConfig } from "./brain-updates-config.ts";
 import { sharedContextRuntime } from "./runtime.ts";
-import { registerPruneTool, registerReadOmittedTool } from "./tool.ts";
+import {
+  registerPruneTool,
+  registerReadOmittedTool,
+  registerRecallTool,
+  registerSearchTool,
+} from "./tool.ts";
 import {
   OperatorNotifications,
   type OperatorStatus,
@@ -266,6 +271,8 @@ const OperatorPlugin = Plugin.define({
         registerCompletionTrigger(context, deps, runtime, { signal: controller.signal });
         await registerReadOmittedTool(context, { stateDirectory });
         await registerPruneTool(context, { stateDirectory });
+        await registerRecallTool(context, { stateDirectory });
+        await registerSearchTool(context, { stateDirectory });
       } else {
         // Refresh-only telemetry: step anchoring without triggers.
         registerStepTracking(

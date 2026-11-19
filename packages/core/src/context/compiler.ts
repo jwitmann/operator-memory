@@ -352,7 +352,7 @@ export function projectToolResultText(blocks: unknown): string {
   return parts.join("\n");
 }
 
-type MessageSource =
+export type MessageSource =
   | {
       readonly kind?: unknown;
       readonly [key: string]: unknown;

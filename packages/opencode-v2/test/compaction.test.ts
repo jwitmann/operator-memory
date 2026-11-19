@@ -4,6 +4,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 
 import type { ContextManagementConfig } from "../src/context-config.ts";
 import { DEFAULT_BRAIN_PATHS, registerCompactionHook } from "../src/compaction.ts";
+import { readCompactionSnapshot } from "../src/compaction-snapshot.ts";
 import { createContextRuntime, sessionRuntime } from "../src/runtime.ts";
 
 vi.mock("node:fs/promises", async () => {
@@ -14,6 +15,7 @@ vi.mock("node:fs/promises", async () => {
     mkdir: memoryFileSystem.promises.mkdir,
     readFile: memoryFileSystem.promises.readFile,
     readdir: memoryFileSystem.promises.readdir,
+    rename: memoryFileSystem.promises.rename,
     stat: memoryFileSystem.promises.stat,
     unlink: memoryFileSystem.promises.unlink,
     writeFile: memoryFileSystem.promises.writeFile,
@@ -221,6 +223,22 @@ test("falls back to shaping when the framed checkpoint would not shrink the requ
     engine: "shaped",
     summaryTokens: null,
   });
+});
+
+test("writes a compaction snapshot for recall on both paths", async () => {
+  const { context, sessionHook } = hookFake();
+  registerCompactionHook(context, DEPS, createContextRuntime());
+  const hook = sessionHook.mock.calls[0]?.[1] as (event: TestEvent) => Promise<void>;
+
+  await hook(largeIdEvent());
+  const overrideSnap = await readCompactionSnapshot(`${STATE}/context-snapshot`, SESSION);
+  expect(overrideSnap.ok && overrideSnap.value?.count).toBe(26);
+  expect(overrideSnap.ok && overrideSnap.value?.lastID).toBe("t4");
+
+  vol.reset();
+  await hook(compactionEvent(3));
+  const shapedSnap = await readCompactionSnapshot(`${STATE}/context-snapshot`, SESSION);
+  expect(shapedSnap.ok && shapedSnap.value?.count).toBe(3);
 });
 
 test("labels the receipt with the recorded request cause", async () => {

@@ -144,7 +144,7 @@ test("registers context management hooks and tools when enabled", async () => {
     "compaction",
   ]);
   expect(subscribe).toHaveBeenCalled();
-  expect(toolTransform).toHaveBeenCalledTimes(2);
+  expect(toolTransform).toHaveBeenCalledTimes(4);
 });
 
 test("stays inert when disabled", async () => {

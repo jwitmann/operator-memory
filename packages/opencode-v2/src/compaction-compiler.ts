@@ -47,7 +47,9 @@ export const DEFAULT_VCC_KEEP_MESSAGES = 6;
 // catalog needs no key-field overrides today: read/edit/write, glob, grep,
 // and bash are already covered by the core defaults, and anything else
 // renders name-only. Elision stays off (no memory plugin re-injects on this
-// host) and debug stays off; both ride config for future use.
+// host) and debug stays off; both ride config for future use. The recall
+// guide names the operator tools (not bare `recall`/`search`): they are the
+// agent-callable recovery surface on this host.
 export function resolveVccCompilerConfig(): CompilerConfig {
   return {
     textTokens: DEFAULT_VCC_TEXT_TOKENS,
@@ -73,11 +75,39 @@ export function resolveVccCompilerConfig(): CompilerConfig {
     systemReminderProofWindow: DEFAULT_SYSTEM_REMINDER_PROOF_WINDOW,
     elidedSourceNote: DEFAULT_ELIDED_SOURCE_NOTE,
     elidedBodyNote: DEFAULT_ELIDED_BODY_NOTE,
-    framing: DEFAULT_CHECKPOINT_FRAMING,
+    framing: {
+      ...DEFAULT_CHECKPOINT_FRAMING,
+      recallGuide:
+        'RECALL: append-only log — nothing is lost. `operator:recall` restores original content: type "seq", id "3-7"; "result", id "3"; "checkpoint", id "1" (`[checkpoint N]` = dropped). `operator:search` finds by keyword.',
+    },
     checkpointOrdinals: null,
     debug: false,
     debugSink: null,
   };
+}
+
+// Stringify one tool-call input for a one-liner or a recall projection:
+// strings pass through, everything else JSON-encodes, unserializable
+// values collapse to empty.
+export function stringifyToolInput(input: unknown): string {
+  if (input === undefined || input === null) return "";
+  try {
+    return typeof input === "string" ? input : (JSON.stringify(input) ?? "");
+  } catch {
+    return "";
+  }
+}
+
+// Classify a media part as an image/document label (bytes are never stored
+// or compiled). Accepts OpenCode parts (`part.media.*`) and cleaned snapshot
+// parts (`part.mediaType`).
+export function mediaLabel(part: {
+  readonly media?: unknown;
+  readonly mediaType?: unknown;
+}): string {
+  const media = part.media;
+  const mime = isRecord(media) ? (media.mediaType ?? media.mime) : part.mediaType;
+  return typeof mime === "string" && mime.startsWith("image/") ? "image" : "document";
 }
 
 // Project one OpenCode tool-result value to plain text for a text block.
@@ -139,33 +169,19 @@ function toBlock(part: unknown): CompileContentBlock | null {
     }
     case "tool-call": {
       const input = record?.input;
-      let args: string;
-      if (typeof input === "string") args = input;
-      else {
-        try {
-          args = JSON.stringify(input) ?? "";
-        } catch {
-          args = "";
-        }
-      }
       const id = record?.id;
       const name = record?.name;
       return {
         type: "tool-call",
         id: typeof id === "string" ? id : "",
         name: typeof name === "string" ? name : "unknown",
-        arguments: args,
+        arguments: stringifyToolInput(input),
       };
     }
     case "tool-result":
       return { type: "text", text: projectResultValue(record?.result) };
     case "media": {
-      const media = record?.media;
-      const mediaType = isRecord(media) ? (media.mediaType ?? media.mime) : undefined;
-      return {
-        type:
-          typeof mediaType === "string" && mediaType.startsWith("image/") ? "image" : "document",
-      };
+      return { type: mediaLabel(isRecord(record) ? record : {}) };
     }
     case "compaction":
     case "effort":
@@ -260,6 +276,21 @@ export type CompiledCompaction = {
   readonly summaryTokens: number;
 };
 
+// Project one compaction request into compiler nodes, assigning durable seqs
+// by kept count (first kept message = seq 1). Skipped messages (system
+// prompt, empty checkpoint shells, unknown roles) consume no seq — the
+// snapshot side (`toSnapshotEvents`) uses the same rule, so checkpoint
+// `(seq N)` pointers address the same events recall and search read.
+export function toCompactionNodes(messages: readonly unknown[]): CompileNode[] {
+  const list = Array.isArray(messages) ? messages : [];
+  const nodes: CompileNode[] = [];
+  for (const message of list) {
+    const node = toCompilerNode(message, nodes.length + 1);
+    if (node !== null) nodes.push(node);
+  }
+  return nodes;
+}
+
 // Compile one compaction request deterministically. Returns undefined to
 // abstain when no keepID exists at/after the cut, or when the framed
 // checkpoint is not smaller than the request it replaces (the shrink
@@ -271,11 +302,7 @@ export function compileCompaction(
   requestTokens: number,
 ): CompiledCompaction | undefined {
   const list = Array.isArray(messages) ? messages : [];
-  const nodes: CompileNode[] = [];
-  for (let index = 0; index < list.length; index += 1) {
-    const node = toCompilerNode(list[index], index + 1);
-    if (node !== null) nodes.push(node);
-  }
+  const nodes = toCompactionNodes(list);
   const keepID = pickKeepID(list, keepMessages);
   if (keepID === undefined) return undefined;
   const region = compileRegion(nodes, config);
