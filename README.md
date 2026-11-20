@@ -2,10 +2,6 @@
   <img src="docs/assets/banner.jpeg" alt="Operator Memory, the self-improving context engine for coding agents">
 </p>
 
-<p align="center">
-  <a href="README.md">English</a> | <a href="README.zh-CN.md">简体中文</a>
-</p>
-
 ---
 
 ### Operator Memory: The self-improving context engine for coding agents.
