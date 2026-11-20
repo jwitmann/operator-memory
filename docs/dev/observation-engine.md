@@ -306,6 +306,14 @@ shared-repo file: project partitions get nothing new to load.
   states it as a pattern — "you always…").
 - The user said "remember that" / "from now on" (explicit durability language).
 - A preference clearly applies beyond this project (cross-project smell).
+- Process/tool improvement (extension, higher bar): the agent may also
+  propose a workflow change or small tool when it sees repeated manual
+  work worth automating ("we always run X after Y — should I add it to
+  the checks?"). Prescriptive claims miss harder than descriptive ones,
+  so this needs visible repetition (≥3 instances in-session or stated as
+  a pattern), concrete reversibility (one file, one commit, removable),
+  and no behavior change beyond the workflow itself. Product ideas are
+  out of scope — workflow only.
 
 Anything else — hunches, single corrections, project-local facts — stays
 unproposed. The agent's live context is the topic-identity and
