@@ -133,6 +133,72 @@ describe("session-event tool counter", () => {
     expect(receipt.summarized).toBe(5000);
   });
 
+  test("compaction receipt attributes the engine from the summary provenance", async () => {
+    for (const [provider, engine] of [
+      ["dsh-compaction-vcc", "vcc"],
+      ["deepseek-chat", "shaped"],
+    ] as const) {
+      const runtime = createDshRuntime();
+      const d = deps({
+        config: { ...DEFAULT_CONTEXT_MANAGEMENT_CONFIG, enabled: true },
+        tokenMeter: {
+          measure: () => ({ totalTokens: 5000 }),
+          contextPressure: () => ({}),
+        },
+      });
+      await dispatchSessionEvent(
+        session,
+        {
+          type: "compaction/summary",
+          data: { provider, model: provider === "dsh-compaction-vcc" ? "vcc-compiler" : "x" },
+        },
+        d,
+        runtime,
+      );
+      await dispatchSessionEvent(
+        session,
+        { type: "compaction/end", data: { turn: 1, compactionId: "c1" } },
+        d,
+        runtime,
+      );
+      const { readFile } = await import("node:fs/promises");
+      const { join } = await import("node:path");
+      const log = await readFile(
+        join("/tmp/operator-dsh-test-state", "context-log", `${session.id}.log`),
+        "utf8",
+      );
+      const receipt = JSON.parse(log.trim().split("\n").pop() as string) as { engine: string };
+      expect(receipt.engine).toBe(engine);
+      // Consumed once: a later end without a new summary is unattributed.
+      expect(sessionRuntime(runtime, session.id).lastCompactionSource).toBeNull();
+    }
+  });
+
+  test("compaction receipt stays unknown with no observed summary", async () => {
+    const runtime = createDshRuntime();
+    const d = deps({
+      config: { ...DEFAULT_CONTEXT_MANAGEMENT_CONFIG, enabled: true },
+      tokenMeter: {
+        measure: () => ({ totalTokens: 5000 }),
+        contextPressure: () => ({}),
+      },
+    });
+    await dispatchSessionEvent(
+      session,
+      { type: "compaction/end", data: { turn: 1, compactionId: "c1" } },
+      d,
+      runtime,
+    );
+    const { readFile } = await import("node:fs/promises");
+    const { join } = await import("node:path");
+    const log = await readFile(
+      join("/tmp/operator-dsh-test-state", "context-log", `${session.id}.log`),
+      "utf8",
+    );
+    const receipt = JSON.parse(log.trim().split("\n").pop() as string) as { engine: string };
+    expect(receipt.engine).toBe("unknown");
+  });
+
   test("failed compaction arms the backoff and skips the receipt", async () => {
     const runtime = createDshRuntime();
     const d = deps({

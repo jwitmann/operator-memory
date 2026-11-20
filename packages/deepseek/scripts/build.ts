@@ -6,7 +6,10 @@ const outputDirectory = join(packageDirectory, "dist");
 
 await rm(outputDirectory, { recursive: true, force: true });
 const build = await Bun.build({
-  entrypoints: [join(packageDirectory, "src", "index.ts")],
+  entrypoints: [
+    join(packageDirectory, "src", "index.ts"),
+    join(packageDirectory, "src", "tool.ts"),
+  ],
   outdir: outputDirectory,
   target: "node",
   format: "esm",
@@ -18,6 +21,7 @@ const build = await Bun.build({
     "@deepseek-ai/dsh-commands",
     "@deepseek-ai/dsh-llm",
     "@deepseek-ai/dsh-system-prompt",
+    "@deepseek-ai/dsh-tools",
   ],
 });
 

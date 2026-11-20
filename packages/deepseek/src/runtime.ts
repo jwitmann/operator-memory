@@ -48,6 +48,11 @@ export type SessionRuntime = {
   preambleRefreshPending: boolean;
   // Brain-update activity for this session (fingerprint era + threshold).
   brainUpdateActivity: BrainUpdateActivityState;
+  // Provenance of the last compaction summary event (`compaction/summary`
+  // carries the provider route and model that wrote it), consumed once by
+  // the compaction-end receipt to attribute the engine. Null when no
+  // summary has been observed yet this process.
+  lastCompactionSource: { readonly provider: string; readonly model: string } | null;
 };
 
 export type DshRuntime = {
@@ -129,8 +134,12 @@ export function sharedDshRuntime(): DshRuntime {
 export function sessionRuntime(runtime: DshRuntime, sessionId: string): SessionRuntime {
   const existing = runtime.sessions.get(sessionId);
   if (existing !== undefined) {
-    const legacy = existing as unknown as { lastCompactionFailure?: unknown };
+    const legacy = existing as unknown as {
+      lastCompactionFailure?: unknown;
+      lastCompactionSource?: unknown;
+    };
     if (legacy.lastCompactionFailure === undefined) existing.lastCompactionFailure = null;
+    if (legacy.lastCompactionSource === undefined) existing.lastCompactionSource = null;
     return existing;
   }
   const created: SessionRuntime = {
@@ -146,6 +155,7 @@ export function sessionRuntime(runtime: DshRuntime, sessionId: string): SessionR
     preambleFingerprint: null,
     preambleRefreshPending: false,
     brainUpdateActivity: EMPTY_BRAIN_UPDATE_ACTIVITY_STATE,
+    lastCompactionSource: null,
   };
   runtime.sessions.set(sessionId, created);
   return created;

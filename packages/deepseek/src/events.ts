@@ -127,8 +127,14 @@ export async function dispatchSessionEvent(
       return;
     }
     case "compaction/summary": {
-      // A summary landed; the checkpoint will follow in compaction/end.
-      // Nothing to record until the bracket closes.
+      // A summary landed; the checkpoint follows in compaction/end. Stash
+      // the writer provenance for the end receipt's engine attribution —
+      // the only record of which backend (vcc or basic) compiled.
+      const provider = typeof event.data.provider === "string" ? event.data.provider : null;
+      const model = typeof event.data.model === "string" ? event.data.model : null;
+      if (provider !== null && model !== null) {
+        sessionRuntime(runtime, session.id).lastCompactionSource = { provider, model };
+      }
       return;
     }
     case "compaction/end": {
@@ -231,6 +237,9 @@ async function handleCompactionEnd(
   const session = sessionRuntime(runtime, sessionId);
   const error = data.error;
   if (typeof error === "string" && error.length > 0) {
+    // The summary stash is deliberately kept: a post-failure retry runs
+    // under the same backend, so a later success without a fresh summary
+    // still attributes correctly.
     if (session.lastEstimate !== null) {
       session.lastCompactionFailure = { at: Date.now(), estimate: session.lastEstimate };
     }
@@ -241,6 +250,13 @@ async function handleCompactionEnd(
   session.pendingCompaction = null;
   // The checkpoint rewrote history: refresh the preamble without gates.
   session.preambleRefreshPending = true;
+  // Attribute the engine from the summary provenance stashed above: the VCC
+  // backend reports its own provider route, anything else went through a
+  // model summarizer. Consumed once, like the receipt cause.
+  const source = session.lastCompactionSource;
+  session.lastCompactionSource = null;
+  const engine =
+    source === null ? "unknown" : source.provider === "dsh-compaction-vcc" ? "vcc" : "shaped";
 
   // Price the receipt off a fresh host measurement: mid-turn pressure
   // compactions land before any turn/end evaluation, so lastEstimate may
@@ -273,9 +289,7 @@ async function handleCompactionEnd(
     trigger: cause,
     at: new Date().toISOString(),
     summarized: Math.max(0, session.lastEstimate ?? 0),
-    // This adapter cannot see which host backend compiled (vcc or basic),
-    // so the engine stays unattributed here.
-    engine: "unknown",
+    engine,
     summaryTokens: null,
   });
   if (!written.ok) reportReceiptFailureOnce(runtime, deps, sessionId, "compact");

@@ -37,6 +37,8 @@ describe("DeepSeek adapter package", () => {
 
     expect(patch).toContain("id: operator-memory");
     expect(patch).toContain("name: '@aerovato/operator-deepseek'");
+    expect(patch).toContain("id: tool-recall");
+    expect(patch).toContain("name: '@aerovato/operator-deepseek/tool'");
   });
 
   test("contributes a static Operator indicator beside the composer readings", async () => {
@@ -48,6 +50,7 @@ describe("DeepSeek adapter package", () => {
       dsh: { client: { platform: string; inject: string[] } };
     };
     expect(manifest.exports["./client"]).toBe("./dist/client.js");
+    expect(manifest.exports["./tool"]).toBe("./dist/tool.js");
     expect(manifest.dsh.client).toEqual({
       platform: "web",
       inject: ["@deepseek-ai/dsh-client-ui-conversation"],
