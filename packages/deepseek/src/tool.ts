@@ -15,10 +15,10 @@
 // Faithful destructure of the reference `dsh-compaction-vcc/tool` module:
 // same tool semantics against the same log shape, same core functions.
 // Deliberate deviations, matching the opencode adapter's tool contract:
-// hyphenated `operator-` names (OpenAI-protocol gateways reject `:` in tool
-// names, so the opencode `operator:` shape cannot pass through here; the
-// brain-update counter excludes exactly this prefix, so recovery calls never
-// nudge the documentation threshold),
+// hyphenated `operator-` names (colons break OpenAI-protocol gateways, so
+// both adapters register flat hyphenated names; the brain-update counter
+// excludes exactly this prefix, so recovery calls never nudge the
+// documentation threshold),
 // text replies instead of thrown harness errors (defineTool validates the
 // argument shapes; semantic failures resolve to a valid canonical value
 // carrying the message), core-default budgets with no config keys, and no
