@@ -1,7 +1,7 @@
 import { homedir } from "node:os";
 
-import type { MemoryStatusSnapshot } from "@aerovato/operator-core/memory/load";
-import { loadMemorySnapshot } from "@aerovato/operator-core/memory/load";
+import type { MemoryStatusSnapshot } from "@jwitmann/operator-core/memory/load";
+import { loadMemorySnapshot } from "@jwitmann/operator-core/memory/load";
 import type {
   TuiPlugin,
   TuiPluginApi,
@@ -13,7 +13,7 @@ import { createStore } from "solid-js/store";
 
 type PartitionStatus = MemoryStatusSnapshot[keyof MemoryStatusSnapshot];
 
-const PACKAGE_NAME = "@aerovato/operator-opencode";
+const PACKAGE_NAME = "@jwitmann/operator-opencode";
 
 const tui: TuiPlugin = async (api, _options, meta) => {
   const [snapshots, setSnapshots] = createStore<Record<string, MemoryStatusSnapshot>>({});

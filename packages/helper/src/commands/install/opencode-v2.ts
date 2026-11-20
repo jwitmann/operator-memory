@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import type { CliContext } from "../../utils.ts";
 import { runProcess } from "../common.ts";
 
-const OPENCODE_V2_PLUGIN = "@aerovato/operator-opencode-v2@latest";
+const OPENCODE_V2_PLUGIN = "@jwitmann/operator-opencode-v2@latest";
 
 export const installOpenCodeV2 = Effect.fn("installOpenCodeV2")(function* (context: CliContext) {
   const execution = yield* runProcess(

@@ -1,12 +1,12 @@
 {
-  "name": "@aerovato/operator-pi",
+  "name": "@jwitmann/operator-pi",
   "version": "1.2.0",
   "description": "Operator Memory adapter for Pi.",
   "license": "BSD-3-Clause",
-  "author": "Aerovato Research",
-  "homepage": "https://github.com/aerovato/operator-memory#readme",
+  "author": "jwitmann",
+  "homepage": "https://github.com/jwitmann/operator-memory#readme",
   "bugs": {
-    "url": "https://github.com/aerovato/operator-memory/issues"
+    "url": "https://github.com/jwitmann/operator-memory/issues"
   },
   "type": "module",
   "main": "dist/index.js",
@@ -29,7 +29,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aerovato/operator-memory.git",
+    "url": "git+https://github.com/jwitmann/operator-memory.git",
     "directory": "packages/pi"
   },
   "engines": {
@@ -50,6 +50,6 @@
     "typebox": "*"
   },
   "devDependencies": {
-    "@aerovato/operator-core": "workspace:*"
+    "@jwitmann/operator-core": "workspace:*"
   }
 }

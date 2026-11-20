@@ -20,7 +20,7 @@ const { emitToast, loadMemorySnapshot, loadPreamble } = vi.hoisted(() => ({
   ),
 }));
 
-vi.mock("@aerovato/operator-core/memory/load", () => ({ loadMemorySnapshot }));
+vi.mock("@jwitmann/operator-core/memory/load", () => ({ loadMemorySnapshot }));
 vi.mock("../src/preamble.ts", () => ({ loadPreamble }));
 vi.mock("node:fs/promises", async () => {
   const { fs: memoryFileSystem } = await import("memfs");
@@ -36,7 +36,7 @@ vi.mock("node:fs/promises", async () => {
 });
 
 import OperatorPlugin from "../src/index.ts";
-import type { RequestMessage } from "@aerovato/operator-core/context/tokens";
+import type { RequestMessage } from "@jwitmann/operator-core/context/tokens";
 
 beforeEach(() => {
   vol.reset();

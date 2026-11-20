@@ -6,10 +6,10 @@ const core = vi.hoisted(() => ({
   renderPreamble: vi.fn(),
 }));
 
-vi.mock("@aerovato/operator-core/memory/load", () => ({
+vi.mock("@jwitmann/operator-core/memory/load", () => ({
   loadMemorySnapshot: core.loadMemorySnapshot,
 }));
-vi.mock("@aerovato/operator-core/preamble", () => ({
+vi.mock("@jwitmann/operator-core/preamble", () => ({
   renderPreamble: core.renderPreamble,
 }));
 

@@ -28,13 +28,13 @@ import {
   DEFAULT_MAX_RECALL_TOKENS,
   recallSession,
   resolveRecallReference,
-} from "@aerovato/operator-core/context/recall";
+} from "@jwitmann/operator-core/context/recall";
 import {
   DEFAULT_MAX_SEARCH_HITS,
   InvalidSearchPatternError,
   searchSession,
-} from "@aerovato/operator-core/context/search";
-import { isRecord } from "@aerovato/operator-core/utils";
+} from "@jwitmann/operator-core/context/search";
+import { isRecord } from "@jwitmann/operator-core/utils";
 import type { Context } from "@deepseek-ai/cordis";
 import { defineTool } from "@deepseek-ai/dsh-tools";
 

@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { $ } from "bun";
 
 const projectDirectory = resolve(import.meta.dirname, "..");
-const plugin = "aerovato@operator-local";
+const plugin = "jwitmann@operator-local";
 
 await $`bun run install:helper`.cwd(projectDirectory);
 await $`bun run build:codex`.cwd(projectDirectory);

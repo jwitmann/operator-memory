@@ -1,8 +1,8 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { loadMemorySnapshot } from "@aerovato/operator-core/memory/load";
-import { renderPreamble } from "@aerovato/operator-core/preamble";
-import { fingerprintPreamble } from "@aerovato/operator-core/preamble-refresh";
+import { loadMemorySnapshot } from "@jwitmann/operator-core/memory/load";
+import { renderPreamble } from "@jwitmann/operator-core/preamble";
+import { fingerprintPreamble } from "@jwitmann/operator-core/preamble-refresh";
 import type { Context } from "@deepseek-ai/cordis";
 import type { Agent } from "@deepseek-ai/dsh-agent";
 import { maybeAppendBrainUpdateReminder } from "./brain-updates.ts";

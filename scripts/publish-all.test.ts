@@ -32,7 +32,7 @@ beforeEach(() => {
     const directory = path.match(/packages\/([^/]+)\//)?.[1] ?? "";
     return {
       json: async () => ({
-        name: `@aerovato/operator-${directory}`,
+        name: `@jwitmann/operator-${directory}`,
         version: versions[directory]?.[bumped.has(directory) ? 1 : 0],
       }),
     };

@@ -7,7 +7,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { NpmRegistry } from "./npm-registry.ts";
 import type { CliContext } from "./utils.ts";
 
-const HELPER_PACKAGE = "@aerovato/operator-helper";
+const HELPER_PACKAGE = "@jwitmann/operator-helper";
 const UPDATE_TIMEOUT = "60 seconds";
 
 type InstallationChannel = "bun" | "npm" | "unknown";

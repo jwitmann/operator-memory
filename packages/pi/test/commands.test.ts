@@ -33,7 +33,7 @@ test.each([
   expect(text).toContain("run `operator-helper upgrade` before continuing");
   expect(text).toContain(`2. Run \`operator-helper ${operation}\``);
   expect(text).toContain(guide);
-  expect(text).toContain("npm package `@aerovato/operator-helper` globally");
+  expect(text).toContain("npm package `@jwitmann/operator-helper` globally");
   expect(text).not.toContain("<operator-command>");
 });
 

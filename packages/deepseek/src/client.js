@@ -1,5 +1,5 @@
 window.__ModuleLoader__.load({
-  id: "@aerovato/operator-deepseek",
+  id: "@jwitmann/operator-deepseek",
   factory(require) {
     const React = require("react");
 

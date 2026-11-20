@@ -2,9 +2,9 @@ import {
   fingerprintPreamble,
   isCacheCold,
   REFRESH_FLOOR_TOKENS,
-} from "@aerovato/operator-core/preamble-refresh";
-import { appendReceipt, type RefreshReceipt } from "@aerovato/operator-core/context/receipts";
-import { estimateContextTokens, type RequestMessage } from "@aerovato/operator-core/context/tokens";
+} from "@jwitmann/operator-core/preamble-refresh";
+import { appendReceipt, type RefreshReceipt } from "@jwitmann/operator-core/context/receipts";
+import { estimateContextTokens, type RequestMessage } from "@jwitmann/operator-core/context/tokens";
 import { join } from "node:path";
 
 import { loadPreamble, type LoadPreambleOptions } from "./preamble.ts";

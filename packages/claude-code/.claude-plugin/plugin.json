@@ -4,8 +4,8 @@
   "version": "0.2.0",
   "description": "Durable project and user memory for agent-driven development in Claude Code.",
   "author": {
-    "name": "Aerovato Research"
+    "name": "jwitmann"
   },
-  "repository": "https://github.com/aerovato/operator-memory",
+  "repository": "https://github.com/jwitmann/operator-memory",
   "license": "BSD-3-Clause"
 }

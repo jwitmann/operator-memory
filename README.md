@@ -12,6 +12,10 @@
 
 Operator Memory gives your agent a brain for documenting all their work. As the agent works, it automatically documents within this brain — specs, decisions, standards, research, lessons. Every new session starts knowing everything the last one learned.
 
+#### Origin
+
+Originally forked from [aerovato/operator-memory](https://github.com/aerovato/operator-memory); continued here as an independent line with deterministic context compaction, recall/search recovery, and the DeepSeek Harness adapter.
+
 #### Features
 
 - **Complete Context Engine** — Documentation, memory, indexes, and skills within a single integrated system.
@@ -25,13 +29,13 @@ Operator Memory gives your agent a brain for documenting all their work. As the 
 Operator is managed via the Operator Helper, which also provides setup and agent instructions. Install the Helper with npm:
 
 ```sh
-npm install --global @aerovato/operator-helper
+npm install --global @jwitmann/operator-helper
 ```
 
 Or Bun:
 
 ```sh
-bun add --global --minimum-release-age 0 @aerovato/operator-helper@latest
+bun add --global --minimum-release-age 0 @jwitmann/operator-helper@latest
 ```
 
 Then install the Operator adapter for your harness. Click each link for harness-specific information.
@@ -114,7 +118,7 @@ Snippet capture, RAG retrieval, and context compression all fail the same way.
 
 - [Read the comparison.](docs/comparison.md)
 - [Read the blog post.](https://liao.gg/blog/agents-dont-need-memory)
-- [Looking for benchmarks?](https://github.com/aerovato/operator-memory/issues/48#issuecomment-5979061413)
+- [Looking for benchmarks?](https://github.com/jwitmann/operator-memory/issues/48#issuecomment-5979061413)
 
 ### Learn More
 

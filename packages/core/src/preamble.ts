@@ -136,7 +136,7 @@ IMPORTANT: You MUST resolve Operator memory loading before proceeding with the u
 3. Repair only the reported load failures. Preserve existing content, do not initialize absent partitions, and do not reset or replace the Brain. If a repair requires deleting content, reconstructing instructions, or choosing between ambiguous fixes, stop and ask the user for guidance.
 4. Rerun \`operator-helper memory check\` after repairs. Resolve any additional load failures it reveals until the check succeeds or a concrete blocker prevents further progress.
 
-\`operator-helper\` is the globally installed Operator CLI (npm package \`@aerovato/operator-helper\`), not a project dependency.
+\`operator-helper\` is the globally installed Operator CLI (npm package \`@jwitmann/operator-helper\`), not a project dependency.
 
 - If Helper cannot start, install or repair its global installation and retry the failed command.
 - If the version check or upgrade fails, diagnose the failure and retry.

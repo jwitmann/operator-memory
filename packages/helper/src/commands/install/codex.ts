@@ -8,7 +8,7 @@ import { pathKind, type ProcessResult, readOptionalFile, runProcess } from "../c
 
 const MARKETPLACE_MARKER = "Operator Memory managed Codex marketplace.\n";
 const MARKETPLACE_NAME = "operator-memory";
-const PLUGIN_NAME = "aerovato";
+const PLUGIN_NAME = "jwitmann";
 const PLUGIN_ID = `${PLUGIN_NAME}@${MARKETPLACE_NAME}`;
 const MARKETPLACE = `${JSON.stringify(
   {
@@ -18,7 +18,7 @@ const MARKETPLACE = `${JSON.stringify(
         name: PLUGIN_NAME,
         source: {
           source: "npm",
-          package: "@aerovato/operator-codex",
+          package: "@jwitmann/operator-codex",
           version: "latest",
         },
         policy: { installation: "AVAILABLE" },
@@ -143,6 +143,8 @@ function registerDesktopMarketplace(
       output: [
         "✓ Registered the Operator Codex marketplace",
         "Codex CLI unavailable: install aerovato@operator-memory from the Codex plugins browser, then start a new session and approve the Operator hooks.",
+        // External plugin-browser name: lives outside this repo and cannot
+        // be renamed unilaterally. Marketplace-entry rename is a follow-up.
       ].join("\n"),
     };
   });

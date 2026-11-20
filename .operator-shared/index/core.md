@@ -1,5 +1,5 @@
 ---
-description: "@aerovato/operator-core source map"
+description: "@jwitmann/operator-core source map"
 read_if: Working in packages/core or changing memory loading and preamble rendering
 ---
 
@@ -18,7 +18,7 @@ read_if: Working in packages/core or changing memory loading and preamble render
 
 ## Architecture
 
-- `@aerovato/operator-core` is the private, harness-agnostic runtime package. It reads Operator memory concurrently with portable Node APIs and returns independent typed partition results for harness adapters and preamble rendering.
+- `@jwitmann/operator-core` is the private, harness-agnostic runtime package. It reads Operator memory concurrently with portable Node APIs and returns independent typed partition results for harness adapters and preamble rendering.
 
 ## `packages/core/` Index
 

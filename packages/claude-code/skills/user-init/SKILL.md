@@ -11,7 +11,7 @@ disable-model-invocation: true
 
 ## Recovery
 
-- If Helper cannot start, install or repair the npm package `@aerovato/operator-helper` globally and retry the failed command.
+- If Helper cannot start, install or repair the npm package `@jwitmann/operator-helper` globally and retry the failed command.
 - If the version check or upgrade fails, diagnose the error and retry.
 - If `operator-helper user init` reports a failure, use its output to resolve it and rerun it as needed.
 - If you cannot resolve a problem, report the blocker.

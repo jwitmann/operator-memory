@@ -30,8 +30,8 @@ import {
   type CompileNode,
   type CompilerConfig,
   type CompileStats,
-} from "@aerovato/operator-core/context/compiler";
-import { isRecord } from "@aerovato/operator-core/utils";
+} from "@jwitmann/operator-core/context/compiler";
+import { isRecord } from "@jwitmann/operator-core/utils";
 
 // Engine defaults: verbatim from the probe's DEFAULT_PLUGIN_CONFIG (itself
 // from dsh-compaction-vcc@0.7.4 `src/index.js`). No OpenCode noise XML is

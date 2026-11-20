@@ -1,6 +1,6 @@
-import { evaluateBrainUpdateActivity } from "@aerovato/operator-core/brain-updates";
-import { appendReceipt, type BrainReminderReceipt } from "@aerovato/operator-core/context/receipts";
-import { fingerprintPreamble } from "@aerovato/operator-core/preamble-refresh";
+import { evaluateBrainUpdateActivity } from "@jwitmann/operator-core/brain-updates";
+import { appendReceipt, type BrainReminderReceipt } from "@jwitmann/operator-core/context/receipts";
+import { fingerprintPreamble } from "@jwitmann/operator-core/preamble-refresh";
 import { join } from "node:path";
 import type { BrainUpdatesConfig } from "./config.ts";
 import {

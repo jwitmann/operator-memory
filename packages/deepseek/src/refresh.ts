@@ -1,10 +1,10 @@
 import { join } from "node:path";
-import { appendReceipt } from "@aerovato/operator-core/context/receipts";
+import { appendReceipt } from "@jwitmann/operator-core/context/receipts";
 import {
   fingerprintPreamble,
   isCacheCold,
   REFRESH_FLOOR_TOKENS,
-} from "@aerovato/operator-core/preamble-refresh";
+} from "@jwitmann/operator-core/preamble-refresh";
 import type { PreambleRefreshConfig } from "./config.ts";
 import {
   reportReceiptFailureOnce,

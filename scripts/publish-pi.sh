@@ -13,7 +13,7 @@ current_version=$(node -p 'require("./packages/pi/package.json").version')
 version=$(sh scripts/resolve-publish-version.sh "$current_version" "$requested_version")
 
 tag="pi@v$version"
-package="@aerovato/operator-pi"
+package="@jwitmann/operator-pi"
 branch=$(git symbolic-ref --quiet --short HEAD || true)
 if [ "$branch" != "main" ]; then
   printf 'Release must run from main; current branch: %s\n' "${branch:-detached HEAD}" >&2

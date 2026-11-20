@@ -44,22 +44,22 @@ Relative paths must start with `./`. Components are auto-discovered from their c
 
 A marketplace is a repo or JSON file with `.claude-plugin/marketplace.json` listing plugins and sources. Accepted plugin sources include GitHub/git repos (with `#ref` pinning), npm packages, local directories, direct URLs, and `command` sources. Anthropic reserves official marketplace names (`claude-plugins-official`, etc.); third-party marketplaces cannot use them.
 
-For Operator: a `aerovato/operator` marketplace repository (GitHub) whose `marketplace.json` points at the plugin — the same shape as the Codex local-marketplace flow. npm is also a source type, matching the workspace's npm publishing pipeline; choose per the release spec.
+For Operator: a `jwitmann/operator` marketplace repository (GitHub) whose `marketplace.json` points at the plugin — the same shape as the Codex local-marketplace flow. npm is also a source type, matching the workspace's npm publishing pipeline; choose per the release spec.
 
 ## Installation
 
 In session: `/plugin install <name>@<marketplace>` (opens review UI), or the `/plugin` Discover tab. From the shell, scriptable:
 
 ```bash
-claude plugin marketplace add aerovato/operator
-claude plugin install <plugin-name>@aerovato/operator
+claude plugin marketplace add jwitmann/operator
+claude plugin install <plugin-name>@jwitmann/operator
 ```
 
 Scopes: user (`~/.claude/settings.json`, all projects), project (`.claude/settings.json`, committed; collaborators still install once with `--scope project`), local (`.claude/settings.local.json`). Scope precedence: local > project > user. Plugins land under `~/.claude/plugins/`.
 
 For Helper's `operator-helper install claude-code`: run the shell `claude plugin` commands (marketplace add + install, default user scope), then verify with `claude plugin list`. `--yes` accepts `command`-source confirmation prompts in scripts.
 
-Live-verified on v2.1.287: a Helper-fabricated marketplace can use `source: "./node_modules/@aerovato/operator-claude-code"` after npm installs the adapter under that marketplace root. `claude plugin marketplace add` is repeatable for the same local path. Follow install with `claude plugin update operator@operator-memory` to refresh an existing installation. `claude plugin list --json` returns an array with `id`, `enabled`, `version`, and `installPath`; verify the matching `id` is enabled. First and repeated installs passed against a packed adapter served by a temporary npm registry in an isolated home/config environment.
+Live-verified on v2.1.287: a Helper-fabricated marketplace can use `source: "./node_modules/@jwitmann/operator-claude-code"` after npm installs the adapter under that marketplace root. `claude plugin marketplace add` is repeatable for the same local path. Follow install with `claude plugin update operator@operator-memory` to refresh an existing installation. `claude plugin list --json` returns an array with `id`, `enabled`, `version`, and `installPath`; verify the matching `id` is enabled. First and repeated installs passed against a packed adapter served by a temporary npm registry in an isolated home/config environment.
 
 Direct npm installation syntax exists (`claude plugin install <package>@npm`, with `--registry` for a custom registry), but availability is account-gated. Both unsigned isolated and signed-in v2.1.287 probes returned `failureCode: "npm_marketplace_disabled"`. No supported user setting to enable it was found in the reviewed public docs. Ordinary marketplace entries with npm plugin sources work independently of this gate; first install, repeated install, and update passed with Claude owning the fetch and cache. Operator uses this ordinary npm-source pathway through the static repository catalog, not Helper's earlier local-marketplace/cache design. See [installation pathways](./installation.md) for the complete verified source/loading distinction.
 

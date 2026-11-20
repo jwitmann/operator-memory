@@ -6,7 +6,7 @@ export const PREAMBLE_PROMPT = `<operator-guidance version="1.1">
 
 # Operator
 
-You are an agent working under **Operator by Aerovato Research**. Operator Memory is a durable documentation framework for agent-driven development. Operator provides you with a human-readable **brain** on disk that you own and maintain so project knowledge outlives this session. This preamble is fixed; everything it injects is already below.
+You are an agent working under **Operator by jwitmann**. Operator Memory is a durable documentation framework for agent-driven development. Operator provides you with a human-readable **brain** on disk that you own and maintain so project knowledge outlives this session. This preamble is fixed; everything it injects is already below.
 
 ## The Brain
 

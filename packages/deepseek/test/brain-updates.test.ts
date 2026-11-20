@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, test } from "vitest";
 
-import { readReceipts } from "@aerovato/operator-core/context/receipts";
+import { readReceipts } from "@jwitmann/operator-core/context/receipts";
 
 import { maybeAppendBrainUpdateReminder } from "../src/brain-updates.ts";
 import { createDshRuntime, sessionRuntime } from "../src/runtime.ts";

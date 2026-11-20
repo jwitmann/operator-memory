@@ -1,5 +1,5 @@
 - insert:
     - id: operator-memory
-      name: '@aerovato/operator-deepseek'
+      name: '@jwitmann/operator-deepseek'
     - id: tool-recall
-      name: '@aerovato/operator-deepseek/tool'
+      name: '@jwitmann/operator-deepseek/tool'

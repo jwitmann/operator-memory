@@ -12,6 +12,10 @@
 
 Operator Memory 给你的智能体一个大脑，用于记录他们的全部工作。智能体在工作时，会自动在这个大脑中记录 —— 规格、决策、规范、研究、经验教训。每个新会话都带着上一个会话学到的一切开始。
 
+#### 项目来源
+
+本项目最初 fork 自 [aerovato/operator-memory](https://github.com/aerovato/operator-memory)，现作为独立分支继续开发，新增了确定性上下文压缩、召回/搜索恢复以及 DeepSeek Harness 适配器。
+
 #### 功能特性
 
 - **完整的上下文引擎** —— 在单一集成系统中提供文档、记忆、索引和技能。
@@ -25,13 +29,13 @@ Operator Memory 给你的智能体一个大脑，用于记录他们的全部工�
 Operator 通过 Operator Helper 管理。使用 npm 安装 Helper：
 
 ```sh
-npm install --global @aerovato/operator-helper
+npm install --global @jwitmann/operator-helper
 ```
 
 或使用 Bun：
 
 ```sh
-bun add --global --minimum-release-age 0 @aerovato/operator-helper@latest
+bun add --global --minimum-release-age 0 @jwitmann/operator-helper@latest
 ```
 
 然后为你的 harness 安装 Operator 适配器。点击各链接查看对应 harness 的详细信息。
@@ -111,7 +115,7 @@ Operator 给智能体一个持久的 Markdown 工作区，保存在三个位置�
 
 片段捕获、RAG 检索和上下文压缩以同样的方式失败：[阅读对比文章](docs/comparison.md)（英文）。
 
-[寻找基准测试？](https://github.com/aerovato/operator-memory/issues/48#issuecomment-5979061413)（英文）
+[寻找基准测试？](https://github.com/jwitmann/operator-memory/issues/48#issuecomment-5979061413)（英文）
 
 ### 了解更多
 

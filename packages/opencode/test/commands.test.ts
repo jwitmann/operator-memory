@@ -27,7 +27,7 @@ test.each([
   expect(template).toContain("run `operator-helper upgrade` before continuing");
   expect(template).toContain(`2. Run \`operator-helper ${operation}\``);
   expect(template).toContain(guide);
-  expect(template).toContain("npm package `@aerovato/operator-helper` globally");
+  expect(template).toContain("npm package `@jwitmann/operator-helper` globally");
   expect(template).not.toContain("!`");
   expect(template).not.toContain("<operator-command>");
 });

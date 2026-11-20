@@ -13,7 +13,7 @@ current_version=$(node -p 'require("./packages/opencode-v2/package.json").versio
 version=$(sh scripts/resolve-publish-version.sh "$current_version" "$requested_version")
 
 tag="opencode-v2@v$version"
-package="@aerovato/operator-opencode-v2"
+package="@jwitmann/operator-opencode-v2"
 branch=$(git symbolic-ref --quiet --short HEAD || true)
 if [ "$branch" != "main" ]; then
   printf 'Release must run from main; current branch: %s\n' "${branch:-detached HEAD}" >&2

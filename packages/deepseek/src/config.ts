@@ -1,4 +1,4 @@
-import type { TriggerConfig } from "@aerovato/operator-core/context/triggers";
+import type { TriggerConfig } from "@jwitmann/operator-core/context/triggers";
 
 import { failure, type Result, success } from "./utils.ts";
 

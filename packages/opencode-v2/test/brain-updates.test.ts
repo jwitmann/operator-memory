@@ -1,8 +1,8 @@
 import { fs, vol } from "memfs";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import type { RequestMessage } from "@aerovato/operator-core/context/tokens";
-import { readReceipts } from "@aerovato/operator-core/context/receipts";
+import type { RequestMessage } from "@jwitmann/operator-core/context/tokens";
+import { readReceipts } from "@jwitmann/operator-core/context/receipts";
 
 import { createContextRuntime, sessionRuntime } from "../src/runtime.ts";
 import { maybeAppendBrainUpdateReminder } from "../src/brain-updates.ts";

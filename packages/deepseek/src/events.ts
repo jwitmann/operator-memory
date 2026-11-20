@@ -1,5 +1,5 @@
-import { appendReceipt } from "@aerovato/operator-core/context/receipts";
-import { evaluateTrigger } from "@aerovato/operator-core/context/triggers";
+import { appendReceipt } from "@jwitmann/operator-core/context/receipts";
+import { evaluateTrigger } from "@jwitmann/operator-core/context/triggers";
 import type { Context } from "@deepseek-ai/cordis";
 import { join } from "node:path";
 

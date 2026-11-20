@@ -69,7 +69,7 @@ Indexed by subindexes under `index/harnesses/`; clone the upstream repository to
 - `scripts/check.sh` - Full-workspace or package-scoped validation runner.
 - `scripts/install-opencode.ts`, `scripts/install-opencode.test.ts` - Self-contained V2 development build and Helper linking, global JSONC-preserving local-directory registration, and installation coverage.
 - `scripts/install-pi.ts` - Persistently registers the built local Pi package through its absolute package-root path.
-- `scripts/preview-codex.ts` - Self-contained local Codex preview: builds and links Helper, builds the plugin package, then registers the repository marketplace and installs or refreshes the local `aerovato@operator-local` plugin.
+- `scripts/preview-codex.ts` - Self-contained local Codex preview: builds and links Helper, builds the plugin package, then registers the repository marketplace and installs or refreshes the local `jwitmann@operator-local` plugin.
 - `scripts/preview-claude-code.ts` - Builds and links Helper, builds the Claude Code adapter, and launches Claude with the local package through `--plugin-dir`.
 - `scripts/publish-helper.sh`, `scripts/publish-opencode-v2.sh`, `scripts/publish-pi.sh`, `scripts/publish-codex.sh`, `scripts/publish-claude-code.sh`, `scripts/publish-deepseek.sh` - Preflight-validated package check, build, version, lockfile, commit, tag, and atomic push release automation; accepts semantic bump names, `X.Y.Z`, or `vX.Y.Z`. Claude Code also synchronizes its plugin manifest version.
 - `scripts/resolve-publish-version.sh`, `scripts/resolve-publish-version.test.ts` - Shared semantic bump resolution and focused validation coverage for package releases.

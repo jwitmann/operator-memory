@@ -1,5 +1,5 @@
 ---
-description: "@aerovato/operator-helper source and template map"
+description: "@jwitmann/operator-helper source and template map"
 read_if: Working in packages/helper or changing setup, status, guides, Git, or index lint
 ---
 
@@ -18,8 +18,8 @@ read_if: Working in packages/helper or changing setup, status, guides, Git, or i
 
 ## Architecture
 
-- `@aerovato/operator-helper` is the published Node-compatible installer and coordinator for harness adapters, deterministic Operator setup, memory checks, status, guides, Git integration, explicit upgrades, and Project Index linting.
-- Services use a namespace containing `Interface`, `Service`, and `layer`; service identifiers follow `@aerovato/operator-helper/<service-name>`.
+- `@jwitmann/operator-helper` is the published Node-compatible installer and coordinator for harness adapters, deterministic Operator setup, memory checks, status, guides, Git integration, explicit upgrades, and Project Index linting.
+- Services use a namespace containing `Interface`, `Service`, and `layer`; service identifiers follow `@jwitmann/operator-helper/<service-name>`.
 
 ## `packages/helper/` Index
 

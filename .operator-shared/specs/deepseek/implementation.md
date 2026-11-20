@@ -2,11 +2,11 @@
 
 Last Updated: November 20, 2026
 
-How `@aerovato/operator-deepseek` binds the general adapter contract to DeepSeek Harness. Command meaning and setup workflows stay in [`commands.md`](../commands.md) and [`../reference/implementation.md`](../reference/implementation.md).
+How `@jwitmann/operator-deepseek` binds the general adapter contract to DeepSeek Harness. Command meaning and setup workflows stay in [`commands.md`](../commands.md) and [`../reference/implementation.md`](../reference/implementation.md).
 
 ## Package
 
-The published package is both a Cordis Host plugin and an installable DeepSeek bundle. Its `cordis.patch.yml` mounts the plugin under the stable `operator-memory` row plus the agent-scoped `tool-recall` row (`@aerovato/operator-deepseek/tool`). The build bundles `@aerovato/operator-core` and leaves DeepSeek runtime packages as compatible peers. All runtime peers carry `peerDependenciesMeta: optional: true`: profile installs run pnpm with `autoInstallPeers: false` and resolve the runtime from the dsh installation, not the profile's `node_modules`, so required peers would trip pnpm's "Issues with peer dependencies" warning on every install. dsh's own compatibility gate reads the `peerDependencies` ranges and ignores the meta, so version enforcement is unchanged.
+The published package is both a Cordis Host plugin and an installable DeepSeek bundle. Its `cordis.patch.yml` mounts the plugin under the stable `operator-memory` row plus the agent-scoped `tool-recall` row (`@jwitmann/operator-deepseek/tool`). The build bundles `@jwitmann/operator-core` and leaves DeepSeek runtime packages as compatible peers. All runtime peers carry `peerDependenciesMeta: optional: true`: profile installs run pnpm with `autoInstallPeers: false` and resolve the runtime from the dsh installation, not the profile's `node_modules`, so required peers would trip pnpm's "Issues with peer dependencies" warning on every install. dsh's own compatibility gate reads the `peerDependencies` ranges and ignores the meta, so version enforcement is unchanged.
 
 ## Preamble Injection
 
@@ -67,7 +67,7 @@ Desktop exclusively owns its profile and package state. Its installation require
 Named profiles use:
 
 ```text
-dsh plugin --profile <profile-name> add @aerovato/operator-deepseek
+dsh plugin --profile <profile-name> add @jwitmann/operator-deepseek
 ```
 
 DeepSeek's native profile package operation owns updates. Profile processes must restart after bundle installation or replacement.

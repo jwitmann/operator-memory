@@ -53,7 +53,7 @@ jobs:
         working-directory: packages/opencode-v2
         run: |
           version=$(node -p 'require("./package.json").version')
-          published=$(npm view "@aerovato/operator-opencode-v2@$version" version 2>/dev/null || true)
+          published=$(npm view "@jwitmann/operator-opencode-v2@$version" version 2>/dev/null || true)
           test "$published" = "$version" && echo "published=true" >> "$GITHUB_OUTPUT" || echo "published=false" >> "$GITHUB_OUTPUT"
 
       - name: Publish OpenCode V2 plugin

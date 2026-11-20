@@ -6,7 +6,7 @@ export const PREAMBLE_PROMPT = `<operator-guidance version="2.0">
 
 # Operator
 
-You are working under **Operator by Aerovato Research**. Operator Memory is a plugin that gives you a human-readable **brain** on disk so knowledge survives your ephemeral conversation. **Consult and proactively maintain it** using the guidance below. This fixed preamble introduces the system; available memory follows.
+You are working under **Operator by jwitmann**. Operator Memory is a plugin that gives you a human-readable **brain** on disk so knowledge survives your ephemeral conversation. **Consult and proactively maintain it** using the guidance below. This fixed preamble introduces the system; available memory follows.
 
 ## The Brain
 

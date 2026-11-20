@@ -2,7 +2,7 @@ import type { Context } from "@opencode/plugin/promise/plugin";
 import { fs, vol } from "memfs";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import type { RequestMessage } from "@aerovato/operator-core/context/tokens";
+import type { RequestMessage } from "@jwitmann/operator-core/context/tokens";
 
 const { emitToast, loadPreamble } = vi.hoisted(() => ({
   emitToast: vi.fn(() => Promise.resolve()),
@@ -14,7 +14,7 @@ const { emitToast, loadPreamble } = vi.hoisted(() => ({
   ),
 }));
 
-vi.mock("@aerovato/operator-core/memory/load", () => ({
+vi.mock("@jwitmann/operator-core/memory/load", () => ({
   loadMemorySnapshot: vi.fn(),
 }));
 vi.mock("../src/preamble.ts", () => ({ loadPreamble }));

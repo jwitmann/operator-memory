@@ -1,6 +1,6 @@
 import { success, type Result } from "./utils.ts";
 import { readOptionBlock, readOptionBoolean, readOptionNumber } from "./options.ts";
-import type { TriggerConfig } from "@aerovato/operator-core/context/triggers";
+import type { TriggerConfig } from "@jwitmann/operator-core/context/triggers";
 
 // Parses the operator.contextManagement block from ctx.options. Absent means
 // the defaults (disabled); a present block with a wrong-typed value is a

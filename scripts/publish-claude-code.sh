@@ -13,7 +13,7 @@ current_version=$(node -p 'require("./packages/claude-code/package.json").versio
 version=$(sh scripts/resolve-publish-version.sh "$current_version" "$requested_version")
 
 tag="claude-code@v$version"
-package="@aerovato/operator-claude-code"
+package="@jwitmann/operator-claude-code"
 branch=$(git symbolic-ref --quiet --short HEAD || true)
 if [ "$branch" != "main" ]; then
   printf 'Release must run from main; current branch: %s\n' "${branch:-detached HEAD}" >&2

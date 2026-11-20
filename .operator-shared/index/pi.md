@@ -1,5 +1,5 @@
 ---
-description: "@aerovato/operator-pi source map"
+description: "@jwitmann/operator-pi source map"
 read_if: Working in packages/pi or changing Pi extension behavior
 ---
 
@@ -11,7 +11,7 @@ read_if: Working in packages/pi or changing Pi extension behavior
 
 ## Architecture
 
-- `@aerovato/operator-pi` is the published Pi extension adapter. Pi owns extension discovery and supplies its runtime peer packages; the adapter bundle owns Operator core.
+- `@jwitmann/operator-pi` is the published Pi extension adapter. Pi owns extension discovery and supplies its runtime peer packages; the adapter bundle owns Operator core.
 
 ## `packages/pi/` Index
 

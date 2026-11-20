@@ -37,7 +37,7 @@ Core tenets are fixed text injected after memory files and before warnings so th
 
 If any partition fails to load, no partition memory is injected. An `<operator-diagnostic>` lists every partition result and directs recovery before ordinary work: check and update Helper, repair only reported load failures, and validate with `operator-helper memory check`. Preserve existing content and leave absent partitions absent; destructive or ambiguous repairs require user guidance. Report unresolved blockers. On success, ask the user to start a new session and resubmit the original request so the complete preamble loads. Adapters should surface one recovery notice per affected session when the harness allows it.
 
-Fixed guidance embeds main-index, subindex, and catalog bodies from `@aerovato/operator-core` templates via interpolation inside the Project Index and Partition Catalog sections. Those template exports are the single source of truth for document syntax; helper init reuses them. Agents follow those shapes when creating or restructuring indexes and catalogs. Filled documents need only real content; seed instructional text is not preserved.
+Fixed guidance embeds main-index, subindex, and catalog bodies from `@jwitmann/operator-core` templates via interpolation inside the Project Index and Partition Catalog sections. Those template exports are the single source of truth for document syntax; helper init reuses them. Agents follow those shapes when creating or restructuring indexes and catalogs. Filled documents need only real content; seed instructional text is not preserved.
 
 ## Instructions
 

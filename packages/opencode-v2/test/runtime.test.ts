@@ -1,4 +1,4 @@
-import { appendReceipt } from "@aerovato/operator-core/context/receipts";
+import { appendReceipt } from "@jwitmann/operator-core/context/receipts";
 import { vol } from "memfs";
 import { beforeEach, expect, test, vi } from "vitest";
 

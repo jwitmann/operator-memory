@@ -1,5 +1,5 @@
-import { loadMemorySnapshot } from "@aerovato/operator-core/memory/load";
-import { renderPreamble } from "@aerovato/operator-core/preamble";
+import { loadMemorySnapshot } from "@jwitmann/operator-core/memory/load";
+import { renderPreamble } from "@jwitmann/operator-core/preamble";
 import { Effect } from "effect";
 
 import type { CliContext } from "../utils.ts";

@@ -81,7 +81,7 @@ test("shows server notification events as toasts", () => {
     listen: callback => {
       callback({
         details: {
-          type: "rpc.aerovato.operator-memory.toast",
+          type: "rpc.jwitmann.operator-memory.toast",
           data: { title: "Operator Error", message: "failed", variant: "error" },
         },
       });

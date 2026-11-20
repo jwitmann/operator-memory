@@ -1,6 +1,6 @@
 # Operator Memory for OpenCode
 
-Operator Memory gives current OpenCode (V2) durable project and user context maintained by agents as readable Markdown. For legacy OpenCode V1, use `operator-helper install opencode-v1` and the separate `@aerovato/operator-opencode` package.
+Operator Memory gives current OpenCode (V2) durable project and user context maintained by agents as readable Markdown. For legacy OpenCode V1, use `operator-helper install opencode-v1` and the separate `@jwitmann/operator-opencode` package.
 
 ### Install
 

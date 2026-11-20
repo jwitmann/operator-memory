@@ -1,10 +1,10 @@
 import {
   countCompletedToolCalls,
   evaluateBrainUpdateActivity,
-} from "@aerovato/operator-core/brain-updates";
-import { appendReceipt, type BrainReminderReceipt } from "@aerovato/operator-core/context/receipts";
-import type { RequestMessage } from "@aerovato/operator-core/context/tokens";
-import { fingerprintPreamble } from "@aerovato/operator-core/preamble-refresh";
+} from "@jwitmann/operator-core/brain-updates";
+import { appendReceipt, type BrainReminderReceipt } from "@jwitmann/operator-core/context/receipts";
+import type { RequestMessage } from "@jwitmann/operator-core/context/tokens";
+import { fingerprintPreamble } from "@jwitmann/operator-core/preamble-refresh";
 import { join } from "node:path";
 
 import {

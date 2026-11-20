@@ -29,7 +29,7 @@ The agent executes Helper and follows the [setup contract](../commands.md) in th
 
 ## Installation And Preview
 
-`operator-helper install claude-code` verifies Helper availability on `PATH`, registers the static repository marketplace from `aerovato/operator-memory`, and delegates plugin installation, refresh, and enabled-state verification to Claude. The marketplace's npm source names `@aerovato/operator-claude-code`; Claude owns the package download and cache. Helper must not fabricate a local marketplace, run npm, or stage adapter files. Repeated installation updates the adapter. Native removal uses `claude plugin uninstall operator@operator-memory`.
+`operator-helper install claude-code` verifies Helper availability on `PATH`, registers the static repository marketplace from `jwitmann/operator-memory`, and delegates plugin installation, refresh, and enabled-state verification to Claude. The marketplace's npm source names `@jwitmann/operator-claude-code`; Claude owns the package download and cache. Helper must not fabricate a local marketplace, run npm, or stage adapter files. Repeated installation updates the adapter. Native removal uses `claude plugin uninstall operator@operator-memory`.
 
 `bun run preview:claude-code` builds and links Helper, builds the adapter, and launches Claude with the local package through `--plugin-dir`, without registering a marketplace or installing the plugin into the user's profile. A fresh process loads updated memory and plugin code.
 

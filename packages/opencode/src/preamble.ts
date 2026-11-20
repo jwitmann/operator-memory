@@ -1,5 +1,5 @@
-import { loadMemorySnapshot } from "@aerovato/operator-core/memory/load";
-import { renderPreamble, type RenderedPreamble } from "@aerovato/operator-core/preamble";
+import { loadMemorySnapshot } from "@jwitmann/operator-core/memory/load";
+import { renderPreamble, type RenderedPreamble } from "@jwitmann/operator-core/preamble";
 
 import { failure, type Result, success } from "./utils.ts";
 

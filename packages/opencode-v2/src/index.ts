@@ -2,8 +2,8 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { loadMemorySnapshot, type MemoryStatusSnapshot } from "@aerovato/operator-core/memory/load";
-import type { TriggerKind } from "@aerovato/operator-core/context/triggers";
+import { loadMemorySnapshot, type MemoryStatusSnapshot } from "@jwitmann/operator-core/memory/load";
+import type { TriggerKind } from "@jwitmann/operator-core/context/triggers";
 import { Plugin } from "@opencode/plugin";
 import { pluginId } from "./id.ts";
 

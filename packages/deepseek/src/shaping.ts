@@ -1,4 +1,4 @@
-import { buildCompactionPrompt } from "@aerovato/operator-core/context/compaction";
+import { buildCompactionPrompt } from "@jwitmann/operator-core/context/compaction";
 import type { Context } from "@deepseek-ai/cordis";
 import type { GenerateOptions, StreamChunk } from "@deepseek-ai/dsh-llm";
 

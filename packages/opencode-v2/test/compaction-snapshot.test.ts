@@ -1,7 +1,7 @@
 import { vol } from "memfs";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { sessionEvents } from "@aerovato/operator-core/context/session-compat";
+import { sessionEvents } from "@jwitmann/operator-core/context/session-compat";
 
 import {
   buildSnapshot,

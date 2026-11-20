@@ -1,5 +1,5 @@
 ---
-description: "@aerovato/operator-codex package, preamble hook, Operator skills, tests, and local installation map"
+description: "@jwitmann/operator-codex package, preamble hook, Operator skills, tests, and local installation map"
 read_if: Working in packages/codex or changing Codex plugin packaging, preamble injection, or commands
 ---
 
@@ -11,10 +11,10 @@ read_if: Working in packages/codex or changing Codex plugin packaging, preamble 
 
 ## Architecture
 
-- `@aerovato/operator-codex` is a dependency-free legacy-format Codex plugin because current Codex clients load lifecycle hooks only from that format.
+- `@jwitmann/operator-codex` is a dependency-free legacy-format Codex plugin because current Codex clients load lifecycle hooks only from that format.
 - One strictly typed, dependency-free launcher compiles to Node-compatible JavaScript and renders current memory through Helper for new or cleared sessions, post-compaction context, and delegated subagents; resume and fork retain prior injected history.
 - Three explicitly invoked plugin skills bind Codex-native interaction to one Helper operation for each setup and indexing workflow.
-- Local preview: `bun run build:codex && bun run preview:codex` registers the repository marketplace via `codex plugin marketplace add` and installs or refreshes `aerovato@operator-local` through `codex plugin add`.
+- Local preview: `bun run build:codex && bun run preview:codex` registers the repository marketplace via `codex plugin marketplace add` and installs or refreshes `jwitmann@operator-local` through `codex plugin add`.
 
 ## `packages/codex/` Index
 

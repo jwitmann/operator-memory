@@ -6,20 +6,20 @@ You are working directly on the Operator Memory project. Operator turns agent wo
 
 The Bun/TypeScript monorepo has six TypeScript adapter/runtime packages plus the JavaScript Codex package:
 
-- `@aerovato/operator-core` — private, harness-agnostic runtime loading and preamble generation
-- `@aerovato/operator-helper` — published setup, filesystem, Git, status, guide, and lint CLI
-- `@aerovato/operator-opencode-v2` — default OpenCode (V2) server, RPC, and TUI plugin adapter
-- `@aerovato/operator-opencode` — legacy OpenCode V1 plugin and harness adapter
-- `@aerovato/operator-pi` — published Pi extension adapter
-- `@aerovato/operator-deepseek` — published DeepSeek Harness Host plugin and bundle adapter
+- `@jwitmann/operator-core` — private, harness-agnostic runtime loading and preamble generation
+- `@jwitmann/operator-helper` — published setup, filesystem, Git, status, guide, and lint CLI
+- `@jwitmann/operator-opencode-v2` — default OpenCode (V2) server, RPC, and TUI plugin adapter
+- `@jwitmann/operator-opencode` — legacy OpenCode V1 plugin and harness adapter
+- `@jwitmann/operator-pi` — published Pi extension adapter
+- `@jwitmann/operator-deepseek` — published DeepSeek Harness Host plugin and bundle adapter
 
 Runtime code uses portable Node APIs. Bun owns workspace management, dependency installation, building, and tests.
 
 ## Core Philosophy
 
 - Keep harness plugins thin so new harnesses stay cheap to add and maintain.
-- Put shared logic in `@aerovato/operator-core`.
-- Put filesystem and install work in `@aerovato/operator-helper`, not in plugins.
+- Put shared logic in `@jwitmann/operator-core`.
+- Put filesystem and install work in `@jwitmann/operator-helper`, not in plugins.
 - Prefer **agent-driven** flows for complex work such as setup; the harness only injects context and thin UI.
 - Treat harness-only extras (for example the OpenCode TUI status icon) as optional sugar, not core behavior.
 

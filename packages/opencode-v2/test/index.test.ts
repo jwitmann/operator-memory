@@ -16,7 +16,7 @@ const { emitToast, loadMemorySnapshot, loadPreamble } = vi.hoisted(() => ({
   ),
 }));
 
-vi.mock("@aerovato/operator-core/memory/load", () => ({ loadMemorySnapshot }));
+vi.mock("@jwitmann/operator-core/memory/load", () => ({ loadMemorySnapshot }));
 vi.mock("../src/preamble.ts", () => ({ loadPreamble }));
 vi.mock("node:fs/promises", async () => {
   const { fs: memoryFileSystem } = await import("memfs");
@@ -363,7 +363,7 @@ test("refreshes the preamble end to end when the Brain changes cold", async () =
   // Initial load, cached re-load, then the refresh re-render.
   expect(loadPreamble).toHaveBeenCalledTimes(3);
   expect(event.system).toEqual([{ type: "text", text: "operator preamble" }]);
-  const { readReceipts } = await import("@aerovato/operator-core/context/receipts");
+  const { readReceipts } = await import("@jwitmann/operator-core/context/receipts");
   const { join } = await import("node:path");
   const { homedir } = await import("node:os");
   const receipts = await readReceipts(

@@ -71,7 +71,7 @@ Codex CLI supports:
 
 Installed plugin capabilities become available in a new chat or CLI session.
 
-Operator release installation uses a Helper-managed local marketplace whose `aerovato` plugin entry resolves `@aerovato/operator-codex@latest` from npm. Helper adds the marketplace, installs `aerovato@operator-memory`, and verifies installed/enabled state through `codex plugin list --json`. Hook trust remains a native Codex decision.
+Operator release installation uses a Helper-managed local marketplace whose `jwitmann` plugin entry resolves `@jwitmann/operator-codex@latest` from npm. Helper adds the marketplace, installs `jwitmann@operator-memory`, and verifies installed/enabled state through `codex plugin list --json`. Hook trust remains a native Codex decision.
 
 ## Enablement
 

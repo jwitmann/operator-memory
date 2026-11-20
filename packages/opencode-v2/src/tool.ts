@@ -2,9 +2,9 @@ import {
   DEFAULT_RETENTION,
   pruneOmissions,
   readOmission,
-} from "@aerovato/operator-core/context/store";
-import { InvalidSearchPatternError } from "@aerovato/operator-core/context/search";
-import { isRecord } from "@aerovato/operator-core/utils";
+} from "@jwitmann/operator-core/context/store";
+import { InvalidSearchPatternError } from "@jwitmann/operator-core/context/search";
+import { isRecord } from "@jwitmann/operator-core/utils";
 import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
 

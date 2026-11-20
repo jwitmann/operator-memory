@@ -10,9 +10,9 @@ What has to be done to implement a harness adapter.
 
 ### Package Boundary
 
-- `@aerovato/operator-core` — load memory and render the preamble
-- `@aerovato/operator-helper` — filesystem setup, status, guides, Git, index lint, install, and explicit upgrade
-- `@aerovato/operator-<harness>` — harness hooks, preamble injection, command registration, optional status UI, and harness-native update when applicable
+- `@jwitmann/operator-core` — load memory and render the preamble
+- `@jwitmann/operator-helper` — filesystem setup, status, guides, Git, index lint, install, and explicit upgrade
+- `@jwitmann/operator-<harness>` — harness hooks, preamble injection, command registration, optional status UI, and harness-native update when applicable
 
 Session, command, and UI behavior belong in the adapter, not core.
 
@@ -62,7 +62,7 @@ What a reference adapter would look like, derived primarily from the OpenCode V2
 
 Before any injection, the adapter must obtain exactly one complete rendered preamble for the active project root. Two accepted pathways:
 
-- Bundled core: the adapter imports `@aerovato/operator-core` in-process and renders memory directly. Preferred where the adapter runs in a trusted TypeScript/JavaScript runtime.
+- Bundled core: the adapter imports `@jwitmann/operator-core` in-process and renders memory directly. Preferred where the adapter runs in a trusted TypeScript/JavaScript runtime.
 - Helper subprocess: the adapter runs `operator-helper preamble` with the event working directory and uses its stdout unchanged. Required where the adapter cannot import core (non-TypeScript runtimes, sandboxed or untrusted hook processes).
 
 Both pathways produce identical output: the complete normal preamble or the canonical all-or-nothing load diagnostic. Successful Helper output is itself the memory-load diagnostic and requires no inspection. Never a partial Brain, never a fallback preamble.
@@ -100,7 +100,7 @@ Each registration supplies this prompt, substituting its command description, op
 
 ## Recovery
 
-- If Helper cannot start, install or repair the npm package `@aerovato/operator-helper` globally and retry the failed command.
+- If Helper cannot start, install or repair the npm package `@jwitmann/operator-helper` globally and retry the failed command.
 - If the version check or upgrade fails, diagnose the error and retry.
 - If `operator-helper {operation}` reports a failure, use its output to resolve it and rerun it as needed.
 - If you cannot resolve a problem, report the blocker.

@@ -1,12 +1,12 @@
 {
-  "name": "@aerovato/operator-opencode",
+  "name": "@jwitmann/operator-opencode",
   "version": "1.1.1",
   "description": "Operator Memory: durable context for agent-driven development.",
   "license": "BSD-3-Clause",
-  "author": "Aerovato Research",
-  "homepage": "https://github.com/aerovato/operator-memory#readme",
+  "author": "jwitmann",
+  "homepage": "https://github.com/jwitmann/operator-memory#readme",
   "bugs": {
-    "url": "https://github.com/aerovato/operator-memory/issues"
+    "url": "https://github.com/jwitmann/operator-memory/issues"
   },
   "type": "module",
   "main": "dist/index.js",
@@ -26,7 +26,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aerovato/operator-memory.git",
+    "url": "git+https://github.com/jwitmann/operator-memory.git",
     "directory": "packages/opencode"
   },
   "engines": {
@@ -64,7 +64,7 @@
     }
   },
   "devDependencies": {
-    "@aerovato/operator-core": "workspace:*",
+    "@jwitmann/operator-core": "workspace:*",
     "@opentui/core": "0.4.5",
     "@opentui/keymap": "0.4.5",
     "@opentui/solid": "0.4.5",

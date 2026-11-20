@@ -36,14 +36,14 @@ import {
   type RecallMessage,
   type RecallResult,
   type SeqSelection,
-} from "@aerovato/operator-core/context/recall";
+} from "@jwitmann/operator-core/context/recall";
 import {
   DEFAULT_MAX_SEARCH_HITS,
   searchSession,
   type SearchResult,
-} from "@aerovato/operator-core/context/search";
-import { isSafePathSegment } from "@aerovato/operator-core/context/store";
-import { failure, isRecord, type Result, success } from "@aerovato/operator-core/utils";
+} from "@jwitmann/operator-core/context/search";
+import { isSafePathSegment } from "@jwitmann/operator-core/context/store";
+import { failure, isRecord, type Result, success } from "@jwitmann/operator-core/utils";
 
 import {
   mediaLabel,

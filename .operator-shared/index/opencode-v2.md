@@ -1,5 +1,5 @@
 ---
-description: "@aerovato/operator-opencode-v2 source map"
+description: "@jwitmann/operator-opencode-v2 source map"
 read_if: Working in packages/opencode-v2 or changing OpenCode V2 preamble injection
 ---
 
@@ -11,7 +11,7 @@ read_if: Working in packages/opencode-v2 or changing OpenCode V2 preamble inject
 
 ## Architecture
 
-- `@aerovato/operator-opencode-v2` uses V2's Promise plugin API, injects one immutable rendered preamble per session through the model-boundary context hook, registers Operator commands through command transforms, leaves updates to OpenCode 2, and provides RPC-backed readiness, partition status, refresh, and notification TUI parity.
+- `@jwitmann/operator-opencode-v2` uses V2's Promise plugin API, injects one immutable rendered preamble per session through the model-boundary context hook, registers Operator commands through command transforms, leaves updates to OpenCode 2, and provides RPC-backed readiness, partition status, refresh, and notification TUI parity.
 
 ## `packages/opencode-v2/` Index
 

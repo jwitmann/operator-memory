@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import type { OpencodeClient } from "@opencode-ai/sdk/v2";
 
-const PACKAGE_NAME = "@aerovato/operator-opencode";
+const PACKAGE_NAME = "@jwitmann/operator-opencode";
 const INSTALL_TIMEOUT = 60_000;
 
 type PackageJson = {
@@ -76,10 +76,10 @@ export async function resolveUpdate(
   const installDirectory = dirname(nodeModulesDirectory);
   if (
     basename(packageDirectory) !== "operator-opencode"
-    || basename(scopeDirectory) !== "@aerovato"
+    || basename(scopeDirectory) !== "@jwitmann"
     || basename(nodeModulesDirectory) !== "node_modules"
     || basename(installDirectory) !== "operator-opencode@latest"
-    || basename(dirname(installDirectory)) !== "@aerovato"
+    || basename(dirname(installDirectory)) !== "@jwitmann"
   ) {
     return { current: null, latest: null };
   }

@@ -8,7 +8,7 @@ Requires Claude Code `v2.1.287` or newer, Node.js 20 or newer, and the [Helper](
 operator-helper install claude-code
 ```
 
-Helper registers the marketplace from `aerovato/operator-memory`, installs `operator@operator-memory` from npm through Claude's native installer, and verifies it is enabled. Claude owns the package download and cache. Start a new Claude Code process after installation.
+Helper registers the marketplace from `jwitmann/operator-memory`, installs `operator@operator-memory` from npm through Claude's native installer, and verifies it is enabled. Claude owns the package download and cache. Start a new Claude Code process after installation.
 
 ### Verify
 

@@ -1,12 +1,12 @@
 {
-  "name": "@aerovato/operator-deepseek",
+  "name": "@jwitmann/operator-deepseek",
   "version": "0.3.0",
   "description": "Operator Memory adapter for DeepSeek Harness.",
   "license": "BSD-3-Clause",
-  "author": "Aerovato Research",
-  "homepage": "https://github.com/aerovato/operator-memory#readme",
+  "author": "jwitmann",
+  "homepage": "https://github.com/jwitmann/operator-memory#readme",
   "bugs": {
-    "url": "https://github.com/aerovato/operator-memory/issues"
+    "url": "https://github.com/jwitmann/operator-memory/issues"
   },
   "type": "module",
   "main": "dist/index.js",
@@ -40,7 +40,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aerovato/operator-memory.git",
+    "url": "git+https://github.com/jwitmann/operator-memory.git",
     "directory": "packages/deepseek"
   },
   "engines": {
@@ -86,7 +86,7 @@
     }
   },
   "devDependencies": {
-    "@aerovato/operator-core": "workspace:*",
+    "@jwitmann/operator-core": "workspace:*",
     "@deepseek-ai/cordis": "4.0.4",
     "@deepseek-ai/dsh": "0.2.0-rc.2",
     "@deepseek-ai/dsh-agent": "0.2.0-rc.2",

@@ -61,4 +61,4 @@ The Brain can go stale — after significant upstream changes or if the agent si
 
 ### OpenCode
 
-The default OpenCode integration targets V2 through `@aerovato/operator-opencode-v2`. It injects session-cached context at the outgoing model boundary, exposes server-owned status through RPC to the TUI, and leaves package updates to OpenCode. The separate `@aerovato/operator-opencode` package supports legacy V1 only.
+The default OpenCode integration targets V2 through `@jwitmann/operator-opencode-v2`. It injects session-cached context at the outgoing model boundary, exposes server-owned status through RPC to the TUI, and leaves package updates to OpenCode. The separate `@jwitmann/operator-opencode` package supports legacy V1 only.

@@ -1,12 +1,12 @@
 {
-  "name": "@aerovato/operator-claude-code",
+  "name": "@jwitmann/operator-claude-code",
   "version": "0.2.0",
   "description": "Operator Memory adapter for Claude Code.",
   "license": "BSD-3-Clause",
-  "author": "Aerovato Research",
-  "homepage": "https://github.com/aerovato/operator-memory#readme",
+  "author": "jwitmann",
+  "homepage": "https://github.com/jwitmann/operator-memory#readme",
   "bugs": {
-    "url": "https://github.com/aerovato/operator-memory/issues"
+    "url": "https://github.com/jwitmann/operator-memory/issues"
   },
   "files": [
     ".claude-plugin",
@@ -22,7 +22,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aerovato/operator-memory.git",
+    "url": "git+https://github.com/jwitmann/operator-memory.git",
     "directory": "packages/claude-code"
   },
   "engines": {

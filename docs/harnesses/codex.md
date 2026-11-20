@@ -8,7 +8,7 @@ Requires Node.js 20 or newer (for Operator Helper) and the [Helper](../../README
 operator-helper install codex
 ```
 
-This installs the plugin from Operator's local marketplace as `aerovato@operator-memory` and verifies it is enabled. Start a fresh Codex session after installation.
+This installs the plugin from Operator's local marketplace as `jwitmann@operator-memory` and verifies it is enabled. Start a fresh Codex session after installation.
 
 **When Codex first starts the plugin, it prompts you to approve Operator's hooks. Approve them — until you do, preamble injection silently does not run.**
 

@@ -1,6 +1,6 @@
-import { CATALOG_TEMPLATE } from "@aerovato/operator-core/templates/catalog";
-import { PROJECT_INDEX_TEMPLATE } from "@aerovato/operator-core/templates/project-index";
-import { PROJECT_SUBINDEX_TEMPLATE } from "@aerovato/operator-core/templates/project-subindex";
+import { CATALOG_TEMPLATE } from "@jwitmann/operator-core/templates/catalog";
+import { PROJECT_INDEX_TEMPLATE } from "@jwitmann/operator-core/templates/project-index";
+import { PROJECT_SUBINDEX_TEMPLATE } from "@jwitmann/operator-core/templates/project-subindex";
 
 import { PROJECT_INDEX_SETUP_TEMPLATE } from "./templates/project/index-setup.ts";
 import { PROJECT_OPERATOR_TEMPLATE } from "./templates/project/operator.ts";

@@ -3,7 +3,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 
 const { loadMemorySnapshot } = vi.hoisted(() => ({ loadMemorySnapshot: vi.fn() }));
 
-vi.mock("@aerovato/operator-core/memory/load", () => ({ loadMemorySnapshot }));
+vi.mock("@jwitmann/operator-core/memory/load", () => ({ loadMemorySnapshot }));
 
 import OperatorTuiPlugin, { readyLabel } from "../src/tui.tsx";
 
@@ -27,16 +27,16 @@ test("registers the home and sidebar status slots", async () => {
 });
 
 test("labels local plugin installations", () => {
-  expect(readyLabel({ source: "npm", spec: "@aerovato/operator-opencode@latest" })).toBe(
+  expect(readyLabel({ source: "npm", spec: "@jwitmann/operator-opencode@latest" })).toBe(
     "Operator Ready",
   );
   expect(
-    readyLabel({ source: "npm", spec: "@aerovato/operator-opencode@latest", version: "1.2.3" }),
+    readyLabel({ source: "npm", spec: "@jwitmann/operator-opencode@latest", version: "1.2.3" }),
   ).toBe("Operator Ready (v1.2.3)");
   expect(
     readyLabel({
       source: "npm",
-      spec: "@aerovato/operator-opencode@file:///project/packages/opencode",
+      spec: "@jwitmann/operator-opencode@file:///project/packages/opencode",
       version: "1.2.3",
     }),
   ).toBe("Operator Ready (Local Build)");

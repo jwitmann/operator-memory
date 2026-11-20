@@ -2,11 +2,11 @@
 
 Last Updated: October 20, 2026
 
-Frozen binding of `@aerovato/operator-opencode` for existing OpenCode V1 installations. No further development or releases are planned. Runtime, tests, and Helper installation/recovery remain; OpenCode development guidance and source navigation are canonical under the [V2 guides](../../guides/opencode-v2/plugins.md) and [V2 reference index](../../index/harnesses/opencode-v2/monorepo.md).
+Frozen binding of `@jwitmann/operator-opencode` for existing OpenCode V1 installations. No further development or releases are planned. Runtime, tests, and Helper installation/recovery remain; OpenCode development guidance and source navigation are canonical under the [V2 guides](../../guides/opencode-v2/plugins.md) and [V2 reference index](../../index/harnesses/opencode-v2/monorepo.md).
 
 ## Package
 
-The package remains `@aerovato/operator-opencode@latest`. Install or recover the last published version with:
+The package remains `@jwitmann/operator-opencode@latest`. Install or recover the last published version with:
 
 ```text
 operator-helper install opencode-v1

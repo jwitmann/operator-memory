@@ -52,8 +52,8 @@ test.runIf(process.platform !== "win32")(
       "codex",
       `printf '%s|%s\n' "$NPM_CONFIG_MIN_RELEASE_AGE" "$*" >> "$OPERATOR_TEST_RECORD"
 if [ "$1 $2 $3" = "plugin marketplace add" ]; then printf '{"marketplaceName":"operator-memory"}'; exit 0; fi
-if [ "$1 $2 $3" = "plugin add aerovato@operator-memory" ]; then printf '{"pluginId":"aerovato@operator-memory"}'; exit 0; fi
-printf '{"installed":[{"pluginId":"aerovato@operator-memory","installed":true,"enabled":true}]}'`,
+if [ "$1 $2 $3" = "plugin add jwitmann@operator-memory" ]; then printf '{"pluginId":"jwitmann@operator-memory"}'; exit 0; fi
+printf '{"installed":[{"pluginId":"jwitmann@operator-memory","installed":true,"enabled":true}]}'`,
     );
 
     const result = await execute(["install", "codex"], "4.5.6");
@@ -72,10 +72,10 @@ printf '{"installed":[{"pluginId":"aerovato@operator-memory","installed":true,"e
       name: "operator-memory",
       plugins: [
         {
-          name: "aerovato",
+          name: "jwitmann",
           source: {
             source: "npm",
-            package: "@aerovato/operator-codex",
+            package: "@jwitmann/operator-codex",
             version: "latest",
           },
           policy: { installation: "AVAILABLE" },
@@ -84,7 +84,7 @@ printf '{"installed":[{"pluginId":"aerovato@operator-memory","installed":true,"e
     });
     expect(fs.readFileSync(record, "utf8")).toBe(
       `0|plugin marketplace add ${marketplaceRoot} --json\n`
-        + "0|plugin add aerovato@operator-memory --json\n"
+        + "0|plugin add jwitmann@operator-memory --json\n"
         + "0|plugin list --marketplace operator-memory --json\n",
     );
   },
@@ -96,8 +96,8 @@ test.runIf(process.platform !== "win32")(
     executable(
       "codex",
       `if [ "$1 $2 $3" = "plugin marketplace add" ]; then printf '{}'; exit 0; fi
-if [ "$1 $2 $3" = "plugin add aerovato@operator-memory" ]; then printf '{}'; exit 0; fi
-printf '{"installed":[{"pluginId":"aerovato@operator-memory","installed":true,"enabled":false}]}'`,
+if [ "$1 $2 $3" = "plugin add jwitmann@operator-memory" ]; then printf '{}'; exit 0; fi
+printf '{"installed":[{"pluginId":"jwitmann@operator-memory","installed":true,"enabled":false}]}'`,
     );
 
     expect(await execute(["install", "codex"], "4.5.6")).toEqual({
@@ -132,7 +132,7 @@ test.runIf(process.platform !== "win32")(
     });
     expect(fs.readFileSync(record, "utf8")).toBe(
       "helper|help\n"
-        + "claude|plugin marketplace add aerovato/operator-memory\n"
+        + "claude|plugin marketplace add jwitmann/operator-memory\n"
         + "claude|plugin install operator@operator-memory\n"
         + "claude|plugin update operator@operator-memory\n"
         + "claude|plugin list --json\n",
@@ -148,7 +148,7 @@ test("the repository marketplace points at the Claude Code npm package", () => {
   );
   expect(manifest.name).toBe("operator-memory");
   expect(manifest.plugins).toEqual([
-    { name: "operator", source: { source: "npm", package: "@aerovato/operator-claude-code" } },
+    { name: "operator", source: { source: "npm", package: "@jwitmann/operator-claude-code" } },
   ]);
 });
 
@@ -278,6 +278,9 @@ test("registers the marketplace in config.toml when the Codex CLI is unavailable
     output:
       "✓ Registered the Operator Codex marketplace\n"
       + "Codex CLI unavailable: install aerovato@operator-memory from the Codex plugins browser, then start a new session and approve the Operator hooks.",
+    // External plugin-browser name (see install/codex.ts): the public
+    // listing still lives under aerovato until the marketplace entry
+    // is renamed.
   });
   expect(fs.readFileSync(join(codexHome, "config.toml"), "utf8")).toBe(
     `[marketplaces.operator-memory]\nsource_type = "local"\nsource = ${JSON.stringify(marketplaceRoot)}\n`,
@@ -495,7 +498,7 @@ test.runIf(process.platform !== "win32")(
       ".cache",
       "opencode",
       "packages",
-      "@aerovato",
+      "@jwitmann",
       "operator-opencode@latest",
     );
     fs.mkdirSync(cache, { recursive: true });
@@ -509,7 +512,7 @@ test.runIf(process.platform !== "win32")(
 
     expect(result).toEqual({ exitCode: 0, output: "installed" });
     expect(fs.readFileSync(record, "utf8")).toBe(
-      "plugin @aerovato/operator-opencode@latest --global --force\n0",
+      "plugin @jwitmann/operator-opencode@latest --global --force\n0",
     );
     expect(fs.existsSync(cache)).toBe(false);
   },
@@ -523,7 +526,7 @@ test.runIf(process.platform !== "win32")(
       xdgCacheHome,
       "opencode",
       "packages",
-      "@aerovato",
+      "@jwitmann",
       "operator-opencode@latest",
     );
     process.env.XDG_CACHE_HOME = xdgCacheHome;
@@ -551,7 +554,7 @@ test.runIf(process.platform !== "win32")(
       ".cache",
       "opencode",
       "packages",
-      "@aerovato",
+      "@jwitmann",
       "operator-opencode@latest",
     );
     fs.mkdirSync(cache, { recursive: true });
@@ -562,7 +565,7 @@ test.runIf(process.platform !== "win32")(
 
       expect(result).toEqual({ exitCode: 0, output: "installed" });
       expect(fs.readFileSync(record, "utf8")).toBe(
-        "plugin add @aerovato/operator-opencode-v2@latest\n0",
+        "plugin add @jwitmann/operator-opencode-v2@latest\n0",
       );
       expect(fs.readFileSync(join(cache, "stale"), "utf8")).toBe("stale");
     }
@@ -575,7 +578,7 @@ test.runIf(process.platform !== "win32")("installs the Pi plugin globally", asyn
   const result = await execute(["install", "pi"], "4.5.6");
 
   expect(result).toEqual({ exitCode: 0, output: "installed" });
-  expect(fs.readFileSync(record, "utf8")).toBe("install npm:@aerovato/operator-pi");
+  expect(fs.readFileSync(record, "utf8")).toBe("install npm:@jwitmann/operator-pi");
 });
 
 test.runIf(process.platform !== "win32")(
@@ -594,12 +597,12 @@ printf '%s installed' "$3"`,
       output:
         "✓ Web: web installed\n✓ Desktop: desktop installed\n\n"
         + "To install a profile manually, run:\n\n"
-        + "  dsh plugin --profile <profile-name> add @aerovato/operator-deepseek\n\n"
+        + "  dsh plugin --profile <profile-name> add @jwitmann/operator-deepseek\n\n"
         + "If the desktop profile was not installed, quit the desktop application and install manually.",
     });
     expect(fs.readFileSync(record, "utf8")).toBe(
-      "plugin --profile web add @aerovato/operator-deepseek\n"
-        + "plugin --profile desktop add @aerovato/operator-deepseek\n",
+      "plugin --profile web add @jwitmann/operator-deepseek\n"
+        + "plugin --profile desktop add @jwitmann/operator-deepseek\n",
     );
   },
 );
@@ -621,7 +624,7 @@ printf 'web installed'`,
       output:
         "✓ Web: web installed\n✗ Desktop: Desktop runtime required\n\n"
         + "To install a profile manually, run:\n\n"
-        + "  dsh plugin --profile <profile-name> add @aerovato/operator-deepseek\n\n"
+        + "  dsh plugin --profile <profile-name> add @jwitmann/operator-deepseek\n\n"
         + "If the desktop profile was not installed, quit the desktop application and install manually.",
     });
     expect(fs.readFileSync(record, "utf8")).toContain("--profile desktop");
@@ -642,7 +645,7 @@ printf 'desktop installed'`,
       output:
         "✗ Web: web failed\n✓ Desktop: desktop installed\n\n"
         + "To install a profile manually, run:\n\n"
-        + "  dsh plugin --profile <profile-name> add @aerovato/operator-deepseek\n\n"
+        + "  dsh plugin --profile <profile-name> add @jwitmann/operator-deepseek\n\n"
         + "If the desktop profile was not installed, quit the desktop application and install manually.",
     });
   },
@@ -653,7 +656,7 @@ test.runIf(process.platform !== "win32")(
   async () => {
     executable(
       "bun",
-      'if [ "$1 $2 $3" = "pm ls --global" ]; then printf "@aerovato/operator-helper@1.2.3"; exit 0; fi\nif [ "$1 $2 $3" = "pm bin --global" ]; then printf "/nonexistent/bun/bin"; exit 0; fi\nprintf "%s" "$*" > "$OPERATOR_TEST_RECORD"',
+      'if [ "$1 $2 $3" = "pm ls --global" ]; then printf "@jwitmann/operator-helper@1.2.3"; exit 0; fi\nif [ "$1 $2 $3" = "pm bin --global" ]; then printf "/nonexistent/bun/bin"; exit 0; fi\nprintf "%s" "$*" > "$OPERATOR_TEST_RECORD"',
     );
     executable(
       "npm",
@@ -664,7 +667,7 @@ test.runIf(process.platform !== "win32")(
 
     expect(result).toEqual({ status: "updated", latest: "4.5.6" });
     expect(fs.readFileSync(record, "utf8")).toBe(
-      "add --global --minimum-release-age 0 @aerovato/operator-helper@4.5.6",
+      "add --global --minimum-release-age 0 @jwitmann/operator-helper@4.5.6",
     );
   },
 );
@@ -675,14 +678,14 @@ test.runIf(process.platform !== "win32")(
     executable("bun", "exit 1");
     executable(
       "npm",
-      'if [ "$1" = "list" ]; then printf "@aerovato/operator-helper@1.2.3"; exit 0; fi\nif [ "$1 $2" = "prefix --global" ]; then printf "/nonexistent/npm/prefix"; exit 0; fi\nprintf "%s\\n%s" "$*" "$NPM_CONFIG_MIN_RELEASE_AGE" > "$OPERATOR_TEST_RECORD"',
+      'if [ "$1" = "list" ]; then printf "@jwitmann/operator-helper@1.2.3"; exit 0; fi\nif [ "$1 $2" = "prefix --global" ]; then printf "/nonexistent/npm/prefix"; exit 0; fi\nprintf "%s\\n%s" "$*" "$NPM_CONFIG_MIN_RELEASE_AGE" > "$OPERATOR_TEST_RECORD"',
     );
 
     const result = await update("4.5.6");
 
     expect(result).toEqual({ status: "updated", latest: "4.5.6" });
     expect(fs.readFileSync(record, "utf8")).toBe(
-      "install --global @aerovato/operator-helper@4.5.6\n0",
+      "install --global @jwitmann/operator-helper@4.5.6\n0",
     );
   },
 );
@@ -787,7 +790,7 @@ test.runIf(process.platform !== "win32")("upgrade reports an up-to-date helper",
 test.runIf(process.platform !== "win32")("reports failed explicit installation", async () => {
   executable(
     "bun",
-    'if [ "$1 $2 $3" = "pm ls --global" ]; then printf "@aerovato/operator-helper@1.2.3"; exit 0; fi\nexit 1',
+    'if [ "$1 $2 $3" = "pm ls --global" ]; then printf "@jwitmann/operator-helper@1.2.3"; exit 0; fi\nexit 1',
   );
   executable("npm", "exit 1");
 
@@ -818,11 +821,11 @@ test.runIf(process.platform !== "win32")(
     fs.writeFileSync(executablePath, "", { mode: 0o755 });
     executable(
       "bun",
-      'if [ "$1 $2 $3" = "pm ls --global" ]; then printf "@aerovato/operator-helper@1.2.3"; exit 0; fi\nif [ "$1 $2 $3" = "pm bin --global" ]; then printf "/nonexistent/bun/bin"; exit 0; fi\nexit 0',
+      'if [ "$1 $2 $3" = "pm ls --global" ]; then printf "@jwitmann/operator-helper@1.2.3"; exit 0; fi\nif [ "$1 $2 $3" = "pm bin --global" ]; then printf "/nonexistent/bun/bin"; exit 0; fi\nexit 0',
     );
     executable(
       "npm",
-      'if [ "$1" = "list" ]; then printf "@aerovato/operator-helper@1.2.3"; exit 0; fi\nif [ "$1 $2" = "prefix --global" ]; then printf "%s" "'
+      'if [ "$1" = "list" ]; then printf "@jwitmann/operator-helper@1.2.3"; exit 0; fi\nif [ "$1 $2" = "prefix --global" ]; then printf "%s" "'
         + npmPrefix
         + '"; exit 0; fi\nexit 0',
     );

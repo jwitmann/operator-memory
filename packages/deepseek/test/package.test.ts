@@ -9,10 +9,10 @@ const core = vi.hoisted(() => ({
   renderPreamble: vi.fn(),
 }));
 
-vi.mock("@aerovato/operator-core/memory/load", () => ({
+vi.mock("@jwitmann/operator-core/memory/load", () => ({
   loadMemorySnapshot: core.loadMemorySnapshot,
 }));
-vi.mock("@aerovato/operator-core/preamble", () => ({
+vi.mock("@jwitmann/operator-core/preamble", () => ({
   renderPreamble: core.renderPreamble,
 }));
 
@@ -36,9 +36,9 @@ describe("DeepSeek adapter package", () => {
     const patch = await readFile(resolve(packageDirectory, "cordis.patch.yml"), "utf8");
 
     expect(patch).toContain("id: operator-memory");
-    expect(patch).toContain("name: '@aerovato/operator-deepseek'");
+    expect(patch).toContain("name: '@jwitmann/operator-deepseek'");
     expect(patch).toContain("id: tool-recall");
-    expect(patch).toContain("name: '@aerovato/operator-deepseek/tool'");
+    expect(patch).toContain("name: '@jwitmann/operator-deepseek/tool'");
   });
 
   test("contributes a static Operator indicator beside the composer readings", async () => {
@@ -89,7 +89,7 @@ describe("DeepSeek adapter package", () => {
             id: string;
             factory: (require: (id: string) => unknown) => ClientPlugin;
           }) => {
-            expect(id).toBe("@aerovato/operator-deepseek");
+            expect(id).toBe("@jwitmann/operator-deepseek");
             plugin = factory(id => {
               expect(id).toBe("react");
               return {

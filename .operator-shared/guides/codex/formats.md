@@ -22,7 +22,7 @@ Minimal legacy manifest:
 
 ```json
 {
-  "name": "aerovato",
+  "name": "jwitmann",
   "version": "0.1.0",
   "description": "Operator Memory",
   "hooks": "./hooks/hooks.json"
@@ -87,7 +87,7 @@ Located at `~/.agents/plugins/marketplace.json` or `$REPO_ROOT/.agents/plugins/m
   "name": "my-marketplace",
   "plugins": [
     {
-      "name": "aerovato",
+      "name": "jwitmann",
       "source": "./packages/codex",
       "policy": { "installation": "AVAILABLE" }
     }

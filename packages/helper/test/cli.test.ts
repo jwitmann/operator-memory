@@ -6,8 +6,8 @@ import { NodeChildProcessSpawner, NodeFileSystem, NodePath } from "@effect/platf
 import { Effect, Layer } from "effect";
 import { afterEach, beforeEach, expect, test } from "vitest";
 
-import { loadMemorySnapshot } from "@aerovato/operator-core/memory/load";
-import { renderPreamble } from "@aerovato/operator-core/preamble";
+import { loadMemorySnapshot } from "@jwitmann/operator-core/memory/load";
+import { renderPreamble } from "@jwitmann/operator-core/preamble";
 
 import { runCli } from "../src/cli.ts";
 import { GitError } from "../src/git.ts";

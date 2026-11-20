@@ -1,12 +1,12 @@
 {
-  "name": "@aerovato/operator-opencode-v2",
+  "name": "@jwitmann/operator-opencode-v2",
   "version": "2.3.0",
   "description": "Operator Memory adapter for OpenCode V2.",
   "license": "BSD-3-Clause",
-  "author": "Aerovato Research",
-  "homepage": "https://github.com/aerovato/operator-memory#readme",
+  "author": "jwitmann",
+  "homepage": "https://github.com/jwitmann/operator-memory#readme",
   "bugs": {
-    "url": "https://github.com/aerovato/operator-memory/issues"
+    "url": "https://github.com/jwitmann/operator-memory/issues"
   },
   "type": "module",
   "main": "dist/index.js",
@@ -27,7 +27,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aerovato/operator-memory.git",
+    "url": "git+https://github.com/jwitmann/operator-memory.git",
     "directory": "packages/opencode-v2"
   },
   "engines": {
@@ -58,7 +58,7 @@
     }
   },
   "devDependencies": {
-    "@aerovato/operator-core": "workspace:*",
+    "@jwitmann/operator-core": "workspace:*",
     "@opencode/plugin": "2.0.14",
     "@opentui/core": "0.5.10",
     "@opentui/solid": "0.5.10",

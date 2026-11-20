@@ -98,13 +98,13 @@ async function installation(
 }> {
   const root = await mkdtemp(join(tmpdir(), "operator-update-"));
   temporaryDirectories.push(root);
-  const installDirectory = join(root, "packages", "@aerovato", wrapper);
-  const packageDirectory = join(installDirectory, "node_modules", "@aerovato", "operator-opencode");
+  const installDirectory = join(root, "packages", "@jwitmann", wrapper);
+  const packageDirectory = join(installDirectory, "node_modules", "@jwitmann", "operator-opencode");
   const modulePath = join(packageDirectory, "dist", "index.js");
   await mkdir(join(packageDirectory, "dist"), { recursive: true });
   await writeFile(
     join(packageDirectory, "package.json"),
-    JSON.stringify({ name: "@aerovato/operator-opencode", version }),
+    JSON.stringify({ name: "@jwitmann/operator-opencode", version }),
   );
   await writeFile(modulePath, "");
   return {

@@ -11,7 +11,7 @@ export const installClaudeCode = Effect.fn("installClaudeCode")(function* (conte
   if (helperFailure !== null) return helperFailure;
 
   const commands = [
-    ["plugin", "marketplace", "add", "aerovato/operator-memory"],
+    ["plugin", "marketplace", "add", "jwitmann/operator-memory"],
     ["plugin", "install", PLUGIN_ID],
     ["plugin", "update", PLUGIN_ID],
   ];

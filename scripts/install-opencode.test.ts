@@ -20,7 +20,7 @@ test("creates global configuration with the development build after the publishe
   const configPath = await registerLocalOpenCode(join(directory, "config"), pluginDirectory);
   expect(parse(await readFile(configPath, "utf8"))).toEqual({
     $schema: "https://opencode.ai/config.json",
-    plugins: ["-aerovato.operator-memory", pluginDirectory],
+    plugins: ["-jwitmann.operator-memory", pluginDirectory],
   });
 });
 
@@ -33,7 +33,7 @@ test("preserves JSONC comments, settings, and published registrations and is ide
   "model": "openai/model",
   "plugins": [
     // Keep the published registration.
-    "@aerovato/operator-opencode-v2@latest",
+    "@jwitmann/operator-opencode-v2@latest",
     { "package": "other", "options": { "enabled": true } },
   ],
 }`,
@@ -45,9 +45,9 @@ test("preserves JSONC comments, settings, and published registrations and is ide
   expect(parse(first)).toEqual({
     model: "openai/model",
     plugins: [
-      "@aerovato/operator-opencode-v2@latest",
+      "@jwitmann/operator-opencode-v2@latest",
       { package: "other", options: { enabled: true } },
-      "-aerovato.operator-memory",
+      "-jwitmann.operator-memory",
       pluginDirectory,
     ],
   });

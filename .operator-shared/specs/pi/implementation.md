@@ -2,11 +2,11 @@
 
 Last Updated: November 3, 2026
 
-How `@aerovato/operator-pi` binds the general adapter contract with first-class Pi support. Command meaning and setup workflows stay in [`commands.md`](../commands.md) and [`../reference/implementation.md`](../reference/implementation.md). Behavioral deviations are recorded against the reference implementation, not other bindings.
+How `@jwitmann/operator-pi` binds the general adapter contract with first-class Pi support. Command meaning and setup workflows stay in [`commands.md`](../commands.md) and [`../reference/implementation.md`](../reference/implementation.md). Behavioral deviations are recorded against the reference implementation, not other bindings.
 
 ## Package
 
-Published as the npm pi-package `@aerovato/operator-pi`. Its package manifest loads `dist/index.js`; the bundle includes `@aerovato/operator-core` and leaves Pi's five runtime packages as `"*"` peers.
+Published as the npm pi-package `@jwitmann/operator-pi`. Its package manifest loads `dist/index.js`; the bundle includes `@jwitmann/operator-core` and leaves Pi's five runtime packages as `"*"` peers.
 
 Install and repair with:
 
@@ -14,7 +14,7 @@ Install and repair with:
 operator-helper install pi
 ```
 
-Helper invokes `pi install npm:@aerovato/operator-pi`. The unversioned source participates in Pi's native package update flow. Local development registers the package root, either persistently as a local package source or per run with `-e packages/pi`; never register the npm package and local path together.
+Helper invokes `pi install npm:@jwitmann/operator-pi`. The unversioned source participates in Pi's native package update flow. Local development registers the package root, either persistently as a local package source or per run with `-e packages/pi`; never register the npm package and local path together.
 
 ## Feature Parity
 
@@ -70,7 +70,7 @@ Pathway selections: bundled-core resolution (bundled into the package with Pi's 
 ## Verification
 
 - Pi unit coverage verifies pending-render coalescing, stable synthetic messages, canonical diagnostics, fatal aborts, session reset, footer lifecycle, all three instruction-based commands, and duplicate-name behavior.
-- Helper integration coverage verifies construction of `pi install npm:@aerovato/operator-pi` through a live child process.
+- Helper integration coverage verifies construction of `pi install npm:@jwitmann/operator-pi` through a live child process.
 - The built npm package contains only `dist`, package metadata, and its README; `operator-core` is bundled with no runtime package import.
 - Pi 0.84.2 loads both the package root and built entry. The integration mechanism and differences were also verified against Pi 0.85.1 source.
 - Release validation should repeat model-boundary faux-provider coverage for retries, compaction, session replacement, `/reload`, and independently spawned subagents, plus isolated installation after the npm version exists.

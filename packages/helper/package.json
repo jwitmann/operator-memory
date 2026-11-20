@@ -1,16 +1,16 @@
 {
-  "name": "@aerovato/operator-helper",
+  "name": "@jwitmann/operator-helper",
   "version": "1.10.0",
   "description": "Installation and setup CLI for Operator Memory",
   "license": "BSD-3-Clause",
-  "author": "Aerovato Research",
-  "homepage": "https://github.com/aerovato/operator-memory#readme",
+  "author": "jwitmann",
+  "homepage": "https://github.com/jwitmann/operator-memory#readme",
   "bugs": {
-    "url": "https://github.com/aerovato/operator-memory/issues"
+    "url": "https://github.com/jwitmann/operator-memory/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aerovato/operator-memory.git",
+    "url": "git+https://github.com/jwitmann/operator-memory.git",
     "directory": "packages/helper"
   },
   "dependencies": {
@@ -44,7 +44,7 @@
     "prepack": "bun run build"
   },
   "devDependencies": {
-    "@aerovato/operator-core": "workspace:*"
+    "@jwitmann/operator-core": "workspace:*"
   },
   "type": "module"
 }

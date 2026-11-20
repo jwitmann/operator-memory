@@ -53,7 +53,7 @@ jobs:
         working-directory: packages/codex
         run: |
           version=$(node -p 'require("./package.json").version')
-          published=$(npm view "@aerovato/operator-codex@$version" version 2>/dev/null || true)
+          published=$(npm view "@jwitmann/operator-codex@$version" version 2>/dev/null || true)
           test "$published" = "$version" && echo "published=true" >> "$GITHUB_OUTPUT" || echo "published=false" >> "$GITHUB_OUTPUT"
 
       - name: Publish Codex plugin

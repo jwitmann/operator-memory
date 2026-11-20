@@ -1,5 +1,5 @@
-import { anchorEstimator, type StepTokenCounts } from "@aerovato/operator-core/context/tokens";
-import { evaluateTrigger, type TriggerKind } from "@aerovato/operator-core/context/triggers";
+import { anchorEstimator, type StepTokenCounts } from "@jwitmann/operator-core/context/tokens";
+import { evaluateTrigger, type TriggerKind } from "@jwitmann/operator-core/context/triggers";
 import type { Context } from "@opencode/plugin/promise/plugin";
 
 import { toTriggerConfig } from "./context-config.ts";

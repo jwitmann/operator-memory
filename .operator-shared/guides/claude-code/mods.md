@@ -25,7 +25,7 @@ Loader constraints (verified from the official docs and the built-in mod sources
 - Types: Claude Code writes per-version `.d.ts` files into `.claude-plugin/types/` when loading via `--plugin-dir`; the canonical declarations are `mods/types/claude-code.d.ts` in the official repo
 - A local `tsconfig.json` extending `.claude-plugin/types/tsconfig.json` is a generated-types shim, not Operator's check configuration. Operator uses `tsconfig.check.json` and its structural API subset; do not commit the shim.
 
-Consequence for Operator: the mod cannot import `@aerovato/operator-core` in-process; it renders through the Helper subprocess pathway (`$.process.run(['operator-helper', 'preamble'])`) and injects via prompt events, which have no documented size cap.
+Consequence for Operator: the mod cannot import `@jwitmann/operator-core` in-process; it renders through the Helper subprocess pathway (`$.process.run(['operator-helper', 'preamble'])`) and injects via prompt events, which have no documented size cap.
 
 ## Injection-relevant events
 

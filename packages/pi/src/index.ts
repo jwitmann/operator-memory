@@ -2,8 +2,8 @@ import { homedir } from "node:os";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { loadMemorySnapshot } from "@aerovato/operator-core/memory/load";
-import { renderPreamble } from "@aerovato/operator-core/preamble";
+import { loadMemorySnapshot } from "@jwitmann/operator-core/memory/load";
+import { renderPreamble } from "@jwitmann/operator-core/preamble";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 import packageJson from "../package.json" with { type: "json" };

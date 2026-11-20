@@ -1,12 +1,12 @@
-import { appendReceipt, type TrimReceipt } from "@aerovato/operator-core/context/receipts";
+import { appendReceipt, type TrimReceipt } from "@jwitmann/operator-core/context/receipts";
 import {
   DEFAULT_RETENTION,
   pruneOmissions,
   storeOmissions,
-} from "@aerovato/operator-core/context/store";
-import { evaluateTrigger, exceedsThresholds } from "@aerovato/operator-core/context/triggers";
-import { planTrimBatched, type TrimPlan } from "@aerovato/operator-core/context/trim";
-import { estimateContextTokens, type RequestMessage } from "@aerovato/operator-core/context/tokens";
+} from "@jwitmann/operator-core/context/store";
+import { evaluateTrigger, exceedsThresholds } from "@jwitmann/operator-core/context/triggers";
+import { planTrimBatched, type TrimPlan } from "@jwitmann/operator-core/context/trim";
+import { estimateContextTokens, type RequestMessage } from "@jwitmann/operator-core/context/tokens";
 import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
 

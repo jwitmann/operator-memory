@@ -1,4 +1,4 @@
-import { storeOmission } from "@aerovato/operator-core/context/store";
+import { storeOmission } from "@jwitmann/operator-core/context/store";
 import { vol } from "memfs";
 import { beforeEach, expect, test, vi } from "vitest";
 

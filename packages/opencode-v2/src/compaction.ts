@@ -1,6 +1,6 @@
-import { buildCompactionPrompt } from "@aerovato/operator-core/context/compaction";
-import { appendReceipt, type CompactReceipt } from "@aerovato/operator-core/context/receipts";
-import { estimateContextTokens, type RequestMessage } from "@aerovato/operator-core/context/tokens";
+import { buildCompactionPrompt } from "@jwitmann/operator-core/context/compaction";
+import { appendReceipt, type CompactReceipt } from "@jwitmann/operator-core/context/receipts";
+import { estimateContextTokens, type RequestMessage } from "@jwitmann/operator-core/context/tokens";
 import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
 

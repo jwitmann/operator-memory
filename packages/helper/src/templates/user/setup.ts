@@ -1,4 +1,4 @@
-import { CATALOG_TEMPLATE } from "@aerovato/operator-core/templates/catalog";
+import { CATALOG_TEMPLATE } from "@jwitmann/operator-core/templates/catalog";
 
 import { USER_OPERATOR_TEMPLATE } from "./operator.ts";
 

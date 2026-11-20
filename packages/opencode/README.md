@@ -2,14 +2,14 @@
 
 Operator Memory: Durable context for agent-driven development.
 
-This package is the legacy OpenCode V1 adapter for Operator Memory. For current OpenCode (V2), use `@aerovato/operator-opencode-v2` through `operator-helper install opencode`.
+This package is the legacy OpenCode V1 adapter for Operator Memory. For current OpenCode (V2), use `@jwitmann/operator-opencode-v2` through `operator-helper install opencode`.
 
 ### Install
 
 Install Operator Helper first:
 
 ```sh
-npm install --global @aerovato/operator-helper
+npm install --global @jwitmann/operator-helper
 ```
 
 Then install or update the OpenCode adapter:
@@ -33,9 +33,9 @@ Run each Operator command in a new conversation so the agent can focus on setup,
 
 ### Documentation
 
-- [Overview and setup](https://github.com/aerovato/operator-memory#readme)
-- [Getting Started](https://github.com/aerovato/operator-memory/blob/main/docs/getting-started.md)
-- [Architecture](https://github.com/aerovato/operator-memory/blob/main/docs/architecture.md)
-- [Troubleshooting](https://github.com/aerovato/operator-memory/blob/main/docs/troubleshooting.md)
+- [Overview and setup](https://github.com/jwitmann/operator-memory#readme)
+- [Getting Started](https://github.com/jwitmann/operator-memory/blob/main/docs/getting-started.md)
+- [Architecture](https://github.com/jwitmann/operator-memory/blob/main/docs/architecture.md)
+- [Troubleshooting](https://github.com/jwitmann/operator-memory/blob/main/docs/troubleshooting.md)
 
 Licensed under the BSD 3-Clause License.

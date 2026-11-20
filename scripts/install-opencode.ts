@@ -27,10 +27,10 @@ export async function registerLocalOpenCode(
   }
   // A distinct dev ID lets the local build coexist with a disabled published registration.
   const registered =
-    plugins.at(-2) === "-aerovato.operator-memory" && plugins.at(-1) === pluginDirectory;
+    plugins.at(-2) === "-jwitmann.operator-memory" && plugins.at(-1) === pluginDirectory;
   const updated = registered
     ? text
-    : ["-aerovato.operator-memory", pluginDirectory].reduce(
+    : ["-jwitmann.operator-memory", pluginDirectory].reduce(
         (content, entry) =>
           applyEdits(
             content,

@@ -41,7 +41,7 @@ test.each([
   expect(text).toContain("1. Run `operator-helper version`");
   expect(text).toContain("run `operator-helper upgrade` before continuing");
   expect(text).toContain(guide);
-  expect(text).toContain("npm package `@aerovato/operator-helper` globally");
+  expect(text).toContain("npm package `@jwitmann/operator-helper` globally");
   expect(text).not.toContain("<operator-command>");
 });
 

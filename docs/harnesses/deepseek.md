@@ -13,7 +13,7 @@ Helper attempts the default Web and Desktop profiles independently. Restart Web 
 Install into another profile with DeepSeek's native command:
 
 ```sh
-dsh plugin --profile <profile-name> add @aerovato/operator-deepseek
+dsh plugin --profile <profile-name> add @jwitmann/operator-deepseek
 ```
 
 ### Verify
@@ -43,7 +43,7 @@ Run each in a new conversation. See [Getting Started](../getting-started.md#appe
 Rerun `operator-helper install deepseek`, or update a specific profile through DeepSeek:
 
 ```sh
-dsh plugin --profile <profile-name> update @aerovato/operator-deepseek
+dsh plugin --profile <profile-name> update @jwitmann/operator-deepseek
 ```
 
 Fully quit Desktop before updating its profile and use Desktop's installed `dsh` command. Restart the affected profile after updating.

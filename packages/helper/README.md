@@ -9,13 +9,13 @@ Operator Helper installs and manages Operator Memory, an agent-driven developmen
 Operator Helper requires Node.js 20 or newer.
 
 ```sh
-npm install --global @aerovato/operator-helper
+npm install --global @jwitmann/operator-helper
 ```
 
 Or with Bun:
 
 ```sh
-bun add --global --minimum-release-age 0 @aerovato/operator-helper@latest
+bun add --global --minimum-release-age 0 @jwitmann/operator-helper@latest
 ```
 
 Install an adapter:
@@ -61,9 +61,9 @@ Operator Helper automatically checks for and installs updates when commands run.
 
 ### Documentation
 
-- [Overview and setup](https://github.com/aerovato/operator-memory#readme)
-- [Getting Started](https://github.com/aerovato/operator-memory/blob/main/docs/getting-started.md)
-- [Architecture](https://github.com/aerovato/operator-memory/blob/main/docs/architecture.md)
-- [Troubleshooting](https://github.com/aerovato/operator-memory/blob/main/docs/troubleshooting.md)
+- [Overview and setup](https://github.com/jwitmann/operator-memory#readme)
+- [Getting Started](https://github.com/jwitmann/operator-memory/blob/main/docs/getting-started.md)
+- [Architecture](https://github.com/jwitmann/operator-memory/blob/main/docs/architecture.md)
+- [Troubleshooting](https://github.com/jwitmann/operator-memory/blob/main/docs/troubleshooting.md)
 
 Licensed under the BSD 3-Clause License.

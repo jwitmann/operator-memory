@@ -2,7 +2,7 @@
 
 Last Updated: November 3, 2026
 
-Codex CLI and Codex Desktop use the dependency-free `@aerovato/operator-codex` legacy plugin package. Shared memory rendering remains in Helper; the adapter only binds Codex lifecycle events to `operator-helper preamble`. Behavioral deviations are recorded against [`../reference/implementation.md`](../reference/implementation.md), not other bindings.
+Codex CLI and Codex Desktop use the dependency-free `@jwitmann/operator-codex` legacy plugin package. Shared memory rendering remains in Helper; the adapter only binds Codex lifecycle events to `operator-helper preamble`. Behavioral deviations are recorded against [`../reference/implementation.md`](../reference/implementation.md), not other bindings.
 
 ## Preamble Injection
 
@@ -26,7 +26,7 @@ Each skill directs the agent to check Helper's version, upgrade when outdated, t
 
 ## Installation
 
-`operator-helper install codex` owns a stable local marketplace that resolves the latest npm release, installs or refreshes the plugin as `aerovato@operator-memory`, and verifies that it is installed and enabled. When the Codex CLI is unavailable, Helper instead upserts only its own `[marketplaces.operator-memory]` table in `config.toml` (`CODEX_HOME`, default `~/.codex`) — the same table the CLI writes — and instructs the user to install the plugin from the Codex plugins browser; no verification is claimed for that handoff. Helper refuses to edit a `config.toml` that expresses `marketplaces` without tables. Helper does not write Codex hook trust. Codex's native startup review handles untrusted or modified hooks, and installation requires a fresh session before plugin capabilities become active.
+`operator-helper install codex` owns a stable local marketplace that resolves the latest npm release, installs or refreshes the plugin as `jwitmann@operator-memory`, and verifies that it is installed and enabled. When the Codex CLI is unavailable, Helper instead upserts only its own `[marketplaces.operator-memory]` table in `config.toml` (`CODEX_HOME`, default `~/.codex`) — the same table the CLI writes — and instructs the user to install the plugin from the Codex plugins browser; no verification is claimed for that handoff. Helper refuses to edit a `config.toml` that expresses `marketplaces` without tables. Helper does not write Codex hook trust. Codex's native startup review handles untrusted or modified hooks, and installation requires a fresh session before plugin capabilities become active.
 
 ## Differences From Reference
 

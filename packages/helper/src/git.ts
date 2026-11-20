@@ -19,7 +19,7 @@ export namespace GitRunner {
   }
 
   export class Service extends Context.Service<Service, Interface>()(
-    "@aerovato/operator-helper/GitRunner",
+    "@jwitmann/operator-helper/GitRunner",
   ) {}
 
   export const layer = Layer.effect(

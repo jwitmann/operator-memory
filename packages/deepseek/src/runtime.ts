@@ -2,14 +2,14 @@ import { join } from "node:path";
 import {
   type BrainUpdateActivityState,
   EMPTY_BRAIN_UPDATE_ACTIVITY_STATE,
-} from "@aerovato/operator-core/brain-updates";
-import { appendReceipt, readReceipts } from "@aerovato/operator-core/context/receipts";
+} from "@jwitmann/operator-core/brain-updates";
+import { appendReceipt, readReceipts } from "@jwitmann/operator-core/context/receipts";
 import {
   dedupDeltaTokens,
   EMPTY_TRIGGER_STATE,
   type TriggerKind,
   type TriggerState,
-} from "@aerovato/operator-core/context/triggers";
+} from "@jwitmann/operator-core/context/triggers";
 
 // DSH-native per-session runtime. Unlike the opencode port (which anchors a
 // hand-rolled token estimator on step events), pressure estimates come from

@@ -13,7 +13,7 @@ current_version=$(node -p 'require("./packages/deepseek/package.json").version')
 version=$(sh scripts/resolve-publish-version.sh "$current_version" "$requested_version")
 
 tag="deepseek@v$version"
-package="@aerovato/operator-deepseek"
+package="@jwitmann/operator-deepseek"
 branch=$(git symbolic-ref --quiet --short HEAD || true)
 if [ "$branch" != "main" ]; then
   printf 'Release must run from main; current branch: %s\n' "${branch:-detached HEAD}" >&2

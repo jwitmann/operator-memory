@@ -3,17 +3,17 @@ import {
   EMPTY_TRIGGER_STATE,
   type TriggerKind,
   type TriggerState,
-} from "@aerovato/operator-core/context/triggers";
+} from "@jwitmann/operator-core/context/triggers";
 import {
   EMPTY_ESTIMATOR,
   type ContextEstimator,
   type StepTokenCounts,
-} from "@aerovato/operator-core/context/tokens";
+} from "@jwitmann/operator-core/context/tokens";
 import {
   EMPTY_BRAIN_UPDATE_ACTIVITY_STATE,
   type BrainUpdateActivityState,
-} from "@aerovato/operator-core/brain-updates";
-import { appendReceipt, readReceipts } from "@aerovato/operator-core/context/receipts";
+} from "@jwitmann/operator-core/brain-updates";
+import { appendReceipt, readReceipts } from "@jwitmann/operator-core/context/receipts";
 import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
 

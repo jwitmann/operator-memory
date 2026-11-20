@@ -8,7 +8,7 @@ Read with [`overview.md`](overview.md). Sources below are relative to `<referenc
 
 A standard Host plugin is a function with `inject` and `apply(ctx, config)` exports or a Cordis `Service` subclass; required injected services delay activation until available. Registrations through `ctx.on` / `ctx.effect` unwind on unload and reload. An `agent/created` listener can perform awaited per-agent initialization before input runs; keep its work bounded and avoid waiting for the agent's idle state. A scoped registration through `agent.ctx` affects that agent; global registrations affect every matching agent. Waterfalls are around-middleware: an observing listener must call `next()`, or it stops downstream listeners. Include/profile row placement does not imply event ordering.
 
-For a thin Operator Host plugin, `@aerovato/operator-core` can be imported in-process if Node package resolution works; `operator-helper` remains the owner of install, setup, status, guides, lint and repair. An adapter must not reuse the dynamic `cordis-host-runner` as an installation route: its definitions are transient, session-scoped and erased on restart.
+For a thin Operator Host plugin, `@jwitmann/operator-core` can be imported in-process if Node package resolution works; `operator-helper` remains the owner of install, setup, status, guides, lint and repair. An adapter must not reuse the dynamic `cordis-host-runner` as an installation route: its definitions are transient, session-scoped and erased on restart.
 
 Sources: `docs/cordis-primer.md`, `docs/cookbook/adding-a-package.md`, `packages/core/agent/src/runtime-types.ts`, `packages/extensions/cordis-host-runner/README.md`.
 
