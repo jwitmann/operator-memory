@@ -117,6 +117,7 @@ neither carries correction language. Documented as coverage, not signal.
   character, not tooling era — and three forces push the same direction
   indistinguishably: better frameworks/brains (fewer rule-violation
   corrections), user adaptation (more specific asks, plan-review rounds),
+  model evolution (fewer dumb mistakes per instruction over 2026),
   and workload mix (research months correct constantly). The remaining
   corrections are a different kind: novel-work repair, where no rule
   exists yet to be violated. Consequence: calibration expires —
