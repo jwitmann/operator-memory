@@ -1,6 +1,7 @@
 # Observation Engine — Design Brief
 
-Status: spec drafted (unapproved), no code. The roadmap line it resolves:
+Status: spec drafted (v4 conversational proposing = next build, unapproved;
+v3 full automation parked), no code. The roadmap line it resolves:
 *"Learn durable user observations over time, kept separate from explicit
 User Instructions."*
 
@@ -271,7 +272,63 @@ Five systems, same five fields. Sources fetched, not snippeted.
   would have fired, how often).
 - Kill criteria 1–2 and probe questions unchanged; (b) proceeds on that basis.
 
-## Proposal-flow spec (draft v3 2026-11-20, unapproved; supersedes v2)
+## Proposal-flow spec (draft v4 2026-11-20, unapproved; NEXT BUILD)
+
+v4 replaces automation with conversation. The agent, in-session and in
+possession of full live context, offers; the user agrees on the spot.
+Canonical shape: *"I could add this as a permanent rule — should I do
+that?"* No detector, no counting, no era machinery, no pending store, no
+rejection memory, no metrics pipeline. v3 (below) is parked as the
+recorded full-automation direction; it earns a second look only if manual
+proposing produces volume that justifies automating the trigger.
+
+### 1. Trigger: agent discretion, in the flow
+
+The agent offers when it recognizes a promotable moment — no flags, hooks,
+or session-end arithmetic. The rubric lives in `operator.md` (a few lines,
+not a subsystem):
+
+- The user corrected the same thing twice (in this session or visibly before).
+- The user said "remember that" / "from now on" (explicit durability language).
+- A preference clearly applies beyond this project (cross-project smell).
+
+Anything else — hunches, single corrections, project-local facts — stays
+unproposed. The agent's live context is the topic-identity and
+sanitization mechanism that v3 built machinery to replicate offline.
+
+### 2. Proposal: question tool, in the moment
+
+Candidate + why (the incident) + scope (`user` or `project`), via the
+question tool per house pattern — or a plain conversational offer for
+trivial cases. User approves / edits / declines. A decline is just a
+decline: no rejection store, no caps, no cooldowns. The context window is
+the dedup mechanism at this scale (the agent won't offer twice for the
+same thing in one conversation because it can see it just asked).
+
+### 3. Storage: the §5 half that survives
+
+Unchanged from v3 §5: dedicated user-partition surface (e.g.
+`observations.md`), kind + scope declarations, project-bar and secrets
+exclusion, explicit instructions route to the explicit flow, promotion ≠
+replacement (migration separately approved), subordinate rendering, never
+merged into `operator.md`.
+
+### 4. Explicit non-goals
+
+Detector v0.1, receipts, era windows, pending store, run-ids, rejection
+memory, frustration counter, metrics pipeline, escalation design — all
+parked with v3. If proposing volume ever makes the manual flow a burden,
+THAT is the quantified trigger for automating detection, and the v3
+design below is where that work resumes.
+
+### 5. Nag guard (norm, not machinery)
+
+Offer rarely: at most one observation proposal per session as a standing
+norm, waived only for an explicit "remember that". No counter, no
+enforcement — at ~3–5 durable finds per 3,300 sessions, over-proposing is
+a taste failure, not a systems problem.
+
+## Proposal-flow spec (draft v3 2026-11-20, unapproved; PARKED)
 
 v2 failed second-pass verification as an implementable contract (6 of 12
 findings partial + 3 new contradictions: unfrozen regexes, allowlist
