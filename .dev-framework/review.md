@@ -1,21 +1,27 @@
-# Review — observation-engine steps (c) + (b) (this session)
+# Review — observation-engine steps (c) + (b) + coverage extension (this session)
 
 ## Scope — every changed file
 
-- `docs/dev/observation-engine.md` — two appended sections this session:
-  (1) `## Analogue survey (step (c))`: five fetched-source analogues
+- `docs/dev/observation-engine.md` — three commits this session:
+  (1) `6cf27ce` `## Analogue survey (step (c))`: five fetched-source analogues
   (ChatGPT Dreaming, Codex local memories, Claude Code auto memory,
   Cursor-absence/Copilot-convergence, mem0 exclusion, 9-brain local scan)
   with detection / control / staleness / precision / constraint-fit fields
   and Last-verified dates; verdict SURVIVE-reshaped
   (deterministic-trigger + LLM-drafted-proposal split); status line updated.
-  (2) `### 4. Wider trawl (step (b))`: 27,584 user messages / 3,029
-  sessions (opencode SQLite + DSH zstd JSONL), loose vs strict pattern
+  (2) `bc29b22` `### 4. Wider trawl (step (b))`: 27,584 user messages /
+  3,029 sessions (opencode SQLite + DSH v4), loose vs strict pattern
   sets, base rates, FP classes, trigger calibration (correction≥3 OR
-  recall≥2 ≈ 26 sessions), two failed deterministic topic-identity probes
-  (verbatim: 1 generic group; word-overlap: 20,020 template-flooded pairs).
-  Phase-1 `### 3` caveat paragraph preserved. One self-caught MD004
-  (`+` list marker) fixed pre-commit.
+  recall≥2 ≈ 26 sessions), two failed deterministic topic-identity probes,
+  Phase-1 `### 3` caveat preserved. One self-caught MD004 fixed pre-commit.
+  (3) `793885e` coverage extension: corpus 28,239 / 3,304 (+274 DSH
+  projcache first-prompts via `titleInput.first.text` after verifying
+  inbox rows are drained end-of-state, +380 DSH-TUI history lines;
+  effect-ledger and inject/servers.json deliberately skipped as
+  non-user-language). New sources contribute ~zero strict hits
+  (correction 193→194, recall unchanged) — documented as coverage, and
+  as the finding that correction language lives mid-session, so
+  opener/TUI-only triggers would be blind. Calibration unchanged.
 - `.dev-framework/review.md` — this artifact, rewritten fresh for this session.
 
 No product code, no tooling, no config. Analysis scripts are throwaway
@@ -48,5 +54,5 @@ no anchor impact (additive sections only).
 
 - `bun run lint:md` — exit 0, "Summary: 0 issues in 0 files".
 - Changed files are exactly the two above; tree otherwise clean.
-- Committed locally as `6cf27ce` (survey) + `bc29b22` (trawl);
-  pre-commit gates passed on both.
+- Committed locally as `6cf27ce` (survey) + `bc29b22` (trawl) +
+  `793885e` (coverage extension); pre-commit gates passed on all three.
