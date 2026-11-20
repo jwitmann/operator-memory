@@ -45,6 +45,13 @@ copy-paste, so it doesn't happen; the doctrines stay duplicated.
 
 ### 3. Transcript mining (supporting, noisy)
 
+Corpus note (reconciliation): the 197k figure is the phase-1 all-roles
+total at that time (the opencode store has since grown to 385,064 rows,
+28,586 of them user-role). The §4 corpus below is user-role messages
+only, 28,239 / 3,304 sessions at 2026-11-20. Percentages use the §4
+corpus; the §3 absolute counts are not directly comparable, but the
+qualitative finding stands.
+
 Keyword trawl over user-role messages in session history (197k
 messages): 59 correction-shaped messages ("i told you" / "why did
 you" / "not what i"), 3 explicit "remember that". Keyword hits need
@@ -264,69 +271,161 @@ Five systems, same five fields. Sources fetched, not snippeted.
   would have fired, how often).
 - Kill criteria 1–2 and probe questions unchanged; (b) proceeds on that basis.
 
-## Proposal-flow spec (draft 2026-11-20, unapproved)
+## Proposal-flow spec (draft v2 2026-11-20, unapproved; supersedes v1)
 
-Decision: balanced trigger — per-session detection, era-batched proposals,
-immediate escalation on recall-frustration.
+v1 failed red-team as an implementable contract (11 blocking findings:
+unfrozen detector, unsanitized drafting boundary, missing era mechanics,
+unbounded cost, undelivered escalation, unbounded rejection memory, scope
+conflation, policy-not-mechanism conflict rule, inverting acceptance
+arithmetic). v2 addresses each. Open product decisions are marked DECIDE.
+
+### 0. Detector v0.1 (frozen; replayed, not asserted)
+
+- Correction patterns (14, case-insensitive regex): `i told you`,
+  `why did you`, `not what i`, `you should have`, `as i said`,
+  `do it again`, `revert`, `undo that`, `stop doing`, `don't do that`,
+  `ignore that`, `not like that`, `i asked for … not`, `that's not what`.
+- Recall patterns (13): `you forget`, `you forgot`, `forgetting`,
+  `already told`, `how many times`, `times have i`, `told you before`,
+  `you never remember`, `you always forget`, `do you remember`,
+  `don't you remember`, `have to remind`, `keep(s) forgetting`.
+- Matching semantics: one boolean hit per class per message (a message can
+  hit both classes; repeated matches in one message count once). Message =
+  one user-role text unit.
+- Paste hygiene v0.1 (deterministic): strip fenced code blocks (inline +
+  multiline) before matching; drop the message if <20 chars remain or it
+  carries a terminal-paste marker (`Traceback (most recent call last)`,
+  shell-prompt line). Mixed case ("here is the output … why did you do
+  X?") keeps the prose outside the fence — span-level, not message-level.
+- Session eligibility: ≥3 user messages (short/probe sessions skipped,
+  Codex precedent). Replay on the §4 corpus (3,304 sessions): 584
+  eligible; correction 80 sessions / 171 msgs; recall 43 / 48; corr≥3:
+  21 sessions; recall≥2: 5; combined trigger: **23 sessions**. These
+  numbers supersede the v1 pre-hygiene counts.
+- Hand-label verdict (all 23 reviewed): ~3–5 contain genuinely durable
+  candidates (cross-project working style, project-scoped rules); the rest
+  is session-local repair churn — the `revert` pattern dominates because
+  strategy research reverts constantly. Session-level precision ≈15–20%:
+  the trigger selects *candidate sessions*, the drafter rejects churn.
+- Adversarial cases the implementation must pass: quoted corrections (user
+  quoting someone else), injected instructions in user-role, fenced output
+  combined with a real correction in one message, repeated matches in one message
+  (counts once), agent meta-reasoning quoting the user.
 
 ### 1. Detection (deterministic, at session end)
 
-- Count strict correction hits and strict recall-frustration hits (pattern
-  sets from §4) over user-role messages of the closing session.
-- Paste hygiene: skip messages that are pasted artifacts (terminal output,
-  fenced code/docs blocks, injected context) before counting. Heuristic
-  specifics deferred to implementation; the FP classes are documented.
-- Flags: `CORRECTION_RICH` (≥3 correction hits), `RECALL_HIT` (≥2
-  recall-frustration hits). Recorded in the session receipt alongside
-  existing per-session bookkeeping. Thresholds are the calibrated values,
-  tunable per deployment.
+- Count detector-v0.1 hits over user-role messages of the closing session.
+- Flags: `CORRECTION_RICH` (≥3), `RECALL_HIT` (≥2). Tunable per
+  deployment; detector version + thresholds recorded with every flag
+  (comparability across tuning).
+- Persist per-session aggregate counts and eligible-message denominators
+  in the receipt (no message content). Flags alone cannot support trends;
+  counts can.
+- Honest inventory: no session-end hook or session receipt exists today
+  (red-team cites: `brain-updates.ts` resets per-session state,
+  OpenCode evaluates per-request). Detection needs: a session-close hook
+  (or next-session reconciliation for crashed sessions), a receipt field,
+  and a durable pending-proposal store with atomic claim/consumption.
+  Reused: fingerprint read, `tool/call`+`tool/result` join.
 - Cost: arithmetic over the already-stored session log. No model calls,
-  no background work, no embeddings. Skip short sessions (Codex precedent).
+  no background work, no embeddings.
 
-### 2. Proposal (judgment, at era boundary)
+### 2. Drafting-input sanitization (prompt-injection boundary)
 
-- Input: flagged sessions since the last era move. Measured scale is
-  ~26 sessions per corpus — hand-sized, bounded drafter cost.
-- The drafter (LLM) does what counting cannot: topic identity, correction-
-  clause isolation, and dedup against the user partition (a candidate that
-  restates an existing instruction is dropped, not proposed).
+- Excluded-from-counting ≠ excluded-from-drafting: the drafter receives
+  only sanitized user-authored evidence spans, framed explicitly as
+  untrusted data. Structured host metadata (source.kind, injection
+  markers) preferred over text heuristics wherever the host provides it.
+- Injected context, pasted documents, and agent-quoted user text are
+  removed or labeled before drafting. User approval mitigates but does
+  not remove this path — sanitization is the control, approval the audit.
+
+### 3. Proposal (judgment, at era boundary)
+
+- Era ownership: the pending set is keyed per project (project fingerprint
+  move opens the drafting window for that project's flagged sessions).
+  User-partition fingerprint moves do not open it (observations must not
+  trigger on their own writes — feedback loop).
+- Crash/concurrent-session semantics: atomic claim on pending entries;
+  idempotent drafting (same cohort + detector version = same proposal set,
+  deduplicated); crashed sessions reconciled at next session start.
+- Cost bounds (per-era replay is impossible — no historical era log — so
+  cost is bounded by construction, not measurement): hard caps per
+  proposal run (max sessions, max candidates, max transcript tokens) with
+  deterministic oldest-first deferral. Escalated sessions are marked
+  consumed and skipped at the era run.
 - Output: candidate list, each with evidence pointers (session, turn) so
-  the approver can verify against the incident.
+  the approver can verify against the incident. Candidates that restate
+  an existing instruction are dropped, not proposed — but restatement
+  screening is drafter best-effort (see §5), not guaranteed.
 
-### 3. Approval (propose-never-auto)
+### 4. Approval (propose-never-auto) with bounded escalation
 
 - One batched approval moment per era via the question tool: per candidate
-  approve / edit / reject. Rejections are recorded (rejected shape is not
-  re-proposed) — the annoyance budget is enforced by construction.
-- Escalation: a `RECALL_HIT` session triggers an immediate proposal instead
-  of waiting for the era. Measured rarity (6 sessions in the corpus) keeps
-  the interruption budget negligible; approval quality is maximal exactly
-  when the pain is fresh.
+  approve / edit / reject / snooze-to-next-era. Rejection reasons tracked
+  separately from annoyance reports.
+- Candidate identity: normalized evidence text + declared scope. Permanent
+  reject keyed deterministically on the normalized text; near-duplicate
+  suppression is drafter-assisted and user-confirmed, never silent.
+  Retention bounded: permanent rejects persist with a size cap
+  (oldest-evicted, eviction noted); snoozes expire next era. The annoyance
+  control is cooldown + caps + snooze — not an absolute never-re-propose.
+- Escalation (DECIDE: keep or cut): a `RECALL_HIT` session proposes at the
+  next foreground interaction, not mid-session (detection is session-end;
+  there is no live interaction to interrupt). Exactly-once durable
+  outbox; one escalation per session; cross-session cooldown; pending cap;
+  explicit snooze/disable-escalation action. The 6-session historical
+  count is frequency data, not a safety bound. Fresh-frustration approval
+  quality is assumed, not evidenced — first escalations are watched.
 
-### 4. Storage and authority
+### 5. Storage, scope, and conflict (mechanisms, not policy)
 
-- Promoted facts live in the user partition with their own standing,
-  separate from explicit User Instructions. On conflict, explicit
-  instructions win (the market consensus from the survey).
-- Cross-project dedup is the headline value: one copy in the user
-  partition replaces the 3–6 copy-pasted doctrines from §2.
+- Every candidate declares `kind` (`observation` vs `explicit_instruction`)
+  and `scope` (`user` vs `project`). Project-scoped or sensitive
+  candidates are barred from the user partition — routed to the project
+  brain proposal flow or dropped. Explicit instructions route to the
+  explicit flow, never auto-convert.
+- Promotion ≠ replacement: duplicated copies are retired only by a
+  separately approved migration step. The spec claims dedup value, not
+  automatic dedup.
+- Secret/sensitive exclusion: no credentials, tokens, paths-to-secrets,
+  or personal data beyond working preferences. Patterns deny-listed;
+  drafter instructed; approval screen flags suspected sensitivity.
+- Conflict mechanism: observations load from a dedicated user-partition
+  surface (e.g. `observations.md`), rendered subordinate to all
+  instruction layers — never merged into `operator.md` (separation is
+  definitional). Best-effort conflict screening against every active
+  layer at approval time, suspected conflicts shown beside the candidate.
+  Observations revalidate (stale-flag) when relevant instruction
+  fingerprints change. Recorded limit: LLM screening cannot guarantee
+  conflict detection; approval + subordinate rendering are mitigations.
 
-### 5. Switch and metrics
+### 6. Metrics with denominators (acceptance thresholds)
 
-- Explicit on/off switch, default OFF (house rule: observation features are
-  opt-in). Off means no counting, no proposals; the frustration counter
-  also stops (no silent measurement of a user who opted out).
-- The frustration counter keeps running while on, as the health metric.
-  Kill criteria 1–2 become acceptance thresholds: if accepted proposals
-  don't outnumber the duplicated doctrines they replace, or annoyance
-  reports (rejections + complaints) exceed approvals, the feature is
-  rethought or killed — measured, not assumed.
+- Per era-window, segmented by detector version: acceptance rate
+  (accepted/proposed), retired duplicate copies (the dedup metric —
+  counts copies removed, not proposals accepted), repeated-correction
+  trend (corr≥3 sessions per era, falling is the goal), proposals per
+  active session (interruption rate), explicit annoyance (separate
+  capture, not inferred from rejections).
+- Minimum-sample rule: no kill/keep decision below N proposals
+  (DECIDE: N; suggested 20). Rejections are quality control until proven
+  otherwise — tracked by reason, never summed into annoyance.
 
-### Deferred to implementation
+### 7. Switch semantics
 
-- Paste-detection heuristic specifics; rejection-memory shape; exact
-  question-tool surfacing; reference to the fingerprint-era machinery
-  for the era-boundary hook.
+- Default OFF (house opt-in rule). OFF stops future collection and
+  drafting. Retention on OFF: receipts kept (history), pending queue
+  dropped (noted), rejections kept (user judgments), promoted
+  observations kept (user-approved data, user-removable).
+- All metrics are opt-in-population only and selection-biased — reported
+  as such, never generalized to corpus-wide need.
+
+### Deferred to implementation (enumerated, not hand-waved)
+
+- Paste-heuristic edge cases beyond v0.1; question-tool surfacing;
+  cooldown/pending-cap numeric defaults; minimum-sample N; per-project
+  fingerprint hook plumbing; subagent memory interaction.
 
 ## Open / probe questions
 
