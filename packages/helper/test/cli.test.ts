@@ -172,6 +172,31 @@ test("initializes Private content without creating the Shared partition", async 
   expect(fs.existsSync(resolvePath("/project/.operator-shared"))).toBe(false);
 });
 
+test("scaffolds a disabled project config and preserves user edits", async () => {
+  const result = await executeCli(["project", "init"], context);
+  expect(result.exitCode).toBe(0);
+  expect(result.output).toContain("Created  .operator/config.json");
+  const configPath = resolvePath("/project/.operator/config.json");
+  const scaffolded = JSON.parse(fs.readFileSync(configPath, "utf8"));
+  expect(scaffolded.contextManagement).toEqual({
+    enabled: false,
+    ratio: 0.8,
+    hardCapTokens: 250000,
+    keepRecentTurns: 3,
+    compactOnComplete: true,
+    compactFloorTokens: 32000,
+  });
+  expect(scaffolded.brainUpdates).toEqual({ enabled: false, toolCallThreshold: 25 });
+  expect(scaffolded.preambleRefresh).toEqual({ enabled: false });
+
+  fs.writeFileSync(configPath, JSON.stringify({ contextManagement: { enabled: true } }));
+  const repeated = await executeCli(["project", "init"], context);
+  expect(repeated.output).toContain("Preserved  .operator/config.json");
+  expect(JSON.parse(fs.readFileSync(configPath, "utf8"))).toEqual({
+    contextManagement: { enabled: true },
+  });
+});
+
 test("creates and preserves the README in an existing Shared partition", async () => {
   fs.mkdirSync(resolvePath("/project/.operator-shared"), { recursive: true });
 

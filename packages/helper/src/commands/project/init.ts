@@ -49,6 +49,22 @@ export const projectInit = Effect.fn("projectInit")((context: CliContext) =>
         ]);
       }
     }
+    const configResult = yield* writeTextIfMissing(
+      pathService.join(privateRoot, "config.json"),
+      readTemplate(TemplatePath.ProjectConfig),
+    ).pipe(Effect.result);
+    if (Result.isFailure(configResult)) {
+      failed = true;
+      privateRows.push([
+        "Failed",
+        `${PRIVATE_ROOT}/config.json: ${fileErrorMessage(configResult.failure)}`,
+      ]);
+    } else {
+      privateRows.push([
+        configResult.success === "created" ? "Created" : "Preserved",
+        `${PRIVATE_ROOT}/config.json`,
+      ]);
+    }
     lines.push(renderTable(privateRows));
 
     const sharedKind = yield* inspectPath(sharedRoot);

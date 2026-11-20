@@ -2,6 +2,7 @@ import { CATALOG_TEMPLATE } from "@jwitmann/operator-core/templates/catalog";
 import { PROJECT_INDEX_TEMPLATE } from "@jwitmann/operator-core/templates/project-index";
 import { PROJECT_SUBINDEX_TEMPLATE } from "@jwitmann/operator-core/templates/project-subindex";
 
+import { PROJECT_CONFIG_TEMPLATE } from "./templates/project/config.ts";
 import { PROJECT_INDEX_SETUP_TEMPLATE } from "./templates/project/index-setup.ts";
 import { PROJECT_OPERATOR_TEMPLATE } from "./templates/project/operator.ts";
 import { PROJECT_SETUP_TEMPLATE } from "./templates/project/setup.ts";
@@ -14,6 +15,7 @@ export enum TemplatePath {
   UserCatalog = "user/catalog.md",
   UserSetup = "user/setup.md",
   ProjectOperator = "project/operator.md",
+  ProjectConfig = "project/config.json",
   ProjectIndex = "project/index.md",
   ProjectSubindex = "project/subindex.md",
   ProjectCatalog = "project/catalog.md",
@@ -27,6 +29,7 @@ const TEMPLATES = {
   [TemplatePath.UserCatalog]: CATALOG_TEMPLATE,
   [TemplatePath.UserSetup]: USER_SETUP_TEMPLATE,
   [TemplatePath.ProjectOperator]: PROJECT_OPERATOR_TEMPLATE,
+  [TemplatePath.ProjectConfig]: PROJECT_CONFIG_TEMPLATE,
   [TemplatePath.ProjectIndex]: PROJECT_INDEX_TEMPLATE,
   [TemplatePath.ProjectSubindex]: PROJECT_SUBINDEX_TEMPLATE,
   [TemplatePath.ProjectCatalog]: CATALOG_TEMPLATE,

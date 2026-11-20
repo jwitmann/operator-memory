@@ -5,7 +5,7 @@ export const PROJECT_SETUP_TEMPLATE = `# Project Setup
 
 You are helping the user configure the Operator Project Brain across the private \`.operator/\` partition and shared \`.operator-shared/\` partition.
 
-Project indexing is excluded from the setup phases; you offer it as the final step in Phase 7.
+Project indexing is excluded from the setup phases; you offer it as the final step in Phase 8.
 
 **Document syntax:** Index and catalog structure, entry syntax, and examples are defined in the fixed preamble (Project Index and Partition Catalog sections). **You must follow that preamble document syntax** when creating or filling indexes and catalogs. Do not invent layouts. \`operator-helper project init\` seeds Private core files with the canonical syntax; fill or rewrite from the preamble. Operator Instructions and Shared README seeds are in the Canonical Seeds section below.
 
@@ -129,13 +129,28 @@ Task: For each active partition: Populate or update the Partition Catalog from t
 
 **You must follow the Partition Catalog document syntax from the fixed preamble** (required shape, Description / Read If entries, coverage rules).
 
-## Phase 6: Confirm
+## Phase 6: Configure Operator Features
+
+\`operator-helper project init\` scaffolds \`.operator/config.json\` with context management, preamble refresh, and brain-update nudges present but disabled — the safe default, behaviorally identical to no config file. Ask the user which, if any, to enable now.
+
+Ask only when the Helper output above shows \`Created .operator/config.json\` this run. When it shows \`Preserved\`, a previous run already handled this choice — skip the phase.
+
+Task: Use the harness's \`question\` tool with multiple selection. Describe each feature in one line, harness-accurately (you know which harness this is):
+
+- Context management — on OpenCode, trims bulky tool output and compacts history past a window ratio or token cap, audited with per-session receipts; on DeepSeek, host-driven compaction only (the host owns tool-result reduction, so there is no trim). Off by default and inert without a Brain either way.
+- Preamble refresh — re-renders the preamble mid-session when the Brain changes, only at cold prompt-cache moments so it costs nothing.
+- Brain-update nudges — one quiet reminder per Brain-change era after enough new tool calls; never an automatic writer.
+
+If the user enables anything, write only the flipped \`enabled\` flags into the existing \`.operator/config.json\`, preserving the scaffolded thresholds; never rewrite the whole file from memory. If the user declines everything, leave the file as scaffolded.
+
+## Phase 7: Confirm
 
 Give the user a concise summary of:
 
 - Project shape used for this run (greenfield or existing)
 - Current Private Operator Instructions and placement policy
 - Whether Project Shared is active and what content is shared
+- Operator features enabled, left disabled, or already configured (omit when unchanged from a previous run)
 - Files created, repaired, configured, or cataloged
 - Existing project instructions incorporated or left authoritative elsewhere (omit when none)
 - Agent documentation migrated, copied from user-facing docs, or left in place (omit when none)
@@ -145,7 +160,7 @@ Ask whether anything is incorrect, missing, too strict, too permissive, improper
 
 Apply approved corrections and finish only after the user confirms the setup. Do not end the session in this phase.
 
-## Phase 7: Offer Indexing
+## Phase 8: Offer Indexing
 
 After the user has confirmed Project Setup: Notice that the index has not been populated yet, then offer to index.
 

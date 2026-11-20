@@ -50,7 +50,22 @@ The Brain must exist: run `/operator:user-init` (cross-project memory) or `/oper
 
 #### Configuration
 
-All keys live under one opt-in switch in the `plugins` entry's `options`. Global (`~/.config/opencode/opencode.json`) enables it for every project; a project root `opencode.json` or `opencode.jsonc` enables it for that project only — configs merge, so project settings add to global ones. Note: `.opencode/opencode.json` inside a project is not a live config path; plugin entries there are ignored. A local directory plugin entry resolves `<dir>/index.js` and ignores `package.json` `main`, so point it at the built `dist` directory:
+Preferred: per-project `<project>/.operator/config.json`, using the same flat block names (no `operator` wrapper). `operator-helper project init` scaffolds it with everything disabled; the setup interview asks which features to enable. Present fields merge over plugin options below, so the project file wins on conflict:
+
+```json
+{
+  "contextManagement": {
+    "enabled": true,
+    "ratio": 0.8,
+    "hardCapTokens": 250000,
+    "keepRecentTurns": 3,
+    "compactOnComplete": true,
+    "compactFloorTokens": 32000
+  }
+}
+```
+
+Alternative: organization-wide defaults through the `plugins` entry's `options` in global (`~/.config/opencode/opencode.json`) or project-root `opencode.json`/`opencode.jsonc` — which merge, so project settings add to global ones. Note: `.opencode/opencode.json` inside a project is not a live config path; plugin entries there are ignored. A local directory plugin entry resolves `<dir>/index.js` and ignores `package.json` `main`, so point it at the built `dist` directory:
 
 ```jsonc
 {
@@ -109,7 +124,7 @@ Checkpoints are a separate mechanism with their own recovery tools (`operator-re
 
 ### Preamble Refresh
 
-Opt-in mid-session preamble re-render when the Brain changes on disk — independent from context management, disabled by default, with its own switch in the same plugin `options`:
+Opt-in mid-session preamble re-render when the Brain changes on disk — independent from context management, disabled by default, with its own switch. Prefer `<project>/.operator/config.json` (`{ "preambleRefresh": { "enabled": true } }`, scaffolded disabled by project init); the plugin-`options` form below sets organization-wide defaults instead:
 
 ```jsonc
 {
@@ -132,7 +147,7 @@ A Brain change re-renders from current disk state only when the provider's promp
 
 ### Brain Updates
 
-Opt-in nudge to record durable knowledge — never an automatic Brain writer. Disabled by default, with its own switch:
+Opt-in nudge to record durable knowledge — never an automatic Brain writer. Disabled by default, with its own switch. Prefer `<project>/.operator/config.json` (`{ "brainUpdates": { "enabled": true, "toolCallThreshold": 25 } }`, scaffolded disabled by project init); the plugin-`options` form below sets organization-wide defaults instead:
 
 ```jsonc
 {

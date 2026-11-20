@@ -36,13 +36,13 @@ Phases: assess and repair both core files (`operator.md`, `catalog.md`); customi
 
 `/operator:project-init` runs Project init, then the agent follows the guide in its output with the user.
 
-Project setup establishes partition scaffolding and placement rules. It does not populate the Project Index.
+Project setup establishes partition scaffolding and placement rules. It does not populate the Project Index. Project init scaffolds `.operator/config.json` with context management, preamble refresh, and brain-update nudges present but disabled (behaviorally identical to no config file) and never overwrites it.
 
 The Project Setup guide classifies the repository once as **greenfield** (new, empty, or template) or **existing** (substantive code and/or agent-facing docs). Greenfield runs stay light: prefer all-private Shared policy, optional minimal instructions, and skip migration. Existing projects keep the full path, including migration.
 
 After the user confirms setup, the agent always offers indexing as the final step, never deferring it: index in the current conversation (the agent runs `index init` itself and follows the Project Index Setup guide), or run `/operator:index` in a new conversation. Small and medium codebases, including greenfield, are recommended to index now; large codebases are recommended a new conversation for clean context while still offering to index here.
 
-Project setup asks whether to migrate existing agent-facing documentation into the Project Brain when the shape is existing and candidates exist. Migrated agent-facing docs that are scattered, thin, or too narrow are reshaped into Operator-style focused documents. User-facing documentation may be copied into specs but is never removed.
+Project setup asks whether to migrate existing agent-facing documentation into the Project Brain when the shape is existing and candidates exist. Migrated agent-facing docs that are scattered, thin, or too narrow are reshaped into Operator-style focused documents. User-facing documentation may be copied into specs but is never removed. When the scaffolded `.operator/config.json` was created this run, project setup also asks which Operator features to enable (context management, preamble refresh, brain-update nudges) and records the answer there; on re-runs with the file preserved it does not re-ask.
 
 Deterministic setup initializes Private only. The agent creates `.operator-shared/` after the user chooses content to publish. When Shared is active and lacks `README.md`, the agent copies the canonical contributor-facing README template without replacing existing content.
 
