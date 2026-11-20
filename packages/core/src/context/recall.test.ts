@@ -260,3 +260,38 @@ test("recall core is deterministic across runs", () => {
   expect(isCheckpointSource({ kind: "compact-checkpoint" })).toBe(true);
   expect(projectToolResultText([{ type: "text", text: "x" }])).toBe("x");
 });
+
+// Host-shaped session: the real DSH Session exposes snapshotEvents,
+// eventAt, and deriveEventMessage as prototype methods over instance state.
+// The compat accessors invoke the first two as method calls on the session
+// object (receiver-safe), but `deriveSessionMessage` used to detach the
+// deriver into a local — which throws on `this` (proven live: TypeError
+// inside the deriver). The deriver call must preserve the receiver;
+// closures are unaffected by binding.
+class HostShapedSession {
+  private readonly log = EVENTS3;
+
+  private readonly messages = MESSAGES3;
+
+  snapshotEvents(): readonly { seq: number; type: string; data?: unknown }[] {
+    return [...this.log];
+  }
+
+  eventAt(seq: number): { seq: number; type: string; data?: unknown } | undefined {
+    return this.log.find(event => event.seq === seq);
+  }
+
+  deriveEventMessage(event: { seq: number }): unknown {
+    return (this.messages[event.seq] ?? null) as unknown;
+  }
+}
+
+test("prototype-method session accessors keep their receiver", () => {
+  const session = new HostShapedSession();
+  expect(sessionEvents(session)).toHaveLength(EVENTS3.length);
+  expect(sessionEventAt(session, 2)?.type).toBe("assistant/message");
+  expect(sessionEventAt(session, 99)).toBeUndefined();
+  const recalled = recallSession(session, [{ start: 1, end: 2 }], { maxRecallTokens: 16000 });
+  expect(recalled.missing).toBe(0);
+  expect(recalled.text).toContain("hello world");
+});

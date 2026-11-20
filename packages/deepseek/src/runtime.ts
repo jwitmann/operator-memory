@@ -176,7 +176,7 @@ export function countSessionCompletedCalls(
 }
 
 function isOperatorTool(name: string): boolean {
-  return name === "operator" || name.startsWith("operator:");
+  return name === "operator" || name.startsWith("operator-");
 }
 
 // Failure backoff: a fresh failure suppresses unconditionally; past the

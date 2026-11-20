@@ -167,3 +167,32 @@ test("search core is deterministic across runs", () => {
   expect(patternError("   ")).toContain("pattern is empty");
   expect(new InvalidSearchPatternError("x", "y").source).toBe("x");
 });
+
+// Host-shaped session: prototype methods over instance state (see the
+// receiver test in recall.test.ts) — the search scan must bind them too.
+class HostShapedSearchSession {
+  private readonly log = EVENTS4;
+
+  private readonly messages = MESSAGES4;
+
+  snapshotEvents(): readonly { seq: number; type: string; data?: unknown }[] {
+    return [...this.log];
+  }
+
+  eventAt(seq: number): { seq: number; type: string; data?: unknown } | undefined {
+    return this.log.find(event => event.seq === seq);
+  }
+
+  deriveEventMessage(event: { seq: number }): unknown {
+    return (this.messages[event.seq] ?? null) as unknown;
+  }
+}
+
+test("search over a prototype-method session keeps the receiver", () => {
+  const found = searchSession(new HostShapedSearchSession(), "bug", {
+    maxSearchHits: 50,
+    maxRecallTokens: 16000,
+  });
+  expect(found.totalMatches).toBeGreaterThan(0);
+  expect(found.text).toContain("login bug");
+});

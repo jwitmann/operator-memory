@@ -63,7 +63,7 @@ describe("session-event tool counter", () => {
 
     await dispatchSessionEvent(
       session,
-      { type: "tool/call", data: { callId: "c2", name: "operator:read_omitted" } },
+      { type: "tool/call", data: { callId: "c2", name: "operator-recall" } },
       d,
       runtime,
     );

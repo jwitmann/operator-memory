@@ -6,17 +6,19 @@
 // recall/search modules read it directly through the host's own
 // `events`/`deriveEventMessage` accessors.
 //
-//   - `operator:recall` — restore exact original content by a typed
+//   - `operator-recall` — restore exact original content by a typed
 //     reference: `seq` for `(seq N)` / `(seqs A-B)` markers, `result` for
 //     the `result N` pointer, `checkpoint` for a `[checkpoint N]` ordinal.
-//   - `operator:search` — keyword/regex search returning `(seq N)` pointers
-//     that `operator:recall` restores in full.
+//   - `operator-search` — keyword/regex search returning `(seq N)` pointers
+//     that `operator-recall` restores in full.
 //
 // Faithful destructure of the reference `dsh-compaction-vcc/tool` module:
 // same tool semantics against the same log shape, same core functions.
 // Deliberate deviations, matching the opencode adapter's tool contract:
-// namespaced `operator:` names (the brain-update counter excludes exactly
-// this prefix, so recovery calls never nudge the documentation threshold),
+// hyphenated `operator-` names (OpenAI-protocol gateways reject `:` in tool
+// names, so the opencode `operator:` shape cannot pass through here; the
+// brain-update counter excludes exactly this prefix, so recovery calls never
+// nudge the documentation threshold),
 // text replies instead of thrown harness errors (defineTool validates the
 // argument shapes; semantic failures resolve to a valid canonical value
 // carrying the message), core-default budgets with no config keys, and no
@@ -49,7 +51,7 @@ type ToolScopedContext = {
   };
 };
 
-/** Register the recall tools (`operator:recall` + `operator:search`). */
+/** Register the recall tools (`operator-recall` + `operator-search`). */
 export function apply(context: Context): void {
   const scoped = context as unknown as ToolScopedContext;
   scoped.effect(() => {
@@ -69,13 +71,13 @@ const RECALL_DESCRIPTION =
   + 'pointer from a tool-call one-liner restores that tool result; type "checkpoint" with an ordinal like "1" '
   + '(1 = oldest, as in a "[checkpoint N]" elision line) restores that whole checkpoint. '
   + "The durable log is append-only, so recalled content is always the original tokens, including content "
-  + "elided by compaction checkpoints. To find events by keyword or regex instead, use operator:search.";
+  + "elided by compaction checkpoints. To find events by keyword or regex instead, use operator-search.";
 
 const SEARCH_DESCRIPTION =
   "Search THIS conversation's durable event log by keyword or regular expression (case-insensitive). "
   + "Every recorded event is searchable, including content elided by compaction checkpoints. "
   + "Returns the matching events with their (seq N) numbers and the matching lines. "
-  + "Then call operator:recall with a (seq N) pointer to restore any hit's full exact original content.";
+  + "Then call operator-recall with a (seq N) pointer to restore any hit's full exact original content.";
 
 type RecallResult = {
   readonly text: string;
@@ -109,14 +111,14 @@ function formatRecallReply(type: string, id: string, recalled: RecallResult): st
   // count accessor varies). Header wording stays identical so agents see
   // one surface.
   const label =
-    `**operator:recall ${type} ${id}** (${recalled.recalled} event(s), ${recalled.tokens} tokens`
+    `**operator-recall ${type} ${id}** (${recalled.recalled} event(s), ${recalled.tokens} tokens`
     + `${recalled.missing > 0 ? `, ${recalled.missing} missing` : ""}`
     + `${recalled.truncated ? ", budget-truncated" : ""})`;
   return `${label}\n\n${recalled.text}`;
 }
 
 function formatSearchReply(pattern: string, found: SearchResult): string {
-  return `**operator:search ${pattern}** (${found.totalMatches} matching event(s))\n\n${found.text}`;
+  return `**operator-search ${pattern}** (${found.totalMatches} matching event(s))\n\n${found.text}`;
 }
 
 function readSession(agent: unknown): unknown {
@@ -124,10 +126,10 @@ function readSession(agent: unknown): unknown {
   return agent.session ?? null;
 }
 
-/** Build the typed `operator:recall` tool definition. Exported for tests. */
+/** Build the typed `operator-recall` tool definition. Exported for tests. */
 export function defineRecallTool() {
   return defineTool({
-    name: "operator:recall",
+    name: "operator-recall",
     description: RECALL_DESCRIPTION,
     parameters: {
       type: {
@@ -205,10 +207,10 @@ export function defineRecallTool() {
   });
 }
 
-/** Build the `operator:search` (grep) tool definition. Exported for tests. */
+/** Build the `operator-search` (grep) tool definition. Exported for tests. */
 export function defineSearchTool() {
   return defineTool({
-    name: "operator:search",
+    name: "operator-search",
     description: SEARCH_DESCRIPTION,
     parameters: {
       pattern: {

@@ -7,7 +7,9 @@
 //
 // Deliberate deviation: `deriveEventMessage` access is guarded with `isRecord`
 // instead of bare property reads, so non-object sessions return the log-only
-// rendering instead of throwing.
+// rendering instead of throwing. The deriver is invoked receiver-preserving
+// (Reflect.apply): the host exposes it as a prototype method over instance
+// state, so a detached call throws on `this`.
 
 import {
   estimateEntryTokens,
@@ -210,7 +212,9 @@ export function deriveSessionMessage(
   if (!isRecord(session)) return null;
   const derive = session.deriveEventMessage;
   if (typeof derive !== "function") return null;
-  const message = (derive as (event: unknown) => unknown)(event);
+  // Receiver-preserving call: the host exposes this as a prototype method
+  // over instance state, so a detached call throws on `this`.
+  const message = Reflect.apply(derive as (event: unknown) => unknown, session, [event]);
   if (!isRecord(message)) return null;
   const role = message.role;
   const content = message.content;
