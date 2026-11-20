@@ -3,8 +3,7 @@
 <!-- markdownlint-disable MD024 --><!-- repeated bucket headings -->
 
 Generated from conventional commits (`scripts/changelog.sh`).
-Single source: CI publishes each version's section as the GitHub
-release notes, so this file and the release page never diverge.
+Human-readable record of what shipped, per package.
 
 ## [v0.3.0] - 2026-11-04
 
@@ -15,9 +14,12 @@ release notes, so this file and the release page never diverge.
 
 ## [v0.2.1] - 2026-10-02
 
-### Other
+### Fixes
 
 - identify helper package in recovery instructions (#39) ([`c68960d`](https://github.com/jwitmann/operator-memory/commit/c68960d1b444898b228f0e18fd12ae4645d6405c))
+
+### Other
+
 - deepseek@v0.2.1 ([`8bf22ae`](https://github.com/jwitmann/operator-memory/commit/8bf22ae74ec05ab5cf6541e9af630e2b0cfce568))
 
 ## [v0.2.0] - 2026-10-02
@@ -29,9 +31,12 @@ release notes, so this file and the release page never diverge.
 
 ## [v0.1.2] - 2026-10-01
 
-### Other
+### Fixes
 
 - mark runtime peers optional to silence pnpm profile-install warnings (#37) ([`12ea411`](https://github.com/jwitmann/operator-memory/commit/12ea411ba3f8d0e3da0f6b60e6cb8384f491c4f7))
+
+### Other
+
 - deepseek@v0.1.2 ([`1381e3c`](https://github.com/jwitmann/operator-memory/commit/1381e3c699474de3e3defd48828c20097452f597))
 
 ## [v0.1.1] - 2026-10-01

@@ -3,22 +3,27 @@
 <!-- markdownlint-disable MD024 --><!-- repeated bucket headings -->
 
 Generated from conventional commits (`scripts/changelog.sh`).
-Single source: CI publishes each version's section as the GitHub
-release notes, so this file and the release page never diverge.
+Human-readable record of what shipped, per package.
 
 ## [v0.3.0] - 2026-11-04
 
-### Other
+### Fixes
 
 - make fixtures portable across Linux and macOS (#60) ([`2aa8265`](https://github.com/jwitmann/operator-memory/commit/2aa82652c998ab1b376577b531799e7feab9b43c))
+
+### Other
+
 - Remove redundant repair commands (#63) ([`c535a55`](https://github.com/jwitmann/operator-memory/commit/c535a558e16612ac82040360b00bb4a87ba108ee))
 - publish coordinated package batch (#66) ([`1c1d653`](https://github.com/jwitmann/operator-memory/commit/1c1d653bc25539fc084827480bc377e5f96fb578))
 
 ## [v0.2.1] - 2026-10-02
 
-### Other
+### Fixes
 
 - identify helper package in recovery instructions (#39) ([`c68960d`](https://github.com/jwitmann/operator-memory/commit/c68960d1b444898b228f0e18fd12ae4645d6405c))
+
+### Other
+
 - codex@v0.2.1 ([`66993ce`](https://github.com/jwitmann/operator-memory/commit/66993cee09ee499eed7c3322cbaf8f57547e36aa))
 
 ## [v0.2.0] - 2026-10-02

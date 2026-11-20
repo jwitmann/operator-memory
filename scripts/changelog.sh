@@ -42,6 +42,8 @@ section_for() {
       Release\ *) continue ;;
     esac
     local type="${subject%%:*}"
+    # Strip scopes: feat(core): x buckets under Features, not Other.
+    type="${type%%(*}"
     local rest="${subject#*: }"
     [ "$rest" = "$subject" ] && rest="$subject"
     local entry="- ${rest} ([\`${hash:0:7}\`](${REPO_URL}/commit/${hash}))"
@@ -91,7 +93,11 @@ normalize() {
 if [ "${1:-}" = "--backfill" ]; then
   package="${2:-}"
   if [ -z "$package" ]; then echo "Usage: $0 --backfill <package>" >&2; exit 1; fi
-  mapfile -t tags < <(git tag --sort=-v:refname | grep -E "^${package}@")
+  mapfile -t tags < <(git tag --sort=-v:refname | grep -E "^${package}@" || true)
+  if [ "${#tags[@]}" -eq 0 ]; then
+    echo "No tags found for package: ${package}" >&2
+    exit 1
+  fi
   out="packages/${package}/CHANGELOG.md"
   {
     write_header "$package"

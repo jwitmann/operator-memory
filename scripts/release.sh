@@ -89,6 +89,13 @@ fi
 if [ -z "$DRY_RUN" ]; then
   echo "==> Running validation..."
   bun run check
+  # Validation auto-formats (check.sh runs format --write on failure),
+  # which can dirty the tree after the guard above. Refuse rather than
+  # release a tree the release commit would not contain.
+  if [ -n "$(git status --porcelain | grep -v '^??' || true)" ]; then
+    echo "Validation left tracked modifications (formatter?). Review them, commit or stash, then re-run." >&2
+    exit 1
+  fi
 else
   echo "==> Dry run: skipping validation."
 fi
@@ -108,28 +115,11 @@ pkg_name() {
 echo ""
 echo "==> Computing release set..."
 
-# Oldest consumer tag anchors the core-cascade window: a core change newer
-# than ANY consumer's last release forces all consumers to ship it.
-oldest_consumer_tag=""
-for pkg in $CONSUMERS; do
-  tag="$(last_tag "$pkg")"
-  if [ -z "$tag" ]; then
-    oldest_consumer_tag="BOOTSTRAP"
-    break
-  fi
-  if [ -z "$oldest_consumer_tag" ] || [ "$(printf '%s\n%s' "$oldest_consumer_tag" "$tag" | sort -V | head -n 1)" = "$tag" ]; then
-    oldest_consumer_tag="$tag"
-  fi
-done
-
-core_changed=""
-if [ "$oldest_consumer_tag" = "BOOTSTRAP" ]; then
-  core_changed="1"
-elif [ -n "$(git log --format=%H -1 "${oldest_consumer_tag}..HEAD" -- packages/core || true)" ]; then
-  core_changed="1"
-fi
-[ -n "$core_changed" ] && echo "core changed since oldest consumer tag: cascade armed."
-
+# Core is never versioned itself, but the built dists bundle it: a core
+# change newer than a consumer's last release forces that consumer to
+# ship it. The window is per consumer (each package's own unpublished
+# range) — never a shared anchor, which mis-orders across independent
+# version lines.
 releases=""
 for pkg in $PACKAGES; do
   tag="$(last_tag "$pkg")"
@@ -142,8 +132,14 @@ for pkg in $PACKAGES; do
   cascade=""
   case " $CONSUMERS " in
     *" $pkg "*)
-      [ -n "$core_changed" ] && [ -z "$own" ] && cascade="core cascade"
-      [ -n "$core_changed" ] && [ -n "$own" ] && cascade="core cascade (also changed)"
+      core_newer=""
+      if [ -z "$tag" ]; then
+        core_newer="1"
+      elif [ -n "$(git log --format=%H -1 "${tag}..HEAD" -- packages/core || true)" ]; then
+        core_newer="1"
+      fi
+      [ -n "$core_newer" ] && [ -z "$own" ] && cascade="core cascade"
+      [ -n "$core_newer" ] && [ -n "$own" ] && cascade="core cascade (also changed)"
       ;;
   esac
   if [ -n "$own" ] || [ -n "$cascade" ]; then
@@ -167,13 +163,12 @@ fi
 echo ""
 tags=""
 summary=""
-OLD_IFS="$IFS"
-IFS=';'
 for item in $releases; do
   [ -z "$item" ] && continue
-  set -- $item
-  pkg="$1"
-  prev="$2"
+  # Parse with expansion, not word splitting: no IFS games, "$@" untouched.
+  pkg="${item%% *}"
+  rest="${item#* }"
+  prev="${rest%% *}"
   current="$(pkg_version "$pkg")"
   name="$(pkg_name "$pkg")"
   version="$(bump_version "$current" "$BUMP")"
@@ -200,7 +195,6 @@ for item in $releases; do
   tags+="${pkg}@v${version} "
   summary+="${pkg}: ${version}, "
 done
-IFS="$OLD_IFS"
 
 echo ""
 echo "==> Committing and tagging..."

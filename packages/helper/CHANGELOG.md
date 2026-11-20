@@ -3,8 +3,7 @@
 <!-- markdownlint-disable MD024 --><!-- repeated bucket headings -->
 
 Generated from conventional commits (`scripts/changelog.sh`).
-Single source: CI publishes each version's section as the GitHub
-release notes, so this file and the release page never diverge.
+Human-readable record of what shipped, per package.
 
 ## [v1.10.0] - 2026-11-04
 
@@ -15,18 +14,27 @@ release notes, so this file and the release page never diverge.
 
 ## [v1.9.0] - 2026-10-27
 
-### Other
+### Features
+
+- make V2 the default and freeze V1 (#62) ([`6826239`](https://github.com/jwitmann/operator-memory/commit/6826239956d9643cc128ef9e72c229bf07d34923))
+
+### Fixes
 
 - make fixtures portable across Linux and macOS (#60) ([`2aa8265`](https://github.com/jwitmann/operator-memory/commit/2aa82652c998ab1b376577b531799e7feab9b43c))
-- make V2 the default and freeze V1 (#62) ([`6826239`](https://github.com/jwitmann/operator-memory/commit/6826239956d9643cc128ef9e72c229bf07d34923))
+
+### Other
+
 - helper@v1.9.0 ([`734bb11`](https://github.com/jwitmann/operator-memory/commit/734bb115178684b50383ec7ccb9d09e9f8263adc))
 
 ## [v1.8.0] - 2026-10-05
 
+### Features
+
+- add Kiro adapter (#50) ([`cc7530f`](https://github.com/jwitmann/operator-memory/commit/cc7530fdc6c066fcf9dcf743dcdf655160e17e2f))
+
 ### Other
 
 - Revamp user-facing docs (#45) ([`702ec06`](https://github.com/jwitmann/operator-memory/commit/702ec06d4b90075b487f1452ef879931302f4b6f))
-- add Kiro adapter (#50) ([`cc7530f`](https://github.com/jwitmann/operator-memory/commit/cc7530fdc6c066fcf9dcf743dcdf655160e17e2f))
 - helper@v1.8.0 ([`75f3256`](https://github.com/jwitmann/operator-memory/commit/75f325638236fd87689ae56edd5717db89f803e3))
 
 ## [v1.7.1] - 2026-10-03
@@ -38,10 +46,13 @@ release notes, so this file and the release page never diverge.
 
 ## [v1.7.0] - 2026-10-03
 
-### Other
+### Features
 
 - add Operator Memory adapter (#40) ([`aa81d54`](https://github.com/jwitmann/operator-memory/commit/aa81d54399c73804c25ae120c375f7c1b8ec5da9))
 - remove Code Puppy adapter support (#42) ([`f4af95e`](https://github.com/jwitmann/operator-memory/commit/f4af95e609c4f8276324a6280995a33c89eaf8fd))
+
+### Other
+
 - helper@v1.7.0 ([`c080edb`](https://github.com/jwitmann/operator-memory/commit/c080edbaf0f5f0ade1753a5c9e0c26604102da89))
 
 ## [v1.6.1] - 2026-10-02
@@ -59,44 +70,62 @@ release notes, so this file and the release page never diverge.
 
 ## [v1.5.0] - 2026-10-01
 
-### Other
+### Features
 
 - DeepSeek Harness adapter and release automation (#34) ([`9a23c7b`](https://github.com/jwitmann/operator-memory/commit/9a23c7baf46303eb9cff4909e4ca26504e917327))
+
+### Other
+
 - helper@v1.5.0 ([`41a5f60`](https://github.com/jwitmann/operator-memory/commit/41a5f6006c5b29020323f0d2750bf9ae74ae7b06))
 
 ## [v1.4.0] - 2026-09-28
 
-### Other
+### Features
 
 - offer indexing at end of project setup (#32) ([`a258403`](https://github.com/jwitmann/operator-memory/commit/a25840342e403b2308aa9384158f7390acf9f0bb))
+
+### Other
+
 - helper@v1.4.0 ([`7d1a6bf`](https://github.com/jwitmann/operator-memory/commit/7d1a6bfb6ca2c7fb301373426cdad64e27d00c8f))
 
 ## [v1.3.2] - 2026-09-27
 
-### Other
+### Features
 
 - register Codex marketplace without the CLI (#29) ([`2b1d781`](https://github.com/jwitmann/operator-memory/commit/2b1d78119032367260a6a1fcc8c614625f3d4496))
+
+### Other
+
 - helper@v1.3.2 ([`3bca92b`](https://github.com/jwitmann/operator-memory/commit/3bca92b3394e90c19fdc6b0fc5315532d5b140e0))
 
 ## [v1.3.1] - 2026-09-27
 
-### Other
+### Features
 
 - add upgrade command and slim publish tarball (#26) ([`4dcdd6b`](https://github.com/jwitmann/operator-memory/commit/4dcdd6b98029b10738d1fb634380b2066f4479e9))
+
+### Other
+
 - helper@v1.3.1 ([`665bc70`](https://github.com/jwitmann/operator-memory/commit/665bc701367294b5d04bfe5e280a3350d3c5345d))
 
 ## [v1.3.0] - 2026-09-27
 
-### Other
+### Features
 
 - add Codex plugin adapter (#25) ([`648a8dd`](https://github.com/jwitmann/operator-memory/commit/648a8ddde1c0cbdebc3bfe353eb99bc5c6355563))
+
+### Other
+
 - helper@v1.3.0 ([`a6fd8a5`](https://github.com/jwitmann/operator-memory/commit/a6fd8a56b5bcc6606069d6ebd29edeacc6a26aac))
 
 ## [v1.2.1] - 2026-09-24
 
-### Other
+### Fixes
 
 - install OpenCode 2 adapter via opencode CLI ([`9847344`](https://github.com/jwitmann/operator-memory/commit/9847344b8b1029e163a890e80128274a9051444a))
+
+### Other
+
 - helper@v1.2.1 ([`3ea8d33`](https://github.com/jwitmann/operator-memory/commit/3ea8d338c9309489fb36259a1d2d9f71da55bc4c))
 
 ## [v1.2.0] - 2026-09-08
