@@ -14,7 +14,7 @@ Operator Memory 给你的智能体一个大脑，用于记录他们的全部工�
 
 #### 项目来源
 
-本项目最初 fork 自 [aerovato/operator-memory](https://github.com/aerovato/operator-memory)，现作为独立分支继续开发，新增了确定性上下文压缩、召回/搜索恢复以及 DeepSeek Harness 适配器。
+本项目最初 fork 自 [aerovato/operator-memory](https://github.com/aerovato/operator-memory)，现作为独立分支继续开发，新增了确定性上下文管理（VCC 压缩、无损剪枝、召回/搜索恢复）、缓存感知的 preamble 刷新以及 DeepSeek Harness 适配器。
 
 #### 功能特性
 
@@ -23,6 +23,9 @@ Operator Memory 给你的智能体一个大脑，用于记录他们的全部工�
 - **透明的记忆** —— 记忆以 Markdown 文档形式存储，你可以阅读、更新和删除。
 - **可共享的知识** —— 用 Git 跟踪文档，与团队分享知识。
 - **零基础设施** —— 无后台智能体、无 embeddings、无向量数据库、无模型配置。
+- **确定性上下文管理** —— 剪枝臃肿的工具输入输出（可按 ID 恢复）、用确定性 VCC 引擎压缩、每次操作都有会话级收据可审计。默认关闭，且需要大脑可用。 [配置方法](docs/harnesses/opencode-v2.md#context-management)。
+- **缓存感知的 Preamble 刷新** —— 大脑变化时在会话中途重渲染 preamble，只选提示缓存冷却的时机，几乎零成本。 [工作原理](docs/harnesses/opencode-v2.md#preamble-refresh)。
+- **大脑更新提醒** —— 长会话中轻声提醒记录持久知识；绝不自动写作。 [工作原理](docs/harnesses/opencode-v2.md#brain-updates)。
 
 ### 安装
 
@@ -101,15 +104,7 @@ Operator 给智能体一个持久的 Markdown 工作区，保存在三个位置�
 
 **Operator Memory 正在积极开发中。** 更多功能正在路上。
 
-#### 大脑改进
-
 - **观察引擎（Observation Engine）** —— 随时间学习持久的用户观察，与显式用户指令分开保存。
-- **可靠的大脑更新** —— 在长对话中保持规格等大脑文档的最新状态，而不是仅依赖智能体自己记住。
-
-#### 上下文管理
-
-- **缓存感知的上下文管理** —— 缓存过期时自动刷新 preamble 并执行工具调用剪枝。
-- **无损上下文压缩** —— 通过无损上下文压缩无损扩展上下文。
 
 ### 对比其他记忆插件
 

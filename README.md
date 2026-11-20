@@ -14,7 +14,7 @@ Operator Memory gives your agent a brain for documenting all their work. As the 
 
 #### Origin
 
-Originally forked from [aerovato/operator-memory](https://github.com/aerovato/operator-memory); continued here as an independent line with deterministic context compaction, recall/search recovery, and the DeepSeek Harness adapter.
+Originally forked from [aerovato/operator-memory](https://github.com/aerovato/operator-memory); continued here as an independent line with deterministic context management (VCC compaction, lossless trim, recall/search recovery), cache-aware preamble refresh, and the DeepSeek Harness adapter.
 
 #### Features
 
@@ -23,6 +23,9 @@ Originally forked from [aerovato/operator-memory](https://github.com/aerovato/op
 - **Transparent Memory** — Memory is stored as Markdown documents you can read, update, and delete.
 - **Sharable Knowledge** — Track documents with Git and share knowledge with your team.
 - **Zero Infrastructure** — No background agents, no embeddings, no vector database, no model configuration.
+- **Deterministic Context Management** — Trim bulky tool I/O (recoverable by ID), compact with the deterministic VCC engine, and audit it all with per-session receipts. Off by default and Brain-gated. [Configure it](docs/harnesses/opencode-v2.md#context-management).
+- **Cache-Aware Preamble Refresh** — Re-render the preamble mid-session when the Brain changes, timed to cold prompt-cache moments so it costs nothing. [How it works](docs/harnesses/opencode-v2.md#preamble-refresh).
+- **Brain-Update Nudges** — A quiet reminder to record durable knowledge during long sessions; never an automatic writer. [How it works](docs/harnesses/opencode-v2.md#brain-updates).
 
 ### Installation
 
@@ -101,16 +104,7 @@ Sometimes agents hesitate to create, consolidate, or split documents. In that ca
 
 **Operator Memory is under active development.** More features are on the way. Each will come with an explicit on/off switch in case you prefer the vanilla Operator experience.
 
-#### Brain Improvements
-
 - **Observation Engine** — Learn durable user observations over time, kept separate from explicit User Instructions.
-- **Reliable Brain Updates** — Keep specs and other Brain documents current during long conversations, instead of relying only on the agent to remember.
-
-#### Context Management
-
-- **Cache-Aware Preamble Rendering** — Automatically refresh preamble when cache expires.
-- **Context Management** — Custom strategies for compaction, pruning, and context management.
-- **Lossless Context Compression** — Losslessly extend context via lossless context compression.
 
 ### VS Other Memory Plugins
 

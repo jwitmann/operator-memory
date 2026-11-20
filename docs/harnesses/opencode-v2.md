@@ -107,6 +107,53 @@ Checkpoints are a separate mechanism with their own recovery tools (`operator-re
 - Pending, running, and errored tool calls, user messages, and the preamble are never trimmed.
 - Under `opencode run`, a compaction requested at the very end of the run can occasionally lose a race with process shutdown; mid-run compactions and interactive sessions are unaffected.
 
+### Preamble Refresh
+
+Opt-in mid-session preamble re-render when the Brain changes on disk — independent from context management, disabled by default, with its own switch in the same plugin `options`:
+
+```jsonc
+{
+  "plugins": [
+    {
+      "package": "<operator-memory>/packages/opencode-v2/dist",
+      "options": {
+        "operator": {
+          "preambleRefresh": {
+            "enabled": true
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+A Brain change re-renders from current disk state only when the provider's prompt cache is cold — rewriting the request prefix on a hot cache burns tokens for nothing. A hot-cache change waits for the next cold request, and the first request after a compaction refreshes unconditionally (compaction already flushed the cache). A refresh never triggers trim or compaction evaluation by itself. Every refresh appends one JSON line to the session context log; re-render failures keep the old preamble and surface through the existing error channel.
+
+### Brain Updates
+
+Opt-in nudge to record durable knowledge — never an automatic Brain writer. Disabled by default, with its own switch:
+
+```jsonc
+{
+  "plugins": [
+    {
+      "package": "<operator-memory>/packages/opencode-v2/dist",
+      "options": {
+        "operator": {
+          "brainUpdates": {
+            "enabled": true,
+            "toolCallThreshold": 25
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+The adapter counts distinct completed tool calls since the last Brain change and appends one static reminder on the first request crossing the threshold. The reminder names no content and requires no edit: when nothing durable emerged, the agent makes none. A Brain change resets the baseline without reminding, and later crossings stay quiet until the Brain moves again.
+
 ### Update
 
 OpenCode V2 owns plugin updates:
