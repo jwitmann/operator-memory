@@ -19,7 +19,7 @@ Originally forked from [aerovato/operator-memory](https://github.com/aerovato/op
 - **Transparent Memory** — Memory is stored as Markdown documents you can read, update, and delete.
 - **Sharable Knowledge** — Track documents with Git and share knowledge with your team.
 - **Zero Infrastructure** — No background agents, no embeddings, no vector database, no model configuration.
-- **Deterministic Context Management** — Trim bulky tool I/O (recoverable by ID), compact with the deterministic VCC engine, and audit it all with per-session receipts. Off by default and Brain-gated. [Configure it](docs/harnesses/opencode-v2.md#context-management). The OpenCode engine is ported in-tree from the [VCC reference engine](https://github.com/jwitmann/opencode-vcc-compaction); on DeepSeek the adapter stays backend-agnostic and attributes verbatim `vcc` checkpoints when the profile runs [dsh-compaction-vcc](https://github.com/tingfeng-droid/dsh-compaction-vcc).
+- **Deterministic Context Management** — Reduce what a session resends to the model through deterministic rules (never model judgment), with per-session receipts for everything it does. Off by default and Brain-gated. [OpenCode](docs/harnesses/opencode-v2.md#context-management) · [DeepSeek](docs/harnesses/deepseek.md#context-management).
 - **Cache-Aware Preamble Refresh** — Re-render the preamble mid-session when the Brain changes, timed to cold prompt-cache moments so it costs nothing. [How it works](docs/harnesses/opencode-v2.md#preamble-refresh).
 - **Brain-Update Nudges** — A quiet reminder to record durable knowledge during long sessions; never an automatic writer. [How it works](docs/harnesses/opencode-v2.md#brain-updates).
 

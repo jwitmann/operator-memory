@@ -36,7 +36,7 @@ Run each in a new conversation. See [Getting Started](../getting-started.md#appe
 
 ### Context Management
 
-When enabled, Operator Memory reduces what a session resends to the model. Three deterministic rules, evaluated with token arithmetic and host-reported run outcomes — never model judgment:
+When enabled, Operator Memory reduces what a session resends to the model. Three deterministic rules, evaluated with token arithmetic and host-reported run outcomes — never model judgment. Compaction runs through the deterministic VCC engine, ported in-tree from the [VCC reference engine](https://github.com/jwitmann/opencode-vcc-compaction):
 
 1. A run ends successfully and context clears `compactFloorTokens`: compact once.
 2. Estimated context passes `ratio` of the model window: trim bulky tool I/O, then compact if still over.
