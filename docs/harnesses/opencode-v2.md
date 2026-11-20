@@ -18,7 +18,7 @@ The default command no longer installs V1; use `install opencode-v1` for legacy 
 
 In a new conversation, ask:
 
-```
+```text
 Is Operator Memory guidance available to you? Give a brief outline of what it says.
 ```
 
@@ -33,6 +33,79 @@ Secondary signals: the home footer shows `Operator Ready (vX.Y.Z)` and the sessi
 - `/operator:index`
 
 Run each in a new conversation. See [Getting Started](../getting-started.md#appendix-commands) for what each command does.
+
+### Context Management
+
+When enabled, Operator Memory reduces what a session resends to the model. Three deterministic rules, evaluated with token arithmetic and host-reported run outcomes — never model judgment:
+
+1. A run ends successfully and context clears `compactFloorTokens`: compact once.
+2. Estimated context passes `ratio` of the model window: trim bulky tool I/O, then compact if still over.
+3. Estimated context passes `hardCapTokens`: same as above, absolute.
+
+Trimming replaces completed tool inputs and outputs with short notices and stores the originals on disk; compaction summarizes history through the host's normal compaction, shaped to reference your Brain instead of inlining it. The host's own native compaction keeps working unchanged — this feature acts earlier and audits everything it does.
+
+#### Prerequisites
+
+The Brain must exist: run `/operator:user-init` (cross-project memory) or `/operator:project-init` (project memory) first. Without an initialized Brain the feature stays off and records one refusal receipt per session explaining why. The feature itself is off by default.
+
+#### Configuration
+
+All keys live under one opt-in switch in the `plugins` entry's `options`. Global (`~/.config/opencode/opencode.json`) enables it for every project; a project root `opencode.json` or `opencode.jsonc` enables it for that project only — configs merge, so project settings add to global ones. Note: `.opencode/opencode.json` inside a project is not a live config path; plugin entries there are ignored. A local directory plugin entry resolves `<dir>/index.js` and ignores `package.json` `main`, so point it at the built `dist` directory:
+
+```jsonc
+{
+  "plugins": [
+    {
+      "package": "<operator-memory>/packages/opencode-v2/dist",
+      "options": {
+        "operator": {
+          "contextManagement": {
+            "enabled": false,
+            "ratio": 0.8,
+            "hardCapTokens": 250000,
+            "keepRecentTurns": 3,
+            "compactOnComplete": true,
+            "compactFloorTokens": 32000
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+- `enabled`: the master switch. Vanilla Operator behavior is unchanged while `false`.
+- `ratio`: trim past this fraction of the model's declared window.
+- `hardCapTokens`: trim past this absolute size. The backstop when the model window is unknown.
+- `keepRecentTurns`: the most recent assistant turns are never trimmed.
+- `compactOnComplete`: compact at the end of successful runs.
+- `compactFloorTokens`: skip end-of-run compaction below this size; small sessions gain nothing from it.
+
+#### What it leaves behind
+
+Receipts, one JSON line per trim or compaction, at `~/.operator/state/context-log/<sessionID>.log`:
+
+```text
+trim trigger=hard-cap tokens=20206 removed=8305 omissions=1
+compact trigger=task-complete summarized=11951
+```
+
+Compact receipts name their cause: the firing trigger, or `manual` for compactions you (or the host) initiated. Refusals look like `refusal reason=brain-unavailable`.
+
+Trimmed payloads live as plain files under `~/.operator/state/omitted/<sessionID>/<contentID>`, with an index per session. These are operational state, not Brain documents: never cataloged, safe to delete when the session is done with.
+
+#### Recovering trimmed content
+
+A notice in place of trimmed output names a content ID. In the same session, ask the agent to call `operator-read_omitted` with that ID — or call it yourself with the ID from the receipt log. IDs from other sessions do not resolve; re-trimming a session reuses the same IDs.
+
+Checkpoints are a separate mechanism with their own recovery tools (`operator-recall`, `operator-search`); see the implementation spec for the contract.
+
+#### Notes and limits
+
+- A trim that fires writes one receipt; steady-state re-trims apply silently with identical notices.
+- A satisfied trigger rests until context grows again (10 percent of the window or 25,000 tokens), so continued sessions do not re-compact on every run.
+- Pending, running, and errored tool calls, user messages, and the preamble are never trimmed.
+- Under `opencode run`, a compaction requested at the very end of the run can occasionally lose a race with process shutdown; mid-run compactions and interactive sessions are unaffected.
 
 ### Update
 
