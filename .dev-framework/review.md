@@ -1,38 +1,34 @@
-# Review — observation-engine confound notes (this session)
+# Review — observation-engine rubric extension (this session)
 
 ## Scope — every changed file
 
-- `docs/dev/observation-engine.md` — two commits: `7cfaff2`
-  (calibration-confound note: monthly correction trend, three
-  indistinguishable forces, corrections-are-now-novel-work-repair finding,
-  calibration-expiry consequence for any v3 revival) and `f3f9991`
-  (fourth force: model evolution). No design changes; evidence
-  qualification only.
+- `docs/dev/observation-engine.md` — one commit: `d50780a`
+  (v4 §1 rubric gains a fourth trigger: agent-proposed process/tool
+  improvements, with its own higher bar — visible repetition ≥3 or
+  stated-as-pattern, concrete reversibility, workflow-only, product
+  ideas out of scope).
 - `.dev-framework/review.md` — this artifact, rewritten fresh for this session.
 
-No product code, no tooling, no config. Additive paragraph + one-line
-amendment; no headings renamed; no anchor impact.
+No product code, no tooling, no config. Eight added lines in the rubric;
+no headings renamed; no anchor impact.
 
 ## Findings and resolutions
 
 - **markdownlint (docs cadence, the entire battery per scope rule):**
-  `bun run lint:md` → 129 files, **0 issues**, run after the final edit
-  and before each commit.
-- **Commit gates:** pre-commit per-package checks passed on both commits.
+  `bun run lint:md` → 129 files, **0 issues**, run on the final tree.
+- **Commit gate:** pre-commit per-package checks passed on the commit.
   Full root `bun run check` green on the parent tree; docs-only delta.
 - **No specialists required:** docs-only change per the scope rule.
-  The monthly trend numbers come from a re-run of the existing pilot
-  scratch script over the same corpus (no new method); the confound
-  reading (workload character over tooling era) is author judgment
-  recorded as such, with the raw monthly table present for re-analysis.
-  No prior specialist scope invalidated.
-- **Content diligence (author-performed):** no claim exceeds the data —
-  the trend is reported as confounded rather than explained; the design
-  consequence (calibration expiry, manual-flow justification) follows
-  without inventing attribution the numbers cannot support.
+  The extension is author-and-user judgment (descriptive vs prescriptive
+  claim types, miss-cost reasoning), not a code delta; no prior
+  specialist scope invalidated.
+- **Self-review note:** the extension was user-proposed ("propose
+  improvements as new process or even tools"), author-shaped (higher bar
+  for prescriptions), user-tacit-approved by continuation. The brief now
+  records a fourth trigger the v4 flow must honor at build time.
 
 ## Verification (final tree)
 
 - `bun run lint:md` — exit 0, "Summary: 0 issues in 0 files".
 - Changed files are exactly the two above; tree otherwise clean.
-- Committed locally as `7cfaff2` + `f3f9991` (pre-commit gates passed).
+- Committed locally as `d50780a` (pre-commit gates passed).
