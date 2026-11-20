@@ -84,7 +84,7 @@ Port deviations, each with the host-imposed reason:
 - Push-as-own-message delivery instead of in-place instruction extension: merging created competing output schemas and returned empty summaries in live A/B runs.
 - Warn-and-skip on render failure instead of rejecting assembly: keeps the Agent working with a diagnostic while the cache entry is evicted for retry.
 - Dual trigger evaluation at `turn/end` instead of opencode's per-request hook plus completion signal: DSH exposes no per-request seam to plugins; turn-end totals only grow within a turn so detection loses nothing, and enforcement is pre-step either way.
-- No trim port: agent-loop requests arrive deep-frozen at the `llm/stream` waterfall by documented host contract (mutation throws; content must stay a pure function of the session log for replay), and the session log is append-only for plugins. Reduction belongs to the host's pruner services; `keepRecentTurns` is parsed-but-reserved and no omission store or recovery tools are registered.
+- No trim port: agent-loop requests arrive deep-frozen at the `llm/stream` waterfall by host contract (mutation throws; content must stay a pure function of the session log for replay), and the session log is append-only for plugins. The only earlier seam, `agent/request`, admits call-config proposals only (a changed provider/model/effort after step preparation throws) before `buildRequest` derives the frozen request from the admitted surface — so no content-reduction seam exists anywhere in the pipeline. Reduction belongs to the host backend; `keepRecentTurns` is parsed-but-reserved and no omission store or recovery tools are registered.
 
 ## Verification
 
