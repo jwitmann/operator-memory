@@ -5,7 +5,7 @@
 - `docs/dev/observation-engine.md` — `cf8da07`: `## Proposal-flow spec`
   rewritten as draft v2 (supersedes v1), systematically addressing the
   11-blocking-findings red-team: new `### 0. Detector v0.1` (14 correction
-  + 13 recall patterns in-spec, one-boolean-per-class semantics,
+  and 13 recall patterns in-spec, one-boolean-per-class semantics,
   span-level paste hygiene, ≥3-message eligibility, replayed cohort:
   584 eligible → 23-session trigger, hand-label verdict ~3–5 durable /
   session precision ≈15–20%, 5 adversarial cases); `§1` honest machinery
