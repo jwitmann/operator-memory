@@ -28,15 +28,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "check": "./scripts/check.sh",
-    "prepare": "git rev-parse --git-dir >/dev/null 2>&1 && git config core.hooksPath .githooks || true",
-    "publish:all": "bun scripts/publish-all.ts",
-    "publish:helper": "sh scripts/publish-helper.sh",
-    "publish:opencode": "sh scripts/publish-opencode-v2.sh",
-    "publish:opencode-v2": "sh scripts/publish-opencode-v2.sh",
-    "publish:pi": "sh scripts/publish-pi.sh",
-    "publish:codex": "sh scripts/publish-codex.sh",
-    "publish:claude-code": "sh scripts/publish-claude-code.sh",
-    "publish:deepseek": "sh scripts/publish-deepseek.sh"
+    "prepare": "git rev-parse --git-dir >/dev/null 2>&1 && git config core.hooksPath .githooks || true"
   },
   "repository": {
     "type": "git",
