@@ -111,7 +111,7 @@ newest kept; dangling index entries healed on sized sweeps), adapter
 auto-cap on the write path, `operator-prune` tool, `DEFAULT_RETENTION`
 as the single source for both.
 
-### Measure brain-reminder compliance — OPEN
+### Measure brain-reminder compliance — OPEN (standing)
 
 Calibration proved the reminder fires at the right time (threshold 25
 from the 200-session histogram and the staged 30-call runs) but never
@@ -124,3 +124,9 @@ brain-changed refresh per fingerprint era (moved vs unanswered, plus lag
 in calls and time); no change to reminder text, threshold, or
 once-per-era quiet. Decide mechanism changes (Helper `memory check`
 surfacing, text, re-arm) only from the measured rate.
+
+Standing rule: re-run `bun scripts/measure-reminder-compliance.ts`
+whenever the sample meaningfully grows (monthly, or past n=30
+reminders); baseline 2026-11-21 is 0/7 (95% CI 0–35%), which constrains
+nothing — one future success moves it. Close this item only with a
+decision (keep, retune, or re-arm the mechanism), not with a reading.
