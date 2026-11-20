@@ -65,10 +65,15 @@ corroborates; the brain annotations carry the argument.
 
 ### 4. Wider trawl — frustration-counter pilot + trigger calibration (step (b), done 2026-11-20)
 
-Corpus: 27,584 user messages / 3,029 sessions (26,189 opencode +
-1,395 DSH), extracted by script (`session_message type=user` +
-`session.v4.jsonl.zstd` `user/message` with `source.kind=user`).
+Corpus: 28,239 user messages / 3,304 sessions (26,190 opencode +
+1,395 DSH v4 + 274 DSH projcache first-prompts + 380 DSH-TUI history
+lines), extracted by script (`session_message type=user` +
+`session.v4.jsonl.zstd` `user/message` with `source.kind=user` +
+projcache `titleInput.first.text` + `history.jsonl`).
 Scripts are throwaway scratch (`/tmp/opencode/obs-pilot/`), not repo tooling.
+The two extra sources added 655 messages and ~zero strict hits:
+first-prompts are task framings, TUI lines are one-shot commands —
+neither carries correction language. Documented as coverage, not signal.
 
 - Explicit durability language ("remember that", "from now on"): 32
   messages / 28 sessions (~0.9%). Rare, high-precision, insufficient alone.
@@ -76,7 +81,7 @@ Scripts are throwaway scratch (`/tmp/opencode/obs-pilot/`), not repo tooling.
   (caps, `?!`, "why"): 2,243 / 317 sessions. Both dominated by false
   positives — see FP classes. Not trigger-grade.
 - Strict correction set (told-you / why-did-you / revert / stop-doing /
-  …): 193 / 93 sessions (3.1%). ≥2/session: 37 sessions. ≥3/session:
+  …): 194 / 94 sessions (2.8%). ≥2/session: 37 sessions. ≥3/session:
   22 sessions (0.7%) — the hand-reviewable pilot cohort.
 - Strict recall-frustration (forgot / already-told / how-many-times /
   you-keep / do-you-remember): 50 / 44 sessions (1.5%). ≥2/session:
