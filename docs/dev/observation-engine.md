@@ -63,6 +63,49 @@ Method limit: keyword mining undercounts (most preferences are never
 stated with these exact words) and overcounts (quoted/code text). It
 corroborates; the brain annotations carry the argument.
 
+### 4. Wider trawl — frustration-counter pilot + trigger calibration (step (b), done 2026-11-20)
+
+Corpus: 27,584 user messages / 3,029 sessions (26,189 opencode +
+1,395 DSH), extracted by script (`session_message type=user` +
+`session.v4.jsonl.zstd` `user/message` with `source.kind=user`).
+Scripts are throwaway scratch (`/tmp/opencode/obs-pilot/`), not repo tooling.
+
+- Explicit durability language ("remember that", "from now on"): 32
+  messages / 28 sessions (~0.9%). Rare, high-precision, insufficient alone.
+- Loose correction set: 1,709 / 523 sessions. Loose recall-frustration
+  (caps, `?!`, "why"): 2,243 / 317 sessions. Both dominated by false
+  positives — see FP classes. Not trigger-grade.
+- Strict correction set (told-you / why-did-you / revert / stop-doing /
+  …): 193 / 93 sessions (3.1%). ≥2/session: 37 sessions. ≥3/session:
+  22 sessions (0.7%) — the hand-reviewable pilot cohort.
+- Strict recall-frustration (forgot / already-told / how-many-times /
+  you-keep / do-you-remember): 50 / 44 sessions (1.5%). ≥2/session:
+  6 sessions; ≥3: 0. The counter runs cheap and fires rarely: a metric,
+  not a standalone trigger. Combined trigger (correction≥3 OR
+  recall≥2) ≈ 26 sessions.
+- Verified samples are real durable preferences stated as corrections:
+  *"HOW MANY times do I need to say that"* (log routing),
+  *"DO NOT TAKE SHORTCUTS, DO NOT ASSUME what i want"* (working style).
+- FP classes (for trigger hygiene): pasted terminal output, pasted or
+  injected docs (DSH user-role messages include injected context and
+  pasted brain text — its 352 loose-"again" hits are mostly this),
+  code-discussion vocabulary ("instead of", "wrong" about code under
+  review). Mitigation is positional, not lexical: skip messages that
+  are pasted artifacts, count per session, require ≥2–3.
+- Deterministic topic identity — tested twice, failed twice:
+  verbatim/near-verbatim repeats across sessions: 1 group (generic "I
+  don't think this is correct", not a rule) — users paraphrase, never
+  re-state. Rare-word overlap (≥3 shared distinctive words): 20,020
+  pairs, flooded by formulaic prompt templates (review invocations share
+  "correctness review … project" vocabulary) — unusable without clause
+  isolation, which itself needs judgment.
+- Calibration output: the trigger stays dumb counting (deterministic,
+  per the reshape); topic identity and clause isolation live in the
+  LLM-drafted proposal step, which operates over a ~26-session cohort —
+  hand-sized, bounded cost, user approves. Probe question 1 ("what event
+  shapes signal durable fact") is answered structurally: counts select
+  the sessions, judgment selects the facts.
+
 ## Constraints (eliminate designs early)
 
 - No embeddings, no vector DB, no background agents (product
