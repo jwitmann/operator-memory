@@ -89,7 +89,17 @@ export function shapeCompactionRequest(options: unknown, deps: ShapingDeps): boo
 function shapeMessages(record: Record<string, unknown>, deps: ShapingDeps): boolean {
   const messages = record.messages;
   if (!Array.isArray(messages) || messages.length === 0) return false;
-  const guidance = buildCompactionPrompt({ brainPaths: [...deps.brainPaths] });
+  // DSH has no trim port and no omission store, so the core template's
+  // default recovery sentence (omission notices + a tool that does not
+  // exist here) would mislead the summarizer. The durable log is the
+  // recovery path instead: checkpoint markers address compacted spans.
+  const guidance = buildCompactionPrompt({
+    brainPaths: [...deps.brainPaths],
+    recoveryRule:
+      "Checkpoint markers delimit compacted spans; the agent recovers elided\n"
+      + "  content from the durable session log with the operator-recall\n"
+      + "  (seq, result, or checkpoint reference) and operator-search tools.",
+  });
   messages.push({ role: "user", content: [{ type: "text", text: guidance }] });
   return true;
 }

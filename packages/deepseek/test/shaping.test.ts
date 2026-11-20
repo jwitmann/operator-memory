@@ -34,6 +34,18 @@ describe("compaction shaping", () => {
     expect(guidance[0]?.text).toContain(".operator-shared");
   });
 
+  test("shaped guidance names DSH recovery tools, never the omission store", () => {
+    const options = compactionOptions();
+    expect(shapeCompactionRequest(options, deps)).toBe(true);
+    const messages = options.messages as Record<string, unknown>[];
+    const guidance = (messages[1] as Record<string, unknown>).content as Record<string, unknown>[];
+    const text = guidance[0]?.text as string;
+    expect(text).toContain("operator-recall");
+    expect(text).toContain("operator-search");
+    expect(text).not.toContain("operator-read_omitted");
+    expect(text).not.toContain("omitted-001");
+  });
+
   test("works when the trailing element is frozen (array stays mutable)", () => {
     const options = compactionOptions();
     const messages = options.messages as object[];

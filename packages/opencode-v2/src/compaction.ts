@@ -123,7 +123,7 @@ export function registerCompactionHook(
     } else {
       event.system.push({
         type: "text",
-        text: buildCompactionPrompt({ brainPaths: deps.brainPaths }),
+        text: buildCompactionPrompt({ brainPaths: deps.brainPaths, recoveryRule: null }),
       });
     }
     const written = await appendReceipt(

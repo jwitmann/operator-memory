@@ -23,7 +23,20 @@ export type CompactionPromptInput = {
   // preamble renders them (for example "~/.operator/user", ".operator",
   // ".operator-shared").
   readonly brainPaths: readonly string[];
+  // How the next session recovers content the summary elides. Null selects
+  // the omission-store sentence (adapters with a trim port); adapters
+  // without one pass their own recovery story. The value is the rule body
+  // after the "- " bullet prefix; keep the two-space continuation indent.
+  readonly recoveryRule: string | null;
 };
+
+// Omission-store recovery (OpenCode and any adapter with a trim port).
+// Kept as the default so existing callers render byte-identical output.
+const DEFAULT_RECOVERY_RULE =
+  "Tool input/output omission notices (content IDs) are the only recoverable\n"
+  + "  handles for trimmed content. Keep every omission notice verbatim in the\n"
+  + "  summary; the agent recovers payloads through the operator-read_omitted\n"
+  + "  tool.";
 
 export function buildCompactionPrompt(input: CompactionPromptInput): string {
   const paths = input.brainPaths.map(path => `- ${path}`).join("\n");
@@ -41,10 +54,7 @@ The summary must preserve, in order of importance:
 4. Key decisions already made, with their reasons.
 
 Rules:
-- Tool input/output omission notices (content IDs) are the only recoverable
-  handles for trimmed content. Keep every omission notice verbatim in the
-  summary; the agent recovers payloads through the operator-read_omitted
-  tool.
+- ${input.recoveryRule ?? DEFAULT_RECOVERY_RULE}
 - Durable knowledge lives in the Brain partitions. Reference these paths
   instead of inlining their content:
 ${paths}
