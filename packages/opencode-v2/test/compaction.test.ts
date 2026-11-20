@@ -144,7 +144,7 @@ test("shapes the request and leaves messages intact", async () => {
   expect(event.system).toHaveLength(2);
   const instructions = event.system[1]?.text ?? "";
   expect(instructions).toContain("~/.operator/user");
-  expect(instructions).toContain("operator:read_omitted");
+  expect(instructions).toContain("operator-read_omitted");
   expect(event.messages).toHaveLength(3);
   expect(event.result).toBeNull();
 

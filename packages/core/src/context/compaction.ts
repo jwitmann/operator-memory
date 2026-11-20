@@ -43,7 +43,7 @@ The summary must preserve, in order of importance:
 Rules:
 - Tool input/output omission notices (content IDs) are the only recoverable
   handles for trimmed content. Keep every omission notice verbatim in the
-  summary; the agent recovers payloads through the operator:read_omitted
+  summary; the agent recovers payloads through the operator-read_omitted
   tool.
 - Durable knowledge lives in the Brain partitions. Reference these paths
   instead of inlining their content:

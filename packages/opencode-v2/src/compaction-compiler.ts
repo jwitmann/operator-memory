@@ -78,7 +78,7 @@ export function resolveVccCompilerConfig(): CompilerConfig {
     framing: {
       ...DEFAULT_CHECKPOINT_FRAMING,
       recallGuide:
-        'RECALL: append-only log — nothing is lost. `operator:recall` restores original content: type "seq", id "3-7"; "result", id "3"; "checkpoint", id "1" (`[checkpoint N]` = dropped). `operator:search` finds by keyword.',
+        'RECALL: append-only log — nothing is lost. `operator-recall` restores original content: type "seq", id "3-7"; "result", id "3"; "checkpoint", id "1" (`[checkpoint N]` = dropped). `operator-search` finds by keyword.',
     },
     checkpointOrdinals: null,
     debug: false,

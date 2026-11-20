@@ -60,6 +60,7 @@ const registration = await ctx.tool.transform((draft) => {
 
 - Transform callbacks are synchronous even in Promise plugins; load external data before registering or reloading.
 - Effective names namespace as `acme_greeting` (dots and unsupported characters become `_`). Later valid registrations for the same effective name override earlier ones.
+- Directly callable (native function) vs Code Mode sandbox: pass `options: { codemode: false }` in `editor.add` for a native function call. Without it the tool lives only in the execute sandbox (`tools.*`) and the model cannot call it by name.
 - `update`/`remove` use the effective name; updates preserve name/namespace and replace schemas/options wholesale.
 - Disposing a registration removes its transform and rebuilds from the rest; plugin unload disposes its registrations.
 - Each model request captures a tool snapshot; reload/disposal affect future snapshots only.

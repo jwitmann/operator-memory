@@ -9,7 +9,7 @@ test("compaction prompt references Brain paths without inlining content", () => 
 
   expect(prompt).toContain("~/.operator/user");
   expect(prompt).toContain(".operator-shared");
-  expect(prompt).toContain("operator:read_omitted");
+  expect(prompt).toContain("operator-read_omitted");
   expect(prompt).toContain("Compaction is lossy; the Brain is not.");
 });
 

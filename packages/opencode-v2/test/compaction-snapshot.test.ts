@@ -224,9 +224,9 @@ test("snapshot replies label provenance", () => {
       truncated: false,
       text: "hi",
     } as never),
-  ).toBe("**operator:recall seq 1** (1 event(s), 10 tokens)\n\nhi");
+  ).toBe("**operator-recall seq 1** (1 event(s), 10 tokens)\n\nhi");
   expect(formatSearchReply("login", { totalMatches: 1, text: "hit" } as never)).toBe(
-    "**operator:search login** (1 matching event(s))\n\nhit",
+    "**operator-search login** (1 matching event(s))\n\nhit",
   );
 });
 

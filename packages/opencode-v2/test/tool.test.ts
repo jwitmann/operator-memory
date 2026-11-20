@@ -32,6 +32,7 @@ type AddedTool = {
   name: string;
   description: string;
   input: unknown;
+  options?: { codemode?: boolean };
   execute: (input: unknown, context: { sessionID: string }) => Promise<{ content: string }>;
 };
 
@@ -48,14 +49,12 @@ beforeEach(() => {
   vol.reset();
 });
 
-test("registers under the operator namespace", async () => {
+test("registers under a flat hyphenated name", async () => {
   const { editor, tool } = await addedTool();
 
-  expect(editor.namespace).toHaveBeenCalledWith({
-    name: "operator",
-    description: "Operator Memory context management tools.",
-  });
-  expect(tool.name).toBe("read_omitted");
+  expect(editor.namespace).not.toHaveBeenCalled();
+  expect(tool.name).toBe("operator-read_omitted");
+  expect(tool.options).toEqual({ codemode: false });
   expect(tool.description).toContain("omitted by Operator trimming or compaction");
 });
 
@@ -109,14 +108,12 @@ async function addedPruneTool() {
   return { editor, tool: editor.add.mock.calls[0]?.[0] as AddedTool };
 }
 
-test("registers prune under the operator namespace", async () => {
+test("registers prune under a flat hyphenated name", async () => {
   const { editor, tool } = await addedPruneTool();
 
-  expect(editor.namespace).toHaveBeenCalledWith({
-    name: "operator",
-    description: "Operator Memory context management tools.",
-  });
-  expect(tool.name).toBe("prune");
+  expect(editor.namespace).not.toHaveBeenCalled();
+  expect(tool.name).toBe("operator-prune");
+  expect(tool.options).toEqual({ codemode: false });
   expect(tool.description).toContain("Prune the current session's omitted");
 });
 
@@ -200,7 +197,7 @@ test("recall restores snapshot content by seq selection", async () => {
 
   const result = await tool.execute({ type: "seq", id: "1-2" }, { sessionID: SESSION });
 
-  expect(result.content).toContain("**operator:recall seq 1-2**");
+  expect(result.content).toContain("**operator-recall seq 1-2**");
   expect(result.content).toContain("please fix the login bug");
   expect(result.content).toContain("[tool-call read]");
 });
@@ -214,6 +211,22 @@ test("recall resolves result and checkpoint references", async () => {
 
   const missing = await tool.execute({ type: "result", id: "result 99" }, { sessionID: SESSION });
   expect(missing.content).toContain("not found in this session");
+});
+
+test("recall registers under a flat hyphenated name", async () => {
+  const { editor, tool } = await addedRecallTool();
+
+  expect(editor.namespace).not.toHaveBeenCalled();
+  expect(tool.name).toBe("operator-recall");
+  expect(tool.options).toEqual({ codemode: false });
+});
+
+test("search registers under a flat hyphenated name", async () => {
+  const { editor, tool } = await addedSearchTool();
+
+  expect(editor.namespace).not.toHaveBeenCalled();
+  expect(tool.name).toBe("operator-search");
+  expect(tool.options).toEqual({ codemode: false });
 });
 
 test("recall validates input and reports a missing snapshot", async () => {
@@ -239,7 +252,7 @@ test("search finds snapshot content with recall pointers", async () => {
 
   const result = await tool.execute({ pattern: "login" }, { sessionID: SESSION });
 
-  expect(result.content).toContain("**operator:search login**");
+  expect(result.content).toContain("**operator-search login**");
   expect(result.content).toContain("[seq 1");
   expect(result.content).toContain("use recall");
 });
