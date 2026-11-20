@@ -163,6 +163,10 @@ fi
 echo ""
 tags=""
 summary=""
+# Split records on ';' only (reasons contain spaces). The inner parse
+# below uses expansion precisely so this IFS never leaks into it.
+OLD_IFS="$IFS"
+IFS=';'
 for item in $releases; do
   [ -z "$item" ] && continue
   # Parse with expansion, not word splitting: no IFS games, "$@" untouched.
@@ -195,6 +199,7 @@ for item in $releases; do
   tags+="${pkg}@v${version} "
   summary+="${pkg}: ${version}, "
 done
+IFS="$OLD_IFS"
 
 echo ""
 echo "==> Committing and tagging..."
