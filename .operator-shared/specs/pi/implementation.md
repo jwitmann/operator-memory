@@ -56,7 +56,6 @@ Pi does not expose native package-update results through `ExtensionAPI`, so the 
 
 Pi checks mutable package sources asynchronously at interactive startup and displays its native update notification when a package update exists. Operator does not perform a package registry check or mutate Pi's shared package store. Users apply updates with `pi update --extensions`; local and version-pinned package sources remain under Pi's rules.
 
-
 ## Differences From Reference
 
 Pathway selections: bundled-core resolution (bundled into the package with Pi's runtime packages as `"*"` peers), transform injection as a prepended synthetic user message, slash commands, footer status UI, and harness-native updates through Pi's startup notification and `pi update --extensions`. All are accepted reference pathways; there are no behavioral deviations.

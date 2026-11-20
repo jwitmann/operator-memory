@@ -23,7 +23,7 @@ what's here is what those don't spell out per-task.
   `bun run check packages/opencode-v2` green; root fully green before
   declaring done. A PASS before the last edit is stale — re-run on the
   final tree.
-- Touched Markdown: `npx -y markdownlint-cli2 --config .markdownlint-cli2.jsonc "<file>"`.
+- Touched Markdown: `bun run lint:md` (repo-wide, zero-issues enforced).
 - The `.githooks/pre-commit` enforces format/lint/typecheck/test, so a
   commit that passed hooks already cleared the suite once.
 

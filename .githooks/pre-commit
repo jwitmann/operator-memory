@@ -19,6 +19,11 @@ if ! bun run lint; then
   exit 1
 fi
 
+if ! bun run lint:md; then
+  echo "Markdown linting failed."
+  exit 1
+fi
+
 if ! bun run typecheck; then
   echo "Type check failed."
   exit 1

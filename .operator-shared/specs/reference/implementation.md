@@ -2,7 +2,7 @@
 
 Last Updated: November 3, 2026
 
-The complete adapter specification: what every harness adapter must do, and what the reference implementation looks like. Concrete bindings in `implementation.md` documents measure themselves against the Reference Implementation section, not against one another. A binding may deviate only through the accepted pathways defined here or through an explicitly recorded deviation.
+The complete adapter specification: what every harness adapter must do, and what the reference implementation looks like. Concrete bindings in `implementation.md` documents measure themselves against the Reference Adapter Shape section, not against one another. A binding may deviate only through the accepted pathways defined here or through an explicitly recorded deviation.
 
 ## Adapter Contract
 
@@ -27,7 +27,7 @@ Session, command, and UI behavior belong in the adapter, not core.
 
 Composition, authority, warnings, and diagnostics are specified in [`preamble.md`](../preamble.md).
 
-#### Commands
+#### Command intents
 
 Expose these command intents on every supported harness. Prefer the following colon-based names, but similar host-compatible names are fully acceptable, including names with dashes instead of colons. Alternate names do not require an exception or separate approval:
 
@@ -54,7 +54,7 @@ Orchestration, helper sequencing, and agent handoff are specified in [`commands.
 - Putting harness session or command APIs in core
 - Special promote/unshare APIs; partition moves remain ordinary filesystem edits
 
-## Reference Implementation
+## Reference Adapter Shape
 
 What a reference adapter would look like, derived primarily from the OpenCode V2 and Pi implementations. The pathways below are the accepted implementation shapes.
 

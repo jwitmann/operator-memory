@@ -14,7 +14,7 @@ Start a new Pi session after installation.
 
 In a new conversation, ask:
 
-```
+```text
 Is Operator Memory guidance available to you? Give a brief outline of what it says.
 ```
 

@@ -4,13 +4,13 @@
 
 This directory holds project knowledge and instructions used by Operator Memory. Operator Memory turns agent work into lasting project knowledge—instructions, specifications, codebase indexes, and related documents agents own and maintain.
 
-##### Learn more: https://github.com/jwitmann/operator-memory
+##### Learn more: <https://github.com/jwitmann/operator-memory>
 
 ---
 
 Install now:
 
-```
+```sh
 # With NPM
 npm install --global @jwitmann/operator-helper
 

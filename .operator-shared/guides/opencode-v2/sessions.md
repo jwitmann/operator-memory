@@ -2,7 +2,7 @@
 
 Last Updated: October 20, 2026
 
-Verified from https://opencode.ai/v2/docs/build/plugins/ and `<reference>/opencode-v2/` source.
+Verified from <https://opencode.ai/v2/docs/build/plugins/> and `<reference>/opencode-v2/` source.
 
 ## Durable Session Core
 

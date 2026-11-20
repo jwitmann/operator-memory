@@ -4,9 +4,10 @@
     "MD013": false, // line length; docs are hard-wrapped by hand
     "MD041": false, // first line must be a top-level heading; handled per file
     "MD060": false, // padded table pipes; tables are exempt by design
+    "MD033": false, // no-inline-html; README product banners use centered <p>/<img> markup
     // MD001 conflicts with the heading structure: H1 -> H3 jumps are used throughout.
     "MD001": false
   },
   "globs": ["**/*.md"],
-  "ignores": ["node_modules/**", "dist/**"]
+  "ignores": ["**/node_modules/**", "**/dist/**"]
 }

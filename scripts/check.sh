@@ -32,6 +32,7 @@ if ! bun run format:check; then
 fi
 
 bun run lint || status=1
+bun run lint:md || status=1
 bun run typecheck || status=1
 bun run test || status=1
 

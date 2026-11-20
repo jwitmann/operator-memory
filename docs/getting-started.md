@@ -41,7 +41,7 @@ If using on an existing project, expect a sparse Brain at first. Due to inertia,
 
 ---
 
-#### Example:
+#### Example: existing project
 
 You initialize Operator on an existing project and start work on a module you know well. The brain has no documents for it yet.
 
@@ -72,7 +72,7 @@ Certain larger architectural moves will need your judgements of the project's lo
 
 ---
 
-#### Example:
+#### Example: unfamiliar library
 
 You work regularly with a third-party library that your agent is not familiar with. Your agent often spends lots of time searching the web for resources.
 

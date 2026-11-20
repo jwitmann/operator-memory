@@ -20,7 +20,7 @@ read_if: Researching OpenCode v2 plugin domains, hooks, in-process SDK hosting, 
 
 ## `reference/opencode-v2/packages/plugin/` Index
 
-### `src/`
+### `plugin/src/`
 
 - `app.ts` — Plugin application entry
 - `options.ts` — Plugin options
@@ -34,7 +34,7 @@ read_if: Researching OpenCode v2 plugin domains, hooks, in-process SDK hosting, 
 
 ## `reference/opencode-v2/packages/sdk/` Index
 
-### `src/`
+### `sdk/src/`
 
 - `opencode.ts` — `OpenCode` in-process host (`OpenCode.create()`, session and plugin registration, disposal)
 - `contracts.ts` — SDK contract types

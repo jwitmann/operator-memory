@@ -16,7 +16,7 @@ This installs the plugin from Operator's local marketplace as `jwitmann@operator
 
 Codex has no status UI, so verify through the agent. In a fresh session, ask:
 
-```
+```text
 Is Operator Memory guidance available to you? Give a brief outline of what it says.
 ```
 

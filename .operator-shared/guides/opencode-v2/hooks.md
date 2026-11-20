@@ -2,7 +2,7 @@
 
 Last Updated: October 20, 2026
 
-Verified from https://opencode.ai/v2/docs/build/plugins/ and `<reference>/opencode-v2/packages/plugin/src/promise/session.ts`.
+Verified from <https://opencode.ai/v2/docs/build/plugins/> and `<reference>/opencode-v2/packages/plugin/src/promise/session.ts`.
 
 Register a hook on its domain and dispose the returned `Registration` when no longer needed. Multiple plugins can register the same hook; OpenCode runs them in plugin order and later hooks see earlier hooks' changes.
 

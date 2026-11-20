@@ -2,7 +2,7 @@
 
 Last Updated: October 20, 2026
 
-Source-verified against the `origin/dev` reference clone (root package version `2.1.0`, pulled October 20, 2026), https://opencode.ai/v2/docs/plugins/ and `<reference>/opencode-v2/packages/cli/src/commands/handlers/plugin/`. Development-source findings below are not live-install verification.
+Source-verified against the `origin/dev` reference clone (root package version `2.1.0`, pulled October 20, 2026), <https://opencode.ai/v2/docs/plugins/> and `<reference>/opencode-v2/packages/cli/src/commands/handlers/plugin/`. Development-source findings below are not live-install verification.
 
 OpenCode 2 is the standard `opencode` binary and reads the existing global and project server config locations.
 
@@ -50,7 +50,7 @@ October 20, 2026: the repository's complete local installer built and linked Hel
 
 ## Sources
 
-- https://opencode.ai/v2/docs/plugins/
+- <https://opencode.ai/v2/docs/plugins/>
 - `<reference>/opencode-v2/packages/cli/src/commands/handlers/plugin/add.ts`
 - `<reference>/opencode-v2/packages/util/src/npm.ts`
 - `<reference>/opencode-v2/packages/core/src/config/plugin/source.ts`
