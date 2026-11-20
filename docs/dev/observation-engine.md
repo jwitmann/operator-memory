@@ -112,6 +112,16 @@ neither carries correction language. Documented as coverage, not signal.
   pairs, flooded by formulaic prompt templates (review invocations share
   "correctness review … project" vocabulary) — unusable without clause
   isolation, which itself needs judgment.
+- Calibration confounds (read honestly): the monthly correction rate
+  (≈1.0% May–Jun 2026, 0.27–0.49% Jul–Oct, 0.62% Nov) tracks workload
+  character, not tooling era — and three forces push the same direction
+  indistinguishably: better frameworks/brains (fewer rule-violation
+  corrections), user adaptation (more specific asks, plan-review rounds),
+  and workload mix (research months correct constantly). The remaining
+  corrections are a different kind: novel-work repair, where no rule
+  exists yet to be violated. Consequence: calibration expires —
+  thresholds are valid for the corpus measured, and any automation
+  revival (v3) must re-replay on fresh data, never reuse these numbers.
 - Calibration output: the trigger stays dumb counting (deterministic,
   per the reshape); topic identity and clause isolation live in the
   LLM-drafted proposal step, which operates over a ~26-session cohort —
