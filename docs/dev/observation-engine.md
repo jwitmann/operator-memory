@@ -285,8 +285,11 @@ proposing produces volume that justifies automating the trigger.
 ### 1. Trigger: agent discretion, in the flow
 
 The agent offers when it recognizes a promotable moment — no flags, hooks,
-or session-end arithmetic. The rubric lives in `operator.md` (a few lines,
-not a subsystem):
+or session-end arithmetic. The rubric lives in `~/.operator/user/operator.md`
+(the user partition's operator file, cross-project by construction), written
+by the user-init flow for new installations and by the existing memory-aware
+loop for existing ones — a few lines, not a subsystem. It is NOT a per-project
+or shared-repo file: project partitions get nothing new to load.
 
 - The user corrected the same thing twice (in this session or visibly before).
 - The user said "remember that" / "from now on" (explicit durability language).
@@ -299,21 +302,61 @@ sanitization mechanism that v3 built machinery to replicate offline.
 ### 2. Proposal: question tool, in the moment
 
 Candidate + why (the incident) + scope (`user` or `project`), via the
-question tool per house pattern — or a plain conversational offer for
-trivial cases. User approves / edits / declines. A decline is just a
+question tool per house pattern — `question` on OpenCode (registered in
+the host's internal tools), `ask_user_question` on DeepSeek — or a plain
+conversational offer for trivial cases and hosts without an answerer.
+User approves / edits / declines. A decline is just a
 decline: no rejection store, no caps, no cooldowns. The context window is
-the dedup mechanism at this scale (the agent won't offer twice for the
-same thing in one conversation because it can see it just asked).
+the dedup mechanism at this scale, best-effort: the agent won't offer
+twice for the same thing in one conversation because it can see it just
+asked — if compaction makes an earlier offer uncertain, do not re-offer
+(a rare duplicate at this signal rate is acceptable; no machinery).
 
-### 3. Storage: the §5 half that survives
+### 3. Storage: the §5 half that survives, with explicit loading
 
-Unchanged from v3 §5: dedicated user-partition surface (e.g.
-`observations.md`), kind + scope declarations, project-bar and secrets
-exclusion, explicit instructions route to the explicit flow, promotion ≠
-replacement (migration separately approved), subordinate rendering, never
-merged into `operator.md`.
+- Canonical surface: `~/.operator/user/observations.md` — user-approved,
+  subordinate. **It does not load itself:** the Core user loader reads
+  only `operator.md` and `catalog.md` today (`packages/core/src/memory/user.ts`),
+  so the build must extend the loader/preamble to load `observations.md`
+  (fail-closed: absent file → no observations, same as Brainless), include
+  it in the fingerprint set, and render it subordinate — a separate
+  labeled block AFTER all instruction layers (user > shared > private),
+  so instruction precedence is untouched. Alternative (lower cost, no Core
+  change): a `user-notes` entry in the User Catalog read-if "observations
+  and working-style notes" — agents load it on demand rather than every
+  session. Default to the explicit load: observations are cross-project
+  and short; the catalog route risks never being read.
+- Every candidate declares `kind` (`observation` vs `explicit_instruction`)
+  and `scope` (`user` vs `project`). Project-scoped candidates write to
+  `.operator/operator.md` (project private instructions, the already-loaded
+  surface — no new file type), never the user partition. Sensitive
+  candidates are barred from both (secrets exclusion below).
+- Explicit instructions route to the explicit flow, never auto-convert.
+- Promotion ≠ replacement: duplicated copies are retired only by a
+  separately approved migration step.
+- Secret/sensitive exclusion: no credentials, tokens, paths-to-secrets,
+  or personal data beyond working preferences; the offer itself flags
+  suspected sensitivity.
+- Conflict mechanism: best-effort screening against every active layer
+  at approval time, suspected conflicts shown beside the candidate.
+  Observations revalidate (stale-flag) when relevant instruction
+  fingerprints change. Recorded limit: LLM screening cannot guarantee
+  conflict detection; approval + subordinate rendering are mitigations.
+- Never merged into `operator.md` — separation is definitional.
 
-### 4. Explicit non-goals
+### 4. Switch semantics (v4-local)
+
+- Config key `observation` (boolean, default OFF), same opt-in contract as
+  the other observation-class features; without an initialized Brain the
+  surface is inert (refusal receipt per session, as with the existing
+  opt-ins).
+- OFF suppresses proposing. Loading is independent: previously approved
+  observations keep loading (they are user-approved content, not live
+  measurement) — a user wanting them gone deletes the file.
+- No collection machinery exists in v4, so there is nothing else to gate;
+  the v3 §7 retention table is parked and does not apply.
+
+### 5. Explicit non-goals
 
 Detector v0.1, receipts, era windows, pending store, run-ids, rejection
 memory, frustration counter, metrics pipeline, escalation design — all
@@ -321,7 +364,7 @@ parked with v3. If proposing volume ever makes the manual flow a burden,
 THAT is the quantified trigger for automating detection, and the v3
 design below is where that work resumes.
 
-### 5. Nag guard (norm, not machinery)
+### 6. Nag guard (norm, not machinery)
 
 Offer rarely: at most one observation proposal per session as a standing
 norm, waived only for an explicit "remember that". No counter, no
