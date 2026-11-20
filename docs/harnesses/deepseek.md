@@ -22,7 +22,7 @@ Web and Desktop display `Operator Ready (vX.Y.Z)` beneath the active conversatio
 
 In a new conversation, ask:
 
-```
+```text
 Is Operator Memory guidance available to you? Give a brief outline of what it says.
 ```
 
@@ -37,6 +37,34 @@ DeepSeek command names use hyphens:
 - `/operator-index`
 
 Run each in a new conversation. See [Getting Started](../getting-started.md#appendix-commands) for what each command does. Profiles without DeepSeek's interactive command service still receive the Operator preamble but do not expose these commands.
+
+### Context Management
+
+The adapter participates in host-driven compaction; there is no trim port. DeepSeek freezes agent-loop requests by host contract ("listeners read it, never rewrite it"), so request-view reduction has no legal seam — the host's own tool-result pruner owns that layer. There is no omission store and no `read_omitted`/`prune` tools on this adapter (`keepRecentTurns` is parsed for compatibility but reserved). Recovery reads the durable session log directly through `operator-recall` (seq, tool-result, or checkpoint restore) and `operator-search` (keyword or regex returning `(seq N)` pointers); checkpoint pointers address the host-readable log natively, so no snapshot file exists.
+
+When session pressure or a completed run fires, the adapter requests compaction through the host's own compaction service — the same hook the host backend uses — so host policy stays authoritative. Verbatim deterministic compaction is a backend choice, not adapter code: `dsh-compaction-vcc` installs as a drop-in for `dsh-compaction-basic` at the profile layer. Compact receipts attribute the engine from the session's compaction provenance (`vcc`, `shaped`, or `unknown`), reusing Core's receipt shapes in the session context log at `~/.operator/state/context-log/<sessionID>.log`.
+
+Configuration is per project via `<project>/.operator/config.json`, using the same flat block names (no `operator` wrapper). All features default OFF; there is currently no profile-wide switch:
+
+```json
+{
+  "contextManagement": {
+    "enabled": true,
+    "ratio": 0.8,
+    "hardCapTokens": 250000,
+    "compactOnComplete": true,
+    "compactFloorTokens": 32000
+  },
+  "brainUpdates": {
+    "enabled": true
+  },
+  "preambleRefresh": {
+    "enabled": true
+  }
+}
+```
+
+Present fields merge over the profile defaults, so a project can flip one knob and inherit the rest. Invalid blocks warn once and fall back; unreadable files fall back silently. Brain-update reminders and preamble refreshes follow the same gates as the OpenCode adapter (fingerprint-era quiet, cold-cache timing) and fail closed without a Brain.
 
 ### Update
 

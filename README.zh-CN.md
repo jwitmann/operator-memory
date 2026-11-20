@@ -23,7 +23,7 @@ Operator Memory 给你的智能体一个大脑，用于记录他们的全部工�
 - **透明的记忆** —— 记忆以 Markdown 文档形式存储，你可以阅读、更新和删除。
 - **可共享的知识** —— 用 Git 跟踪文档，与团队分享知识。
 - **零基础设施** —— 无后台智能体、无 embeddings、无向量数据库、无模型配置。
-- **确定性上下文管理** —— 剪枝臃肿的工具输入输出（可按 ID 恢复）、用确定性 VCC 引擎压缩、每次操作都有会话级收据可审计。默认关闭，且需要大脑可用。 [配置方法](docs/harnesses/opencode-v2.md#context-management)。
+- **确定性上下文管理** —— 剪枝臃肿的工具输入输出（可按 ID 恢复）、用确定性 VCC 引擎压缩、每次操作都有会话级收据可审计。默认关闭，且需要大脑可用。 [配置方法](docs/harnesses/opencode-v2.md#context-management)。OpenCode 端引擎由 [VCC 参考引擎](https://github.com/jwitmann/opencode-vcc-compaction) 移植到树内；DeepSeek 端保持后端无关，当前 profile 运行 [dsh-compaction-vcc](https://github.com/tingfeng-droid/dsh-compaction-vcc) 时会按原样标注 `vcc` 检查点。
 - **缓存感知的 Preamble 刷新** —— 大脑变化时在会话中途重渲染 preamble，只选提示缓存冷却的时机，几乎零成本。 [工作原理](docs/harnesses/opencode-v2.md#preamble-refresh)。
 - **大脑更新提醒** —— 长会话中轻声提醒记录持久知识；绝不自动写作。 [工作原理](docs/harnesses/opencode-v2.md#brain-updates)。
 

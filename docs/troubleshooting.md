@@ -34,3 +34,7 @@ For on-demand diagnosis, ask the agent or run `operator-helper memory check` fro
 #### Private Files Appear In Git
 
 Run `operator-helper project status` to inspect ignore and tracking status. Project initialization ensures the exact `.operator/` entry is in the global Git ignore, but does not untrack files already committed or staged.
+
+### Context Management Is Inert
+
+Context management, preamble refresh, and brain-update nudges require an initialized Brain (`/operator:user-init` or `/operator:project-init`) and stay off without one — by design, never silently degraded. When a trigger fires while Brainless, the adapter records a refusal receipt instead of acting. Check the session context log at `~/.operator/state/context-log/<sessionID>.log`: `refusal reason=brain-unavailable` means the Brain gate, not a bug. Trim and compaction receipts in the same file show what fired, what was removed, and which engine ran. On the DeepSeek Harness there is additionally no trim by design (the host owns tool-result reduction), so only compaction receipts appear.

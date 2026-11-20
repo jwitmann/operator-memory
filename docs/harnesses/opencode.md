@@ -4,7 +4,7 @@ OpenCode V1 is frozen and receives no further releases. For current OpenCode, us
 
 ### Install
 
-Requires Node.js 20 or newer (for Operator Helper) and the [Helper](../../README.md#installation) installed.
+Legacy path, kept for existing setups: OpenCode V1 is frozen and its package is not published under the new scope, so fresh installs fail at the registry and no releases ship. Requires Node.js 20 or newer (for Operator Helper) and the [Helper](../../README.md#installation) installed.
 
 ```sh
 operator-helper install opencode-v1
@@ -16,7 +16,7 @@ Restart OpenCode after installation. Until OpenCode reloads the plugin, commands
 
 In a new conversation, ask:
 
-```
+```text
 Is Operator Memory guidance available to you? Give a brief outline of what it says.
 ```
 

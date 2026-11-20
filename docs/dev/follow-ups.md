@@ -3,11 +3,22 @@
 Performance and robustness work deliberately held out of the first
 implementation to keep it minimal and behavior-focused. Each item below was
 reviewed, judged correct-as-is, and deferred with its trade-off recorded.
-Most have since shipped; the remaining open item is marked.
+Most have since shipped; the remaining open items are marked.
 
 > Import note (2026-11-20): ported from the context-management design repo.
 > Scope strings updated to `jwitmann`. Branch names below are the historical
-> implementation branches in this repo's history.
+> implementation branches in this repo's history. Items added after the
+> import are dated.
+
+### opencode-v1 installer fails gracelessly on the unpublished package — OPEN (added 2026-11-21)
+
+`operator-helper install opencode-v1` resolves `@jwitmann/operator-opencode@latest`,
+which was never published (V1 frozen and excluded from all release
+machinery), so fresh installs die in the package manager with a bare E404.
+Direction: fail loudly in the installer with a frozen/unpublished
+explanation pointing at the V2 adapter, instead of leaking the registry
+error. Docs already mark V1 frozen and unpublished; this closes the
+behavior gap.
 
 ### No helper integration for the new option blocks (deliberately skipped)
 
