@@ -1,6 +1,6 @@
 # Observation Engine — Design Brief
 
-Status: exploration (Phase 1 evidence complete, no code). Ends in a
+Status: exploration (Phase 1 evidence + analogue survey complete, no code). Ends in a
 spec or a kill memo. The roadmap line it resolves: *"Learn durable user
 observations over time, kept separate from explicit User Instructions."*
 
@@ -95,6 +95,126 @@ corroborates; the brain annotations carry the argument.
 - (b) Wider transcript trawl second, framed as the frustration-counter pilot.
 - (a) Exact duplication quantification on standby — verdict already
   established; run only if evidence is challenged.
+
+## Analogue survey (step (c) — done 2026-11-20)
+
+Five systems, same five fields. Sources fetched, not snippeted.
+
+### ChatGPT memory (Dreaming update, June 2026)
+
+- Detection: background process synthesizes a profile from past chats, files,
+  connected apps; saved-memories list now legacy. LLM-judged throughout.
+- Control: auto-write, user corrects after the fact ("Memory updated" +
+  Manage; "Don't mention this again"; per-source correction).
+  No propose-before-write anywhere.
+- Staleness: no stated mechanism; OpenAI admits the visible summary "does not
+  include everything ChatGPT remembers" (transparency gap).
+- Precision evidence: "context rot" (Taylor, Every, Feb 2026, building on
+  Breunig's taxonomy): poisoning (hallucinated fact saved as gospel),
+  distraction (accuracy decay with context load), confusion (vibe treated as
+  binding directive — the Kanye case), clash (January vs June preferences
+  contradict; cf. 39% multi-turn drop, Microsoft/Salesforce). Plus complaint
+  threads on memory getting worse post-GPT-6 and "remembers nouns, forgets
+  reasoning."
+- Constraint fit: violates background-agents, deterministic-triggers, and
+  propose-never-auto. The failure-mode exhibit, not the model.
+- Last verified: 2026-11-20
+  (`help.openai.com/en/articles/8590148-memory-in-chatgpt`,
+  `every.to/.../why-i-turned-off-chatgpt-s-memory`).
+
+### Codex local memories (`$CODEX_HOME/memories[_v2]/`)
+
+- Detection: background pass after chat-idle, LLM extraction
+  (`memories.extract_model`) + global consolidation
+  (`memories.consolidation_model`); skips short-lived sessions, low
+  rate-limit, redacts secrets.
+- Control: OFF by default (explicit on-switch, per machine); per-chat
+  `/memories` use/contribute toggles; generated files inspectable but
+  "don't rely on editing them by hand."
+- Staleness: consolidation model merges; no user-facing queue.
+- Precision evidence: none published (too new for complaint literature).
+- Constraint fit: closest coding-agent analogue, but background extraction +
+  auto-write violate two constraints. Adopts the hierarchy we need:
+  "Keep required team guidance in `AGENTS.md`… Treat memories as a helpful
+  recall layer, not the only source."
+- Last verified: 2026-11-20 (`learn.chatgpt.com/docs/customization/memories`).
+
+### Claude Code auto memory (on by default, local sessions)
+
+- Detection: Claude writes four typed notes (`user`, `feedback`, `project`,
+  `reference`) during the session; skips anything derivable from code or
+  already in CLAUDE.md. LLM-judged.
+- Control: ON by default; `/memory` browses/toggles; files are plain
+  markdown the user can edit or delete; explicit "remember that…" also lands
+  here (not in CLAUDE.md unless asked).
+- Staleness: MEMORY.md index capped (200 lines / 25KB); host reminds Claude
+  to shorten, merge, or drop stale entries near the cap. Machine-local,
+  per-repo, excluded from transcript retention sweeps.
+- Precision evidence: no complaint literature found yet; docs carry their own
+  caution ("treated as context, not enforced configuration"; conflict →
+  arbitrary pick; `/doctor prompt-audit` for instruction files).
+- Constraint fit: the only analogue with user-editable markdown storage and
+  an explicit instructions-vs-learnings split (CLAUDE.md table). Still
+  LLM-judged detection + auto-write — our propose step would be stricter
+  than the market leader.
+- Last verified: 2026-11-20 (`code.claude.com/docs/en/memory`).
+
+### Cursor / Copilot (the split absence-and-convergence)
+
+- Cursor core: NO inferred memory — carryover is whatever is written into
+  rules / memory-bank files (explicit, agent-readable). Inference exists
+  only via third-party plugins (supermemory MCP: background save/recall).
+- Copilot: now HAS "Copilot Memory" (repo facts + personal preferences) with
+  the same subordinate posture — "Keep reviewed team requirements in
+  source-controlled project documentation or custom instructions";
+  store/recall/correct via explicit prompt.
+- Reading: the coding-agent market converges on inferred-recall-layer
+  subordinate to checked-in explicit instructions. Nobody ships
+  inferred-memory-as-authority; nobody ships propose-before-write.
+- Last verified: 2026-11-20 (`docs.github.com/en/copilot/concepts/.../copilot-memory`,
+  `code.visualstudio.com/docs/agents/run/memory`, Cursor forum/supermemory docs).
+
+### mem0 (the excluded pipeline, documented for the record)
+
+- Detection: per-message LLM fact extraction → dedup → embed (vector DB +
+  SQL + entity store). ADD-only: never silently overwrites; explicit
+  update/delete ops.
+- Control: API-level, developer-owned; no end-user propose surface.
+- Staleness: accumulation + retrieval ranking (semantic + BM25 + entity
+  fusion) instead of curation.
+- Constraint fit: violates no-embeddings, no-vector-DB, no-background-agents
+  simultaneously — the exclusion stands, but ADD-only is a useful staleness
+  datum: retrieval-time ranking as an alternative to write-time curation.
+- Last verified: 2026-11-20 (`docs.mem0.ai/core-concepts/how-it-works`).
+
+### Local corpus (9 brains scanned)
+
+- No `~/.operator` brain contains any cross-session user-learning mechanism.
+  Closest hit is VCC `/recall` (session-log retrieval) — different bucket
+  (knowledge retrieval, not observation learning). The premise holds:
+  no existing mechanism, only manual simulation (brief §1–§2).
+
+### Verdict: SURVIVE, reshaped
+
+- Kill criterion 3 (intrinsic unmitigable failure) does NOT trigger:
+  context rot is real, but every mitigation analogues use — user-visible
+  markdown, edit/delete, per-project scoping, index caps, explicit-over-
+  inferred hierarchy — fits our constraints. Our propose-never-auto is
+  stricter than anything shipped, i.e. the strongest mitigation on the market.
+- Reshape: no analogue does deterministic detection — all use LLM judgment
+  (extract/consolidation models, background synthesis). So the detector
+  cannot be "deterministic extraction"; it must be **deterministic trigger
+  - LLM-drafted proposal**: era boundary / correction-count / frustration
+  threshold fires deterministically, the proposal text is LLM-drafted, the
+  user approves. That split satisfies "deterministic triggers" (the *when*
+  is arithmetic) while conceding the *what* needs judgment.
+- Candidates after reshape: (2) fingerprint-era prompt is the natural
+  deterministic window; (3) frustration counter is the natural deterministic
+  trigger-metric; (1) correction harvest needs the trigger defined as
+  counting, not judging. (b) the transcript trawl now doubles as the
+  frustration-counter pilot AND the trigger-calibration data (what threshold
+  would have fired, how often).
+- Kill criteria 1–2 and probe questions unchanged; (b) proceeds on that basis.
 
 ## Open / probe questions
 
