@@ -1,52 +1,55 @@
-# Review — observation-engine spec v2 (this session)
+# Review — observation-engine spec v3 (this session)
 
 ## Scope — every changed file
 
-- `docs/dev/observation-engine.md` — `cf8da07`: `## Proposal-flow spec`
-  rewritten as draft v2 (supersedes v1), systematically addressing the
-  11-blocking-findings red-team: new `### 0. Detector v0.1` (14 correction
-  and 13 recall patterns in-spec, one-boolean-per-class semantics,
-  span-level paste hygiene, ≥3-message eligibility, replayed cohort:
-  584 eligible → 23-session trigger, hand-label verdict ~3–5 durable /
-  session precision ≈15–20%, 5 adversarial cases); `§1` honest machinery
-  inventory (no session-end hook/receipt exists; new vs reused enumerated);
-  `§2` drafting-input sanitization as prompt-injection boundary;
-  `§3` per-project era ownership, atomic claim/idempotent drafting,
-  crash reconciliation, caps + oldest-first deferral (per-era replay
-  impossible, stated); `§4` bounded escalation (next-interaction delivery,
-  exactly-once outbox, one-per-session, cooldown, snooze) + bounded
-  rejection (permanent vs snooze, deterministic identity, capped
-  retention); `§5` kind/scope declarations, project-bar, promotion≠
-  replacement, secrets exclusion, subordinate surface, revalidation,
-  recorded LLM limits; `§6` denominator metrics (retired copies, min
-  sample with DECIDE N); `§7` OFF retention table + selection-bias
-  statement; `§3` corpus reconciliation note (197k all-roles then vs
-  28,239 user-role now). Three DECIDEs marked (escalation keep/cut,
-  min-sample N, 15–20% precision worth drafting).
+- `docs/dev/observation-engine.md` — `c1cda41`: `## Proposal-flow spec`
+  rewritten as draft v3 (supersedes v2), closing the second-pass
+  verification (6 partial + 3 new contradictions): exact 27-regex
+  detector fence with boundary/apostrophe/wildcard semantics + shared
+  text normalization + version-bump/re-replay rule; generalized
+  shell-prompt marker with replay re-run (identical 23-session cohort);
+  §1 receipts carry version+thresholds+denominators on every receipt;
+  §2 fail-closed drafting allowlist (3 positive conditions, removed-never-
+  labeled, quote-stripping) + adversarial acceptance with expected
+  outcomes; §3 era lifecycle (per-project ownership, era-ids on all
+  records, no-move fallback at 50 eligible sessions, foreground drafting
+  trigger, claim lease session-end/4h with recovery, stable run-ids with
+  persisted-result reuse replacing the v2 equality claim);
+  snooze/consumption reconciled via standalone pending items; §4
+  rejection key `(normalized, scope)`, 200-entry cap, escalation kept
+  with numeric defaults (1 per 10 sessions, pending cap 5); §6 outcome
+  accounting (edit=accepted, snooze=undecided, rejection reasons vs
+  annoyance affordance), era attribution via recorded era-ids,
+  segmentation by version AND thresholds, N=20, 25%-over-first-20
+  pilot-gate; probe era-cadence question marked resolved; deferred list
+  shrunk to genuinely open items. One `+`-continuation and one
+  space-in-code-span lint self-catch fixed pre-commit.
 - `.dev-framework/review.md` — this artifact, rewritten fresh for this session.
 
-No product code, no tooling, no config. One `+`-continuation lint fix
-inside the new section (self-caught pre-commit).
+No product code, no tooling, no config. No headings renamed outside the
+spec section's own versioning; no anchor impact.
 
 ## Findings and resolutions
 
 - **markdownlint (docs cadence, the entire battery per scope rule):**
   `bun run lint:md` → 129 files, **0 issues**, run after the final edit
-  and before commit.
-- **Commit gate:** pre-commit per-package checks passed on `cf8da07`.
+  and before commit. Two self-caught violations fixed pre-commit
+  (MD004 `+` continuation, MD038 code-span space).
+- **Commit gate:** pre-commit per-package checks passed on `c1cda41`.
   Full root `bun run check` green on the parent tree; docs-only delta.
 - **No specialists required:** docs-only change per the scope rule
-  (the red-team that drove v2 was a design review on the new model,
-  already consumed — its 12 findings are the v2 requirements above).
-  No prior specialist scope invalidated.
-- **Content diligence (author-performed):** detector replay actually
-  re-ran (`detector.ts` + `label.ts` scratch, 23-session cohort
-  hand-read); numbers in-spec match script output; corpus reconciliation
-  verified against live SQLite counts (385,064 rows / 28,586 user-role);
-  no red-team finding left unmapped (each v2 section cites its own).
+  (the verification that drove v3 was consumed design review, already
+  folded into the v3 requirements above). No prior specialist scope
+  invalidated.
+- **Content diligence (author-performed):** replay re-ran against the
+  generalized definition (identical cohort — reported honestly);
+  every second-pass partial mapped to a v3 mechanism (frozen-vs-tunable
+  split, snooze/consumption standalone items, era-ids on records);
+  all three new contradictions addressed in-line; DECIDEs resolved as
+  marked DEFAULTs with finite values.
 
 ## Verification (final tree)
 
 - `bun run lint:md` — exit 0, "Summary: 0 issues in 0 files".
 - Changed files are exactly the two above; tree otherwise clean.
-- Committed locally as `cf8da07` (pre-commit gates passed).
+- Committed locally as `c1cda41` (pre-commit gates passed).
