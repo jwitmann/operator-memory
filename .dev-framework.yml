@@ -1,0 +1,26 @@
+profile: standard
+
+commands:
+  typecheck: "bun run typecheck"
+  test: "bun run test"
+  lint:
+    ".ts": "bun x biome lint {dir}"
+
+protect:
+  - "dist/**"
+  - "bun.lock"
+  - "node_modules/**"
+
+gate:
+  run_typecheck: true
+  run_tests: true
+  block_on_failure: true
+  require_review: true
+
+on_edit:
+  lint: true
+
+rules:
+  mode: append
+  files:
+    - .dev-framework/hardening.md

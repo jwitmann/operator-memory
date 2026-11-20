@@ -22,6 +22,8 @@ coverage/
 .env
 .env.*.local
 .cache/
+/opencode.jsonc
+/.dev-framework/runtime-status.json
 /.operator-shared/references/
 /.opencode/opencode.json
 /.opencode/tui.json

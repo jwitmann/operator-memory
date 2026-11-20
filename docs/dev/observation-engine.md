@@ -89,6 +89,13 @@ corroborates; the brain annotations carry the argument.
   pure metric first (no proposals). Cheapest, validates whether the
   problem is big enough to deserve 1 or 2.
 
+## Investigation sequence (agreed)
+
+- (c) Analogue survey first — only step that can kill or reshape candidates.
+- (b) Wider transcript trawl second, framed as the frustration-counter pilot.
+- (a) Exact duplication quantification on standby — verdict already
+  established; run only if evidence is challenged.
+
 ## Open / probe questions
 
 - What event shapes reliably signal "durable user fact" vs. one-off
