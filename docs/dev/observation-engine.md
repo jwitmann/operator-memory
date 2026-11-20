@@ -1,8 +1,8 @@
 # Observation Engine — Design Brief
 
-Status: exploration (Phase 1 evidence + analogue survey complete, no code). Ends in a
-spec or a kill memo. The roadmap line it resolves: *"Learn durable user
-observations over time, kept separate from explicit User Instructions."*
+Status: spec drafted (unapproved), no code. The roadmap line it resolves:
+*"Learn durable user observations over time, kept separate from explicit
+User Instructions."*
 
 ## Question
 
@@ -263,6 +263,70 @@ Five systems, same five fields. Sources fetched, not snippeted.
   frustration-counter pilot AND the trigger-calibration data (what threshold
   would have fired, how often).
 - Kill criteria 1–2 and probe questions unchanged; (b) proceeds on that basis.
+
+## Proposal-flow spec (draft 2026-11-20, unapproved)
+
+Decision: balanced trigger — per-session detection, era-batched proposals,
+immediate escalation on recall-frustration.
+
+### 1. Detection (deterministic, at session end)
+
+- Count strict correction hits and strict recall-frustration hits (pattern
+  sets from §4) over user-role messages of the closing session.
+- Paste hygiene: skip messages that are pasted artifacts (terminal output,
+  fenced code/docs blocks, injected context) before counting. Heuristic
+  specifics deferred to implementation; the FP classes are documented.
+- Flags: `CORRECTION_RICH` (≥3 correction hits), `RECALL_HIT` (≥2
+  recall-frustration hits). Recorded in the session receipt alongside
+  existing per-session bookkeeping. Thresholds are the calibrated values,
+  tunable per deployment.
+- Cost: arithmetic over the already-stored session log. No model calls,
+  no background work, no embeddings. Skip short sessions (Codex precedent).
+
+### 2. Proposal (judgment, at era boundary)
+
+- Input: flagged sessions since the last era move. Measured scale is
+  ~26 sessions per corpus — hand-sized, bounded drafter cost.
+- The drafter (LLM) does what counting cannot: topic identity, correction-
+  clause isolation, and dedup against the user partition (a candidate that
+  restates an existing instruction is dropped, not proposed).
+- Output: candidate list, each with evidence pointers (session, turn) so
+  the approver can verify against the incident.
+
+### 3. Approval (propose-never-auto)
+
+- One batched approval moment per era via the question tool: per candidate
+  approve / edit / reject. Rejections are recorded (rejected shape is not
+  re-proposed) — the annoyance budget is enforced by construction.
+- Escalation: a `RECALL_HIT` session triggers an immediate proposal instead
+  of waiting for the era. Measured rarity (6 sessions in the corpus) keeps
+  the interruption budget negligible; approval quality is maximal exactly
+  when the pain is fresh.
+
+### 4. Storage and authority
+
+- Promoted facts live in the user partition with their own standing,
+  separate from explicit User Instructions. On conflict, explicit
+  instructions win (the market consensus from the survey).
+- Cross-project dedup is the headline value: one copy in the user
+  partition replaces the 3–6 copy-pasted doctrines from §2.
+
+### 5. Switch and metrics
+
+- Explicit on/off switch, default OFF (house rule: observation features are
+  opt-in). Off means no counting, no proposals; the frustration counter
+  also stops (no silent measurement of a user who opted out).
+- The frustration counter keeps running while on, as the health metric.
+  Kill criteria 1–2 become acceptance thresholds: if accepted proposals
+  don't outnumber the duplicated doctrines they replace, or annoyance
+  reports (rejections + complaints) exceed approvals, the feature is
+  rethought or killed — measured, not assumed.
+
+### Deferred to implementation
+
+- Paste-detection heuristic specifics; rejection-memory shape; exact
+  question-tool surfacing; reference to the fingerprint-era machinery
+  for the era-boundary hook.
 
 ## Open / probe questions
 
