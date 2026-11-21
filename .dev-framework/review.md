@@ -1,10 +1,10 @@
-# Review — rename Claude workflow + publish diagnosis (this session)
+# Review — Claude workflow rename reverted + publish diagnosis (this session)
 
 ## Scope — every changed file
 
-Process fix plus an operator-requested rename; no product TypeScript touched:
+Process fix; the requested rename was evaluated and reverted; no product TypeScript touched:
 
-- `.github/workflows/publish-claude-code.yml` → `.github/workflows/publish-claude.yml` (rename only, zero content changes). The tag trigger stays `claude-code@v*` — tags derive from the package directory via `release.sh`, so the trigger must keep matching the tag, not the filename. No in-repo file references the workflow filename (repo-wide grep for `publish-claude`: no matches), so nothing else changes. **Operator action required:** the npmjs trusted-publisher entry for `@jwitmann/operator-claude-code` must name the new workflow filename, or its publish keeps failing auth.
+- `.github/workflows/publish-claude-code.yml` — **unchanged in the end.** Renamed to `publish-claude.yml` and reverted in the same session: the short names (`operator-claude`, `operator-opencode`) 404 on npmjs, so the suffixed package names are authoritative and the `publish-<dir>.yml` convention holds for all six. The operator's npmjs trusted-publisher entries (already created, naming `publish-claude-code.yml`) match the original filename — reverting costs nothing and avoids another settings edit. Net diff: zero.
 - `scripts/push-release.sh` — (committed `7a29f42`) operator-only release push: branch first, one push per tag, terminal-only confirmation, no `--yes` bypass.
 - `scripts/release.sh`, `docs/dev/releasing.md` — (committed) per-tag push guidance.
 - `.dev-framework/review.md` — this artifact, rewritten fresh.
