@@ -19,10 +19,17 @@ version, bumps each `package.json`, prepends a `CHANGELOG.md` section per
 package (generated from conventional commits since that package's last
 tag via `scripts/changelog.sh` — no dependencies, fully offline),
 commits once, and tags per package (`<pkg>@v<version>`) — but does
-**not** push. Then, on explicit operator instruction:
+**not** push. Then, on explicit operator instruction, push the branch
+first and each tag in its own command — one tag per push, mirroring
+the original per-package flow (`git push --atomic origin main "$tag"`).
+A combined `git push --tags` does not reliably deliver tag-push
+events to Actions, so the publish workflows may never fire:
 
 ```bash
-git push origin HEAD --tags
+git push origin HEAD
+git push origin <pkg1>@v<version1>
+git push origin <pkg2>@v<version2>
+# ... one command per tag printed by release.sh, then verify in Actions
 ```
 
 Tags do NOT follow a branch push — push them explicitly, or the next

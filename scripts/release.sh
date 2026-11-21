@@ -210,7 +210,14 @@ for tag in $tags; do
 done
 
 echo ""
-echo "Done. To publish, push the branch and tags (never pushed automatically):"
-echo "  git push origin HEAD --tags"
+echo "Done. To publish, push the branch first, then push each tag"
+echo "in its own command (one push event per tag — a combined"
+echo "'git push --tags' does not reliably deliver tag-push events"
+echo "to Actions, so the publish workflows may never fire):"
+echo "  git push origin HEAD"
+for tag in $tags; do
+  echo "  git push origin $tag"
+done
 echo ""
-echo "CI will publish each tagged package to npm automatically."
+echo "Each tag push triggers its publish workflow, which publishes"
+echo "the package to npm automatically. Verify in the Actions tab."
