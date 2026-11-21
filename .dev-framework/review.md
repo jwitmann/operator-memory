@@ -1,25 +1,25 @@
-# Review — per-tag release push guidance + recovery note (this session)
+# Review — operator-only push script (this session)
 
 ## Scope — every changed file
 
-Process fix, two files; no product TypeScript touched:
+Process fix, three files; no product TypeScript touched:
 
-- `scripts/release.sh` — (committed `8c4ade7`; unchanged this round) final message prints `git push origin HEAD` plus one `git push origin <tag>` per tag instead of `git push origin HEAD --tags`; "CI will publish" overclaim removed.
-- `docs/dev/releasing.md` — Routine-release push step updated to match (branch first, one command per tag, original one-tag-per-push invariant cited); **new this round:** `If no publish workflow fired` recovery subsection (delete the remote tag first — re-pushing an unchanged tag fires no event — then push it again, one tag at a time, verifying each in Actions).
+- `scripts/push-release.sh` — **new.** Operator-only release push: branch first, then one push per tag so every tag-push event reaches Actions. Defaults to local `<pkg>@v*` tags pointing at HEAD (the release just made); explicit tags override; `--repush` deletes each tag from origin first (re-pushing unchanged fires no event). Hardened against agent execution: confirmation requires an interactive terminal (`[ ! -t 0 ]` refuses piped stdin), and there is intentionally no `--yes` bypass. Header, `--help`, and docs all state agents must never run it.
+- `scripts/release.sh` — final message now points at `./scripts/push-release.sh` as the single publish path instead of printing per-tag commands (transparent but bypassable). The flawed `git push origin HEAD --tags` instruction is gone from all repo files (repo-wide grep for `HEAD --tags` / `CI will publish`: no matches).
+- `docs/dev/releasing.md` — Routine-release section uses the script (normal + `--repush` modes) with the one-tag-per-push rationale and the original `git push --atomic origin main "$tag"` invariant cited; recovery subsection uses `--repush` and states terminal-only use.
 - `.dev-framework/review.md` — this artifact, rewritten fresh.
 
 ## Findings and resolutions
 
-- **style-enforcer (this session): clean.** `release.sh` lines match the file's existing echo-block style; the new loop mirrors line 208. `releasing.md` keeps H2/H3 structure, backticked commands, no tables or diagrams. `bash -n scripts/release.sh` — exit 0. Repo gate (`scripts/check.sh`) has no shell-lint stage, so syntax + style conformance is the full style cadence for the script.
-- **pattern-guardian (this session): no drift.** The new `for tag in $tags` loop mirrors the existing tagging loop at line 208 exactly. Docs change cites the original aerovato per-package push invariant rather than inventing a new mechanism.
-- **code-reviewer (this session): no blocking issues.** Unquoted `$tags` is intentional (word-splitting iteration, as in line 208); tags are `pkg@vX.Y.Z`, never contain spaces. Trailing space in the accumulator yields no empty iteration (verified: 6 tags in, 6 lines out). Loop variable `tag` reassigned after the earlier loop — no leakage. "CI will publish" overclaim removed from both files.
-- **test-grounder (this session): grounded by simulation, not full run.** A full `./scripts/release.sh` run would commit and tag — out of scope as a side effect, so not executed. Instead: (1) `bash -n` passes; (2) the new output block executed against a production-format `$tags` string emitted exactly the branch line plus 6 correct per-tag lines (no empty line from the trailing space). Fail-before contrast: the old single-command text is the instruction that produced today's lost tag events; the new per-tag text recreates one push event per tag, matching the original project's proven one-tag-per-push flow.
-- **Docs cadence:** `bun run lint:md` — exit 0: 134 files, 0 issues. Covers `releasing.md` including the new recovery subsection.
+- **style-enforcer (this session): clean.** New script follows `release.sh` conventions (`set -euo pipefail`, `cd` to repo root, `case` flag parsing, `--help` via `sed`). `releasing.md` keeps structure, backticked commands, no tables/diagrams. `bash -n` passes on both scripts.
+- **pattern-guardian (this session): no drift.** Flag parsing mirrors `release.sh`; per-tag `for tag in $tags` loop mirrors its tagging loop. Docs cite the original aerovato one-tag-per-push invariant rather than inventing a mechanism.
+- **code-reviewer (this session): no blocking issues.** Default discovery (`git tag --points-at HEAD --list '*@v*'`) scopes to the just-made release — never the whole history, so `--repush` cannot mass-delete published tags. Explicit args bypass discovery for recovery. `--repush` deletes a remote tag only if `ls-remote` confirms it exists; the local tag is untouched, so the re-push recreates the event. Detached HEAD and empty-discovery both abort with actionable messages. No secret handling; push auth stays with the operator's own credentials.
+- **test-grounder (this session): safe paths executed, push path not.** Pushing is a deliberate user action and the sandbox blocks it — correctly, since this script is operator-only. Evidence: (1) `bash -n` both scripts, exit 0; (2) `--help` prints the full usage block; (3) piped-stdin run printed the plan then refused (`Refusing: run this script yourself in a terminal...`, exit 1) — the agent-execution barrier verified live; (4) no-discovery path errors correctly when no tags point at HEAD. Fail-before contrast: the removed `HEAD --tags` instruction is what lost today's six tag events.
+- **Docs cadence:** `bun run lint:md` — exit 0: 134 files, 0 issues. Covers `releasing.md`.
 - **Prior reports reused unchanged:** product-code findings from earlier rounds stand; no TypeScript edited this session, so nothing re-run and nothing invalidated. No blocking findings.
 
 ## Verification (final tree)
 
-- `bash -n scripts/release.sh` — exit 0 (SYNTAX-OK).
+- `bash -n scripts/push-release.sh && bash -n scripts/release.sh` — exit 0.
 - `bun run lint:md` — exit 0: 134 files, 0 issues.
-- `dev_framework_verify` — PASS (prior round; re-run after commit).
-- Change committed locally as `fix(release): per-tag push guidance` (`8c4ade7`); this round's recovery note to be committed as a follow-up; nothing pushed. The six `*@v*` tags from release `9063094` still await user-side delete + individual re-push to unstick publishing.
+- Change to be committed locally; nothing pushed. The six `*@v*` tags from release `9063094` still await the operator's `./scripts/push-release.sh --repush <tags...>`.

@@ -19,18 +19,20 @@ version, bumps each `package.json`, prepends a `CHANGELOG.md` section per
 package (generated from conventional commits since that package's last
 tag via `scripts/changelog.sh` — no dependencies, fully offline),
 commits once, and tags per package (`<pkg>@v<version>`) — but does
-**not** push. Then, on explicit operator instruction, push the branch
-first and each tag in its own command — one tag per push, mirroring
-the original per-package flow (`git push --atomic origin main "$tag"`).
-A combined `git push --tags` does not reliably deliver tag-push
-events to Actions, so the publish workflows may never fire:
+**not** push. Then, on explicit operator instruction, run the
+operator-only push script (agents must never run it — it requires an
+interactive terminal and has no bypass flag):
 
 ```bash
-git push origin HEAD
-git push origin <pkg1>@v<version1>
-git push origin <pkg2>@v<version2>
-# ... one command per tag printed by release.sh, then verify in Actions
+./scripts/push-release.sh                  # tags on HEAD, the release just made
+./scripts/push-release.sh --repush <tag>... # re-fire tags already on the remote
 ```
+
+It pushes the branch first, then one push per tag — mirroring the
+original per-package flow (`git push --atomic origin main "$tag"`).
+A combined `git push --tags` does not reliably deliver tag-push
+events to Actions, so the publish workflows may never fire. Verify
+each tag shows a publish run in the Actions tab.
 
 Tags do NOT follow a branch push — push them explicitly, or the next
 run's change detection breaks.
@@ -39,11 +41,11 @@ run's change detection breaks.
 
 Re-pushing an unchanged tag fires no event, so a tag that reached
 the remote without triggering its workflow must be deleted first,
-then pushed again — one tag at a time, verifying each in Actions:
+then pushed again — the `--repush` mode does exactly that, one tag
+at a time. It refuses piped stdin, so only run it yourself:
 
 ```bash
-git push --delete origin <pkg>@v<version>
-git push origin <pkg>@v<version>
+./scripts/push-release.sh --repush <pkg>@v<version>...
 ```
 
 ## Only touched packages release (no lockstep)
