@@ -17,6 +17,11 @@ Docs-only change; no product code touched:
 - **Prior product-code reports reused unchanged:** pattern-guardian-1 (two pre-existing Notes: root-literal duplication, `collectIndexFiles`/`listMarkdownFiles` fork), code-reviewer-3 (two pre-existing Notes: `.md` dotfile filter divergence, mtime-only granularity), style-enforcer-2 (clean). No product edits this session, so nothing re-run and nothing invalidated. No blocking findings in any round.
 - **No test-grounder fail-before/pass-after:** not applicable — docs-only, no behavior to ground. Product-code grounding from the prior round stands (stash → 7 failed/40; restored → 40 passed/40; root 522 passed).
 
+## Release (same session, after docs approval)
+
+- `./scripts/release.sh minor` — exit 0. Full validation inside the script: format/lint clean, `lint:md` 134 files 0 issues, `tsc` clean, 63 files / 522 tests passed.
+- Release commit `9063094` (12 files: six `package.json` bumps + six `CHANGELOG.md` sections): helper 1.10.0→1.11.0, opencode-v2 2.3.0→2.4.0, pi 1.2.0→1.3.0, codex 0.3.0→0.4.0, deepseek 0.3.0→0.4.0, claude-code 0.2.0→0.3.0. Tags `helper@v1.11.0`, `opencode-v2@v2.4.0`, `pi@v1.3.0`, `codex@v0.4.0`, `deepseek@v0.4.0`, `claude-code@v0.3.0` created locally. Nothing pushed (script never pushes; push is a user action).
+
 ## Verification (final tree)
 
 - `bun run lint:md` — exit 0: 134 files, 0 issues.
