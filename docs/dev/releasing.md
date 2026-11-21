@@ -35,6 +35,17 @@ git push origin <pkg2>@v<version2>
 Tags do NOT follow a branch push — push them explicitly, or the next
 run's change detection breaks.
 
+## If no publish workflow fired
+
+Re-pushing an unchanged tag fires no event, so a tag that reached
+the remote without triggering its workflow must be deleted first,
+then pushed again — one tag at a time, verifying each in Actions:
+
+```bash
+git push --delete origin <pkg>@v<version>
+git push origin <pkg>@v<version>
+```
+
 ## Only touched packages release (no lockstep)
 
 Each package is diffed against its own last tag
