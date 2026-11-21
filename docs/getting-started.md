@@ -19,7 +19,7 @@ Inside each partition, four kinds of content cooperate:
 - Project Indexes (`index/`) map the codebase itself so the agent can navigate source without rediscovering the layout. Catalogs map Brain knowledge; indexes map code.
 - Freeform documents are everything else — specifications, plans, research, guides — read on demand through catalog guidance.
 
-At the start of every conversation, Operator loads a short preamble: Operator Guidance (fixed framework rules), Operator Instructions merged by authority, Partition Catalogs, and the Main Project Index. Everything deeper stays on disk, read only when the task calls for it.
+At the start of every conversation, Operator loads a short preamble: Operator Guidance (fixed framework rules), Operator Instructions merged by authority, Partition Catalogs, approved User Observations, and the Main Project Index. Everything deeper stays on disk, read only when the task calls for it.
 
 **The brain is NOT a summary of the code.** The brain is designed to store context, contracts, requirements, conventions, decisions, and other meta-information that the code cannot own.
 
@@ -27,7 +27,7 @@ For the full architecture, see [Architecture](architecture.md).
 
 ### Get Started
 
-1. Run `/operator:user-init` in a new conversation to establish user-global working instructions. This is a one-time step. Rerun anytime to update user instructions.
+1. Run `/operator:user-init` in a new conversation to establish user-global working instructions. This is a one-time step. Rerun anytime to update user instructions. Over time, agents may occasionally propose durable observations about how you work; approved entries are kept in `~/.operator/user/observations.md`.
 2. Run `/operator:project-init` in a new conversation to initialize the private partition, configure sharing rules, and index the repository. Project setup runs once per project.
 3. Start a new conversation and give the agent ordinary development work.
 

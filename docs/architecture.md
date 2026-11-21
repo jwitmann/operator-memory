@@ -21,10 +21,17 @@ The preamble is the lightweight entrypoint. At the start of every conversation, 
 - Operator Guidance — fixed framework rules: the memory-aware workflow, partition placement and authority, catalog and index semantics.
 - Operator Instructions — standing rules from each partition's `operator.md`, merged by authority.
 - Partition Catalogs — each partition's `catalog.md`, a compact map of its Brain documents.
+- User Observations — approved notes about how you work, loaded as subordinate context that never overrides instructions, catalogs, or index guidance.
 - The main Project Index — `index/index.md`, the repository's structural map.
 - Warnings and diagnostics — malformed or missing context flagged for repair.
 
 Everything else — specifications, plans, research, guides — stays on disk and is read deliberately when the task calls for it. Loading is deterministic: the same session start produces the same orientation, every time.
+
+### User Observations
+
+The User partition may hold an `observations.md` file: durable notes about how you work, each proposed by an agent in conversation and kept only with your approval. It loads in the preamble after the User Catalog. When the file is absent, nothing loads.
+
+Agents propose new entries rarely — at most one per session, and only for genuine patterns such as repeated corrections, an explicit "remember that", or manual work worth automating. A declined proposal is simply dropped and never re-offered.
 
 ### Preamble Versions
 
