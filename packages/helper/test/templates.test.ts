@@ -11,6 +11,13 @@ test("reads an embedded template by its enum path", () => {
   expect(readTemplate(TemplatePath.ProjectIndex)).not.toContain("## Guidelines");
 });
 
+test("user operator seed carries the observation-proposal rubric", () => {
+  const seed = readTemplate(TemplatePath.UserOperator);
+  expect(seed).toContain("Proposing lasting improvements (observation flow)");
+  expect(seed).toContain("observations.md");
+  expect(seed).toContain("at most one observation proposal per session");
+});
+
 test("setup guides allow optional topics to remain unfilled", () => {
   const userGuide = readTemplate(TemplatePath.UserSetup);
   expect(userGuide).toContain("`Skip` or `Leave unfilled`");

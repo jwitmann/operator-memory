@@ -1,9 +1,10 @@
 # Observation Engine — Design Brief
 
-Status: spec drafted (v4 conversational proposing = next build, unapproved;
-v3 full automation parked), no code. The roadmap line it resolves:
-*"Learn durable user observations over time, kept separate from explicit
-User Instructions."*
+Status: v4 conversational proposing implemented (2026-11-21: Core loads
+`observations.md` as subordinate preamble context with fingerprint coverage;
+user-init template carries the proposal rubric); v3 full automation parked.
+Roadmap line resolved: *"Learn durable user observations over time, kept
+separate from explicit User Instructions."*
 
 ## Question
 
@@ -283,7 +284,7 @@ Five systems, same five fields. Sources fetched, not snippeted.
   would have fired, how often).
 - Kill criteria 1–2 and probe questions unchanged; (b) proceeds on that basis.
 
-## Proposal-flow spec (draft v4 2026-11-20, unapproved; NEXT BUILD)
+## Proposal-flow spec (v4 2026-11-20, implemented 2026-11-21)
 
 v4 replaces automation with conversation. The agent, in-session and in
 possession of full live context, offers; the user agrees on the spot.

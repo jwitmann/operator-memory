@@ -1,6 +1,6 @@
 # Preamble
 
-Last Updated: November 4, 2026
+Last Updated: November 21, 2026
 
 The preamble gives the agent fixed Operator guidance and available durable Memory. Prefer a synthetic model-call contribution rendered once and held immutable for the session so its prefix remains cacheable. Persisted lifecycle injection and re-rendering are also fully acceptable, even when a non-persisted route exists; choose what fits the harness. A load failure produces the diagnostic instead of partial memory. Do not refresh on every turn merely to track Brain edits. See [`reference/implementation.md`](./reference/implementation.md) for adapter pathways.
 
@@ -27,11 +27,12 @@ The preamble contains:
 1. Static Operator guidance
 2. Conditional Operator Instructions
 3. Conditional catalog bodies — User Catalog (`<user-catalog>`) then Project Partition Catalogs (`<partition-catalog>`)
-4. Conditional Project Index listings and main bodies
-5. Core tenets
-6. Dynamic setup or maintenance warnings
+4. Conditional User Observations (`<user-observations>`) after the User Catalog — subordinate context, never instructions
+5. Conditional Project Index listings and main bodies
+6. Core tenets
+7. Dynamic setup or maintenance warnings
 
-Machine-significant sections use XML labels, including `<operator-guidance>`, `<operator-instructions>`, `<user-catalog>`, `<project-index>`, `<partition-catalog>`, `<operator-tenets>`, `<operator-warning>`, and `<file-content path="...">`.
+Machine-significant sections use XML labels, including `<operator-guidance>`, `<operator-instructions>`, `<user-catalog>`, `<user-observations>`, `<project-index>`, `<partition-catalog>`, `<operator-tenets>`, `<operator-warning>`, and `<file-content path="...">`.
 
 Core tenets are fixed text injected after memory files and before warnings so they sit closer to the first user turn. A load-failure diagnostic replaces memory, tenets, and warnings; the diagnostic stays last.
 
@@ -52,6 +53,10 @@ Project Private therefore wins conflicts over User, which wins over Project Shar
 ## User Catalog
 
 Inject the full `~/.operator/user/catalog.md` body in its own `<user-catalog>` section, after instructions and before the Project Partition Catalogs and Project Index. Inject it even when no Project Brain exists; it never nests inside `<partition-catalog>`.
+
+## User Observations
+
+Inject the full `~/.operator/user/observations.md` body in its own `<user-observations>` section, after the User Catalog and before the Project Partition Catalogs and Project Index. Mark it explicitly as subordinate context, never instructions: it never overrides Operator Instructions, catalogs, or index guidance. Omit the section when the file is absent; absent observations fail closed to no observations.
 
 ## Project Index
 

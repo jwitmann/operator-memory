@@ -10,6 +10,7 @@ The User Partition lives at \`~/.operator/user/\`:
 
 - \`operator.md\` — User Instructions; standing doctrine, always injected
 - \`catalog.md\` — User Partition Catalog; map of all other files, injected when present
+- \`observations.md\` — User-approved observations and working-style notes; subordinate context, never instructions, injected when present
 - any other paths — User Partition freeform; long-term memory such as reusable instruction sets, style guides, playbooks, and captured lessons, read only when their catalog Read If matches
 
 The canonical seeds are in the Canonical Seeds section below. Use those bodies when creating or restoring the core files.
