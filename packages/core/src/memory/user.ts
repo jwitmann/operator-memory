@@ -12,6 +12,7 @@ export type UserPartitionSnapshot = {
   readonly exists: boolean;
   readonly operatorInstructions: string | null;
   readonly catalog: string | null;
+  readonly observations: string | null;
 };
 
 export type UserPartitionStatusSnapshot = {
@@ -42,7 +43,11 @@ export async function loadUserPartition(
         : directory;
     }
 
-    for (const path of [join(root, "operator.md"), join(root, "catalog.md")]) {
+    for (const path of [
+      join(root, "operator.md"),
+      join(root, "catalog.md"),
+      join(root, "observations.md"),
+    ]) {
       const file = await checkOptionalReadableFile(path);
       if (!file.ok) {
         return file;
@@ -59,19 +64,28 @@ export async function loadUserPartition(
   if (!catalog.ok) {
     return catalog;
   }
-  if (operatorInstructions.value !== null || catalog.value !== null) {
+  const observations = await readOptionalContent(join(root, "observations.md"));
+  if (!observations.ok) {
+    return observations;
+  }
+  if (
+    operatorInstructions.value !== null
+    || catalog.value !== null
+    || observations.value !== null
+  ) {
     return success({
       exists: true,
       operatorInstructions: operatorInstructions.value,
       catalog: catalog.value,
+      observations: observations.value,
     });
   }
 
   const directory = await readDirectory(root);
   if (!directory.ok) {
     return hasNodeErrorCode(directory.error.cause, "ENOENT")
-      ? success({ exists: false, operatorInstructions: null, catalog: null })
+      ? success({ exists: false, operatorInstructions: null, catalog: null, observations: null })
       : directory;
   }
-  return success({ exists: true, operatorInstructions: null, catalog: null });
+  return success({ exists: true, operatorInstructions: null, catalog: null, observations: null });
 }

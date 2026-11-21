@@ -31,7 +31,7 @@ test("loads an empty memory snapshot when all optional paths are absent", async 
 
   expect(result).toEqual({
     shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
-    user: { exists: false, operatorInstructions: null, catalog: null },
+    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
     private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
   });
 
@@ -213,6 +213,47 @@ test("fails the user status when catalog.md is obstructed", async () => {
   expect(status.user.ok).toBe(false);
   if (!status.user.ok) {
     expect(status.user.error.path).toBe(join(HOME_DIRECTORY, ".operator", "user", "catalog.md"));
+  }
+});
+
+test("loads user observations alongside instructions and catalog", async () => {
+  await writeDocument(
+    join(HOME_DIRECTORY, ".operator", "user", "operator.md"),
+    "user instructions",
+  );
+  await writeDocument(join(HOME_DIRECTORY, ".operator", "user", "catalog.md"), "user catalog");
+  await writeDocument(
+    join(HOME_DIRECTORY, ".operator", "user", "observations.md"),
+    "- [2026-11-20] (scope:user) text",
+  );
+
+  const result = unwrap(await loadMemorySnapshot(PROJECT_DIRECTORY, HOME_DIRECTORY, true));
+
+  expect(result.user.exists).toBe(true);
+  expect(result.user.observations).toBe("- [2026-11-20] (scope:user) text");
+});
+
+test("absent observations load as null without failing", async () => {
+  await writeDocument(
+    join(HOME_DIRECTORY, ".operator", "user", "operator.md"),
+    "user instructions",
+  );
+
+  const result = unwrap(await loadMemorySnapshot(PROJECT_DIRECTORY, HOME_DIRECTORY, true));
+
+  expect(result.user.exists).toBe(true);
+  expect(result.user.observations).toBeNull();
+});
+
+test("returns a user error when observations.md is obstructed", async () => {
+  const userRoot = join(HOME_DIRECTORY, ".operator", "user");
+  fs.mkdirSync(join(userRoot, "observations.md"), { recursive: true });
+
+  const result = await loadMemorySnapshot(PROJECT_DIRECTORY, HOME_DIRECTORY, true);
+
+  expect(result.user.ok).toBe(false);
+  if (!result.user.ok) {
+    expect(result.user.error.path).toBe(join(userRoot, "observations.md"));
   }
 });
 

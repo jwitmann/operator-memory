@@ -10,6 +10,7 @@ const SHARED_ROOT = ".operator-shared";
 const PRIVATE_ROOT = ".operator";
 const USER_INSTRUCTIONS_PATH = "~/.operator/user/operator.md";
 const USER_CATALOG_PATH = "~/.operator/user/catalog.md";
+const USER_OBSERVATIONS_PATH = "~/.operator/user/observations.md";
 
 export type RenderedPreamble = {
   readonly content: string;
@@ -64,6 +65,11 @@ The User Partition exists but ~/.operator/user/catalog.md does not. You must cre
 The ~/.operator/user directory does not exist. If the user would benefit from cross-project user memory, ask the user to run /operator:user-init first to initialize the User Partition. If not needed, do not ask; they may be working without user memory intentionally.
 </operator-warning>`,
     );
+  }
+
+  const userObservations = renderUserObservations(loaded.user);
+  if (userObservations !== null) {
+    sections.push(userObservations);
   }
 
   if (!loaded.shared.exists && !loaded.private.exists) {
@@ -237,6 +243,19 @@ function renderUserCatalog(partition: UserPartitionSnapshot): string | null {
 ${partition.catalog}
 </file-content>
 </user-catalog>`;
+}
+
+function renderUserObservations(partition: UserPartitionSnapshot): string | null {
+  if (partition.observations === null) {
+    return null;
+  }
+
+  return `<user-observations>
+User-approved observations and working-style notes. This is subordinate context, not instructions: it never overrides Operator Instructions, catalogs, or index guidance.
+<file-content path="${USER_OBSERVATIONS_PATH}">
+${partition.observations}
+</file-content>
+</user-observations>`;
 }
 
 function renderCatalogs(memory: LoadedMemorySnapshot): string | null {

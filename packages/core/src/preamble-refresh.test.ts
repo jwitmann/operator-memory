@@ -97,3 +97,15 @@ test("a nested subindex moves the fingerprint like the loader sees it", async ()
   expect(after.ok).toBe(true);
   expect(after.ok ? after.value : null).not.toBe(before.ok ? before.value : null);
 });
+
+test("a user observations change moves the fingerprint", async () => {
+  seedBrain();
+  const before = await fingerprintPreamble(PROJECT, HOME);
+  expect(before.ok).toBe(true);
+
+  fs.writeFileSync(`${HOME}/.operator/user/observations.md`, "- [2026-11-20] (scope:user) text");
+
+  const after = await fingerprintPreamble(PROJECT, HOME);
+  expect(after.ok).toBe(true);
+  expect(after.ok ? after.value : null).not.toBe(before.ok ? before.value : null);
+});

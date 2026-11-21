@@ -31,7 +31,7 @@ test.each(["1.1", "2.0"] as const)("renders matching guidance and tenets for v%s
   vi.mocked(selectPreambleVersion).mockReturnValue(version);
   const content = renderPreamble({
     shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
-    user: { exists: false, operatorInstructions: null, catalog: null },
+    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
     private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
   });
   const prompt = version === "2.0" ? preambleV2 : { PREAMBLE_PROMPT, PREAMBLE_TENETS };
@@ -45,7 +45,7 @@ test.each(["1.1", "2.0"] as const)("renders matching guidance and tenets for v%s
 test("renders fixed guidance and the missing-catalog warning for empty memory", () => {
   const memory: LoadedMemorySnapshot = {
     shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
-    user: { exists: false, operatorInstructions: null, catalog: null },
+    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
     private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
   };
 
@@ -81,7 +81,12 @@ test("renders conditional memory in authority and partition order", () => {
         },
       ],
     },
-    user: { exists: true, operatorInstructions: "user instructions", catalog: "user catalog" },
+    user: {
+      exists: true,
+      operatorInstructions: "user instructions",
+      catalog: "user catalog",
+      observations: null,
+    },
     private: {
       exists: true,
       operatorInstructions: "private instructions",
@@ -156,7 +161,7 @@ ${PREAMBLE_TENETS}`);
 test("renders identical bytes for the same snapshot", () => {
   const memory: LoadedMemorySnapshot = {
     shared: { exists: true, operatorInstructions: null, catalog: "catalog", indexes: [] },
-    user: { exists: false, operatorInstructions: null, catalog: null },
+    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
     private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
   };
 
@@ -187,7 +192,7 @@ test("renders index listing connectors and metadata for every valid index", () =
         },
       ],
     },
-    user: { exists: false, operatorInstructions: null, catalog: null },
+    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
     private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
   };
 
@@ -213,7 +218,7 @@ main index
 test("renders an index listing without a main index body", () => {
   const memory: LoadedMemorySnapshot = {
     shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
-    user: { exists: false, operatorInstructions: null, catalog: null },
+    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
     private: {
       exists: true,
       operatorInstructions: null,
@@ -244,7 +249,12 @@ test("renders an index listing without a main index body", () => {
 test("renders only available instructions and catalogs", () => {
   const memory: LoadedMemorySnapshot = {
     shared: { exists: true, operatorInstructions: null, catalog: "shared catalog", indexes: [] },
-    user: { exists: true, operatorInstructions: "user instructions", catalog: "user catalog" },
+    user: {
+      exists: true,
+      operatorInstructions: "user instructions",
+      catalog: "user catalog",
+      observations: null,
+    },
     private: {
       exists: true,
       operatorInstructions: "private instructions",
@@ -268,7 +278,7 @@ test("renders only available instructions and catalogs", () => {
 test("renders component warnings for an existing empty project partition", () => {
   const memory: LoadedMemorySnapshot = {
     shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
-    user: { exists: false, operatorInstructions: null, catalog: null },
+    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
     private: { exists: true, operatorInstructions: null, catalog: null, indexes: [] },
   };
 
@@ -283,7 +293,7 @@ test("renders component warnings for an existing empty project partition", () =>
 test("injects the user catalog without a project brain", () => {
   const memory: LoadedMemorySnapshot = {
     shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
-    user: { exists: true, operatorInstructions: null, catalog: "user catalog" },
+    user: { exists: true, operatorInstructions: null, catalog: "user catalog", observations: null },
     private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
   };
 
@@ -298,7 +308,12 @@ test("injects the user catalog without a project brain", () => {
 test("warns about a missing user catalog independently of project catalogs", () => {
   const memory: LoadedMemorySnapshot = {
     shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
-    user: { exists: true, operatorInstructions: "user instructions", catalog: null },
+    user: {
+      exists: true,
+      operatorInstructions: "user instructions",
+      catalog: null,
+      observations: null,
+    },
     private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
   };
 
@@ -356,6 +371,50 @@ type LoadedMemorySnapshot = {
   readonly private: ProjectPartitionSnapshot;
 };
 
+test("renders subordinate user observations after the user catalog", () => {
+  const memory: LoadedMemorySnapshot = {
+    shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+    user: {
+      exists: true,
+      operatorInstructions: "user instructions",
+      catalog: "user catalog",
+      observations: "- [2026-11-20] (scope:user) text",
+    },
+    private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+  };
+
+  const preamble = renderPreamble(memory);
+
+  expect(preamble).toContain("<user-observations>");
+  expect(preamble).toContain('<file-content path="~/.operator/user/observations.md">');
+  expect(preamble).toContain("- [2026-11-20] (scope:user) text");
+  expect(preamble).toContain("subordinate context, not instructions");
+  expect(preamble.indexOf("<user-catalog>")).toBeLessThan(preamble.indexOf("<user-observations>"));
+  const instructions = preamble.slice(
+    preamble.indexOf("<operator-instructions>"),
+    preamble.indexOf("</operator-instructions>"),
+  );
+  expect(instructions).not.toContain("- [2026-11-20] (scope:user) text");
+});
+
+test("omits the observations block when absent and keeps instructions clean", () => {
+  const memory: LoadedMemorySnapshot = {
+    shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+    user: {
+      exists: true,
+      operatorInstructions: "user instructions",
+      catalog: "user catalog",
+      observations: null,
+    },
+    private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+  };
+
+  const preamble = renderPreamble(memory);
+
+  expect(preamble).not.toContain("<user-observations>");
+  expect(preamble).not.toContain("observations.md");
+});
+
 function renderPreamble(memory: LoadedMemorySnapshot): string {
   const snapshot: MemorySnapshot = {
     shared: success(memory.shared),
@@ -368,7 +427,7 @@ function renderPreamble(memory: LoadedMemorySnapshot): string {
 test("reports initialization separately from load success", () => {
   const absent: MemorySnapshot = {
     shared: success({ exists: false, operatorInstructions: null, catalog: null, indexes: [] }),
-    user: success({ exists: false, operatorInstructions: null, catalog: null }),
+    user: success({ exists: false, operatorInstructions: null, catalog: null, observations: null }),
     private: success({ exists: false, operatorInstructions: null, catalog: null, indexes: [] }),
   };
   const empty = renderMemoryPreamble(absent);
@@ -377,7 +436,7 @@ test("reports initialization separately from load success", () => {
 
   const userOnly: MemorySnapshot = {
     ...absent,
-    user: success({ exists: true, operatorInstructions: null, catalog: null }),
+    user: success({ exists: true, operatorInstructions: null, catalog: null, observations: null }),
   };
   const initialized = renderMemoryPreamble(userOnly);
   expect(initialized.loaded).toBe(true);

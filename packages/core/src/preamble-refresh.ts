@@ -23,8 +23,8 @@ export type FingerprintError = {
 export const REFRESH_FLOOR_TOKENS = 4000;
 
 // Every disk file the preamble renders: per-partition operator.md
-// instructions and catalog.md maps (shared, user, private) plus every
-// index/*.md at any depth (shared and private listings use paths plus
+// instructions and catalog.md maps (shared, user, private), plus the user
+// observations.md subordinate surface, plus every index/*.md at any depth (shared and private listings use paths plus
 // frontmatter; only the main index.md inlines full content). Static
 // framework guidance and tenets are code constants. Canonical form:
 // sorted `path:mtimeMs` lines, `path:missing` for an absent index root.
@@ -38,7 +38,7 @@ export async function fingerprintPreamble(
   const privateRoot = join(projectDirectory, ".operator");
   const userRoot = join(homeDirectory, ".operator", "user");
 
-  for (const root of [sharedRoot, privateRoot, userRoot]) {
+  for (const root of [sharedRoot, privateRoot]) {
     for (const file of ["operator.md", "catalog.md"]) {
       const entry = await fingerprintFile(join(root, file));
       if (!entry.ok) {
@@ -46,6 +46,14 @@ export async function fingerprintPreamble(
       }
       entries.push(entry.value);
     }
+  }
+
+  for (const file of ["operator.md", "catalog.md", "observations.md"]) {
+    const entry = await fingerprintFile(join(userRoot, file));
+    if (!entry.ok) {
+      return entry;
+    }
+    entries.push(entry.value);
   }
 
   for (const root of [sharedRoot, privateRoot]) {
