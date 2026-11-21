@@ -1,12 +1,12 @@
-# Review — operator-only push script (this session)
+# Review — rename Claude workflow + publish diagnosis (this session)
 
 ## Scope — every changed file
 
-Process fix, three files; no product TypeScript touched:
+Process fix plus an operator-requested rename; no product TypeScript touched:
 
-- `scripts/push-release.sh` — **new.** Operator-only release push: branch first, then one push per tag so every tag-push event reaches Actions. Defaults to local `<pkg>@v*` tags pointing at HEAD (the release just made); explicit tags override; `--repush` deletes each tag from origin first (re-pushing unchanged fires no event). Hardened against agent execution: confirmation requires an interactive terminal (`[ ! -t 0 ]` refuses piped stdin), and there is intentionally no `--yes` bypass. Header, `--help`, and docs all state agents must never run it.
-- `scripts/release.sh` — final message now points at `./scripts/push-release.sh` as the single publish path instead of printing per-tag commands (transparent but bypassable). The flawed `git push origin HEAD --tags` instruction is gone from all repo files (repo-wide grep for `HEAD --tags` / `CI will publish`: no matches).
-- `docs/dev/releasing.md` — Routine-release section uses the script (normal + `--repush` modes) with the one-tag-per-push rationale and the original `git push --atomic origin main "$tag"` invariant cited; recovery subsection uses `--repush` and states terminal-only use.
+- `.github/workflows/publish-claude-code.yml` → `.github/workflows/publish-claude.yml` (rename only, zero content changes). The tag trigger stays `claude-code@v*` — tags derive from the package directory via `release.sh`, so the trigger must keep matching the tag, not the filename. No in-repo file references the workflow filename (repo-wide grep for `publish-claude`: no matches), so nothing else changes. **Operator action required:** the npmjs trusted-publisher entry for `@jwitmann/operator-claude-code` must name the new workflow filename, or its publish keeps failing auth.
+- `scripts/push-release.sh` — (committed `7a29f42`) operator-only release push: branch first, one push per tag, terminal-only confirmation, no `--yes` bypass.
+- `scripts/release.sh`, `docs/dev/releasing.md` — (committed) per-tag push guidance.
 - `.dev-framework/review.md` — this artifact, rewritten fresh.
 
 ## Findings and resolutions
