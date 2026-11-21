@@ -18,8 +18,25 @@ Process fix, three files; no product TypeScript touched:
 - **Docs cadence:** `bun run lint:md` — exit 0: 134 files, 0 issues. Covers `releasing.md`.
 - **Prior reports reused unchanged:** product-code findings from earlier rounds stand; no TypeScript edited this session, so nothing re-run and nothing invalidated. No blocking findings.
 
+## Publish diagnosis (recorded after the fact — operator findings, no repo change)
+
+- All six tag-push events eventually fired and all six publish workflows
+  ran green through build/pack, then failed identically at `npm publish`
+  with `ENEEDAUTH` — systematic, and re-runs failed the same way.
+- Root cause: **none of the six `@jwitmann/*` packages has npm trusted
+  publishing configured**, so the OIDC path never authenticates. The Nov 20
+  "CI published" reading was wrong: those versions went up manually and CI
+  only skipped its publish step (version already present) plus created the
+  GitHub releases — which is why the workflows looked green.
+- Fix is account-side, not repo-side: on npmjs.com, add a trusted
+  publisher to each package (repo `jwitmann/operator-memory` + its
+  `publish-<pkg>.yml` workflow), then re-run the six failed jobs. No
+  workflow or script change required; `scripts/push-release.sh` and
+  `docs/dev/releasing.md` already describe the correct mechanics.
+
 ## Verification (final tree)
 
 - `bash -n scripts/push-release.sh && bash -n scripts/release.sh` — exit 0.
 - `bun run lint:md` — exit 0: 134 files, 0 issues.
-- Change to be committed locally; nothing pushed. The six `*@v*` tags from release `9063094` still await the operator's `./scripts/push-release.sh --repush <tags...>`.
+- Process fix committed locally (`7a29f42`); this diagnosis note amends
+  the review only. Nothing pushed.
