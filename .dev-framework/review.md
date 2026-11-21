@@ -38,5 +38,5 @@ Real bug fix plus the patch release it enabled; no other product code touched:
 
 - `bash -n scripts/push-release.sh && bash -n scripts/release.sh` — exit 0.
 - `bun run lint:md` — exit 0: 134 files, 0 issues.
-- Process fix committed locally (`7a29f42`); this diagnosis note amends
-  the review only. Nothing pushed.
+- Process fix + `claude-code: 0.3.1` release committed locally; pushes were the operator's.
+- **Final outcome (operator-confirmed): all six packages published, all workflows green** — including `claude-code@v0.3.1` after the manifest-sync fix. Full loop proven end to end: `release.sh` → operator `push-release.sh` (branch + one push per tag) → per-tag publish workflows → npm via trusted publishing. The red `claude-code@v0.3.0` run remains as history; `0.3.1` supersedes it.
