@@ -5,6 +5,17 @@
 Generated from conventional commits (`scripts/changelog.sh`).
 Human-readable record of what shipped, per package.
 
+## [v1.3.0] - 2026-11-21
+
+### Fixes
+
+- per-consumer cascade, IFS-free parse, changelog guards ([`6b3bbbd`](https://github.com/jwitmann/operator-memory/commit/6b3bbbdc8aa0b098fa958fed932a1baf084ff86d))
+
+### Other
+
+- rename scope to @jwitmann, repoint repo URLs ([`fc3b690`](https://github.com/jwitmann/operator-memory/commit/fc3b69035f1711abbef490eadf6f79eaf87ed561))
+- port change-detected release flow ([`f2a0d46`](https://github.com/jwitmann/operator-memory/commit/f2a0d46bcdd878e1b00fdd8061e4282dac51cfc2))
+
 ## [v1.2.0] - 2026-11-04
 
 ### Other
