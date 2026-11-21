@@ -1,20 +1,20 @@
-# Review — Claude workflow rename reverted + publish diagnosis (this session)
+# Review — Claude manifest sync + 0.3.1 patch release (this session)
 
 ## Scope — every changed file
 
-Process fix; the requested rename was evaluated and reverted; no product TypeScript touched:
+Real bug fix plus the patch release it enabled; no other product code touched:
 
-- `.github/workflows/publish-claude-code.yml` — **unchanged in the end.** Renamed to `publish-claude.yml` and reverted in the same session: the short names (`operator-claude`, `operator-opencode`) 404 on npmjs, so the suffixed package names are authoritative and the `publish-<dir>.yml` convention holds for all six. The operator's npmjs trusted-publisher entries (already created, naming `publish-claude-code.yml`) match the original filename — reverting costs nothing and avoids another settings edit. Net diff: zero.
-- `scripts/push-release.sh` — (committed `7a29f42`) operator-only release push: branch first, one push per tag, terminal-only confirmation, no `--yes` bypass.
-- `scripts/release.sh`, `docs/dev/releasing.md` — (committed) per-tag push guidance.
+- `scripts/release.sh` — restored the plugin-manifest sync the `release.sh` port dropped from the old `publish-claude-code.sh`: after bumping `claude-code`, its `.claude-plugin/plugin.json` version is synced from `package.json` (same node one-liner idiom as the original), and the release commit's `git add` now includes the manifest. Without this, every future Claude release would fail the workflow's manifest-version validation, exactly like `v0.3.0` did.
+- `packages/claude-code/.claude-plugin/plugin.json` — `0.2.0` → `0.3.0` in the fix commit (the state `9063094` should have had), then → `0.3.1` by the release run itself, proving the new sync step works in the real flow.
+- Release `9b62b55` `Release claude-code: 0.3.1` + tag `claude-code@v0.3.1` (3 files: `package.json`, `plugin.json`, `CHANGELOG.md` — both version files read `0.3.1` in the tagged tree). Only `claude-code` qualified (dry-run confirmed the rest unchanged). Commit + tag local; push is the operator's via `./scripts/push-release.sh`.
 - `.dev-framework/review.md` — this artifact, rewritten fresh.
 
 ## Findings and resolutions
 
-- **style-enforcer (this session): clean.** New script follows `release.sh` conventions (`set -euo pipefail`, `cd` to repo root, `case` flag parsing, `--help` via `sed`). `releasing.md` keeps structure, backticked commands, no tables/diagrams. `bash -n` passes on both scripts.
-- **pattern-guardian (this session): no drift.** Flag parsing mirrors `release.sh`; per-tag `for tag in $tags` loop mirrors its tagging loop. Docs cite the original aerovato one-tag-per-push invariant rather than inventing a mechanism.
-- **code-reviewer (this session): no blocking issues.** Default discovery (`git tag --points-at HEAD --list '*@v*'`) scopes to the just-made release — never the whole history, so `--repush` cannot mass-delete published tags. Explicit args bypass discovery for recovery. `--repush` deletes a remote tag only if `ls-remote` confirms it exists; the local tag is untouched, so the re-push recreates the event. Detached HEAD and empty-discovery both abort with actionable messages. No secret handling; push auth stays with the operator's own credentials.
-- **test-grounder (this session): safe paths executed, push path not.** Pushing is a deliberate user action and the sandbox blocks it — correctly, since this script is operator-only. Evidence: (1) `bash -n` both scripts, exit 0; (2) `--help` prints the full usage block; (3) piped-stdin run printed the plan then refused (`Refusing: run this script yourself in a terminal...`, exit 1) — the agent-execution barrier verified live; (4) no-discovery path errors correctly when no tags point at HEAD. Fail-before contrast: the removed `HEAD --tags` instruction is what lost today's six tag events.
+- **style-enforcer (this session): clean.** Sync block reuses the retired `publish-claude-code.sh` node one-liner idiom verbatim; `bash -n` passes. Manifest edit is a version string only.
+- **pattern-guardian (this session): no drift.** Restores the original per-package-script behavior instead of inventing a new mechanism; the `git add` extension follows the existing line. Prior push-script/docs findings stand (nothing re-run, nothing invalidated).
+- **code-reviewer (this session): no blocking issues.** Sync runs only for `pkg = claude-code`, after the `npm version` bump, reading the just-written `package.json` — ordering correct. No other package has a secondary version file (repo-wide grep confirmed), so no other package needs this.
+- **test-grounder (this session): grounded in the real flow.** (1) Fail-before: `package.json 0.3.0` vs `plugin.json 0.2.0` reproduced the CI validation failure line-for-line; (2) dry-run after the tree fix qualified only `claude-code`; (3) the full `./scripts/release.sh patch` run (its own validation gate green) produced tagged tree `9b62b55` with both files at `0.3.1` (verified via `git show`) — exactly what the workflow's validation asserts. Push path not executed (operator-only, sandbox-blocked).
 - **Docs cadence:** `bun run lint:md` — exit 0: 134 files, 0 issues. Covers `releasing.md`.
 - **Prior reports reused unchanged:** product-code findings from earlier rounds stand; no TypeScript edited this session, so nothing re-run and nothing invalidated. No blocking findings.
 
