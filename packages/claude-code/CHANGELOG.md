@@ -5,6 +5,12 @@
 Generated from conventional commits (`scripts/changelog.sh`).
 Human-readable record of what shipped, per package.
 
+## [v0.3.1] - 2026-11-21
+
+### Fixes
+
+- sync Claude plugin manifest on version bumps ([`a6ae286`](https://github.com/jwitmann/operator-memory/commit/a6ae28687f6d046aca06aa1a0c09d28389274d96))
+
 ## [v0.3.0] - 2026-11-21
 
 ### Fixes
