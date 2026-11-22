@@ -5,6 +5,12 @@
 Generated from conventional commits (`scripts/changelog.sh`).
 Human-readable record of what shipped, per package.
 
+## [v0.4.1] - 2026-11-22
+
+### Fixes
+
+- sync Codex plugin manifest, Helper-first push order ([`c27f31d`](https://github.com/jwitmann/operator-memory/commit/c27f31dba68768231e069b547c57ad9db077fe26))
+
 ## [v0.4.0] - 2026-11-21
 
 ### Fixes
