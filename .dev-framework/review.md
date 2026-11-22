@@ -1,59 +1,78 @@
-# Review — session: branding leftovers (upstream attribution, V1 row, banner images)
+# Review — session: init-time auto-migration of legacy inner instructions
 
-Docs-only session (plus binary image assets), no product code. Cadence per
-the gate's docs rule: `lint:md` on the changed files, recorded below.
-Prior specialist battery reused where scope is unchanged: pattern-guardian
-and code-reviewer reported clean on the README attribution change;
-style-enforcer reported clean. No product-code delta since those reports.
+`project init` / `user init` now rename a legacy `operator.md` to
+`vcc-brain.md` in place instead of scaffolding a shadowing template next
+to it. Motivation: brains migrated at directory level only
+(`.vcc-brain/operator.md`, e.g. via the repo's migrate script before the
+inner-file rename existed, or manual `mv`) read fine through the loader
+fallback, but the next init wrote an empty `vcc-brain.md` that the loader
+then preferred — silently hiding the real instructions.
 
 ## Scope — every session-changed file
 
-- `README.md`
-  - Restored the fork attribution to the original project:
-    `aerovato/operator-memory` (name + URL). The rename codemod had
-    rewritten it to `aerovato/vcc-brain`; the upstream repo keeps its
-    old name, so this was a misattribution, not a rename target.
-    Verified no other file references the upstream under the new name
-    (`grep aerovato/` tree-wide: single hit, this line).
-  - Dropped the `OpenCode V1 (legacy)` row from the support table.
-    V1 is frozen, not installed for new users; advertising it as
-    "Supported, Legacy" was wrong. `docs/harnesses/opencode.md` stays
-    as the frozen-behavior reference.
-- `docs/assets/banner.jpeg` — headline + pill text redrawn as
-  "VCC Brain" (EB Garamond Bold / Inter Display Medium, sampled inks,
-  flat-cream fill). Tagline and cards untouched (no product name).
-- `docs/assets/getting-started.jpeg` — headline redrawn as "VCC Brain".
-  Tagline untouched.
-- `docs/assets/change-the-loop.png` — "Without/With Operator Memory"
-  headers redrawn as "Without/With VCC Brain" (Inter Regular, original
-  gray/green inks, centered on the original header centers).
+- `packages/helper/src/filesystem.ts` — new `renameFileIfTargetMissing`
+  (Effect.fn, inspectPath guards, `"moved" | "already-present" |
+  "source-missing"`, `PathKindError` on obstructed paths, `FileSystem.rename`).
+- `packages/helper/src/commands/project/init.ts`, `packages/helper/src/commands/user/init.ts` —
+  run the rename before scaffolding, report a `"Migrated"` row; on
+  migration failure the instructions template is skipped (other files
+  still scaffold) so a fresh file can never shadow real content.
+- `packages/core/src/memory/roots.ts` — `BRAIN_INSTRUCTIONS_LEGACY_FILENAME`
+  now exported (was module-private); comment records it is read + migrated,
+  never written by new code.
+- `packages/helper/src/commands/project/common.ts`, `packages/helper/src/commands/user/common.ts` —
+  re-export the legacy constant (project: import+export block; user: import
+  with a single-line re-export, aligned after review).
+- `packages/helper/test/cli.test.ts` — 4 new tests: legacy-root migration,
+  primary-root legacy-inner migration (the stranded state), user legacy
+  migration, idempotence re-run (no second "Migrated", exit 0, content kept),
+  obstruction skip (legacy path is a directory → exit 1, "Failed" row, no
+  `vcc-brain.md` created, catalog still scaffolded).
+
+## Battery
+
+- `pattern-guardian`, `style-enforcer`, `code-reviewer` in parallel over
+  the diff (read-only), plus targeted re-confirmation messages after the
+  fixes — all three report resolved, no remaining opens.
+- Test-grounder: new tests fail without the src changes (stash check:
+  legacy-inner assertions fail against primary-only reads); fail-before
+  shown for the original trap (template "Created" next to real legacy
+  content in the pre-fix flow, caught by the `not.toContain("Created  …")`
+  assertion shape during development).
 
 ## Findings and resolutions
 
-No blocking issues. The image work is pixel surgery, so verification is
-visual, not textual:
-
-- Fail-before: viewed all three originals; each baked in
-  "Operator Memory" (banner headline + pill, getting-started headline,
-  both loop headers).
-- Method: threshold-detected text bounding boxes, flat-fill with locally
-  sampled background/pill colors, redrew with system Garamond/Inter cuts
-  size-matched to the original cap heights (left-aligned headlines to
-  preserve tagline alignment; centered pill/headers on original centers).
-  JPEGs re-saved at quality 95; PNG kept lossless. Originals recoverable
-  from git (tracked files).
-- Pass-after: viewed crops of all five edited zones — Garamond headline
-  matches the original cut, pill text centered in the sage pill with no
-  residue, headers correctly colored and positioned. No seams or
-  background mismatch visible in any crop.
-- Residue sweep: no remaining `Operator Memory` baked text; `grep` for
-  `aerovato/vcc-brain` and `install opencode-v1` in docs returns nothing
-  outside CHANGELOG history.
+- Blocking: none from any specialist.
+- Should-fix 1 (style): `as const` on new returns vs bare literals in
+  `writeTextIfMissing` — dropped, neighbor spelling now uniform.
+  Re-confirmed by style-enforcer.
+- Should-fix 2 (code-reviewer): migration failure followed by template
+  write baked in the shadowing trap (fresh template + exit 1 + silent
+  self-concealment on re-run). Fixed: skip the instructions file when
+  migration fails, in both flows; covered by the obstruction test.
+  Re-confirmed by code-reviewer (including typing: filtered arrays keep
+  element types, template indexing still checks).
+- Notes (accepted): `writeTextIfMissing` TOCTOU parity (no worse than the
+  established pattern, single-process CLI); shared root untouched by init
+  (init never writes instructions there — standalone script covers it);
+  `resolveInstructionsPath` display still shows the primary name for
+  legacy-inner brains (transient state, content always correct).
 
 ## Verification
 
+- `bun run check`: 66 files / 561 tests, exit 0 (twice consecutively;
+  one transient failure mid-session did not reproduce).
 - `bun run lint:md`: 135 files, 0 issues (this artifact included).
-- Pre-commit hooks on both session commits green (per-package gates).
-- No `bun run check` impact possible: zero `.ts` changes this session
-  (README + images only); last full gate on the product tree was green
-  at 557 tests and the tree is unchanged since except these files.
+- New behavior: 3 migration tests + idempotence assertions + obstruction
+  test, all green in `cli.test.ts` (29/29 file).
+
+## Tracker artifacts (not files)
+
+The gate lists sed command strings from this session as changed paths;
+none exists on disk. Named verbatim for completeness:
+`s|Created  \.operator/vcc-brain\.md|Created   .operator/vcc-brain.md|`,
+`s|Migrated  \.vcc-brain/vcc-brain\.md|Migrated   .vcc-brain/vcc-brain.md|`,
+`s|Migrated  ~/\.operator/user/vcc-brain\.md|Migrated   ~/.operator/user/vcc-brain.md|`,
+`s|Created  /.operator/vcc-brain/.md|Created   .operator/vcc-brain.md|`,
+`s|Migrated  /.vcc-brain/vcc-brain/.md|Migrated   .vcc-brain/vcc-brain.md|`,
+`s|Migrated  ~//.operator/user/vcc-brain/.md|Migrated   ~/.operator/user/vcc-brain.md|`.

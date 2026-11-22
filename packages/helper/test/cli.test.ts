@@ -187,6 +187,62 @@ test("reuses a legacy private partition instead of shadowing it", async () => {
   expect(fs.existsSync(resolvePath("/project/.vcc-brain"))).toBe(false);
 });
 
+test("migrates a legacy operator.md instead of shadowing it on project init", async () => {
+  seed({ "/project/.operator/operator.md": "legacy instructions" });
+
+  const result = await executeCli(["project", "init"], context);
+  expect(result.exitCode).toBe(0);
+  expect(result.output).toContain("Migrated   .operator/vcc-brain.md");
+  expect(result.output).not.toContain("Created   .operator/vcc-brain.md");
+  expect(fs.existsSync(resolvePath("/project/.operator/operator.md"))).toBe(false);
+  expect(fs.readFileSync(resolvePath("/project/.operator/vcc-brain.md"), "utf8")).toBe(
+    "legacy instructions",
+  );
+
+  const repeated = await executeCli(["project", "init"], context);
+  expect(repeated.exitCode).toBe(0);
+  expect(repeated.output).not.toContain("Migrated");
+  expect(fs.readFileSync(resolvePath("/project/.operator/vcc-brain.md"), "utf8")).toBe(
+    "legacy instructions",
+  );
+});
+
+test("migrates a legacy inner file inside a primary partition", async () => {
+  seed({ "/project/.vcc-brain/operator.md": "carried instructions" });
+
+  const result = await executeCli(["project", "init"], context);
+  expect(result.exitCode).toBe(0);
+  expect(result.output).toContain("Migrated   .vcc-brain/vcc-brain.md");
+  expect(fs.existsSync(resolvePath("/project/.vcc-brain/operator.md"))).toBe(false);
+  expect(fs.readFileSync(resolvePath("/project/.vcc-brain/vcc-brain.md"), "utf8")).toBe(
+    "carried instructions",
+  );
+});
+
+test("migrates a legacy user operator.md instead of shadowing it", async () => {
+  seed({ "/home/.operator/user/operator.md": "legacy user instructions" });
+
+  const result = await executeCli(["user", "init"], context);
+  expect(result.exitCode).toBe(0);
+  expect(result.output).toContain("Migrated   ~/.operator/user/vcc-brain.md");
+  expect(fs.existsSync(resolvePath("/home/.operator/user/operator.md"))).toBe(false);
+  expect(fs.readFileSync(resolvePath("/home/.operator/user/vcc-brain.md"), "utf8")).toBe(
+    "legacy user instructions",
+  );
+});
+
+test("skips the instructions template when migration fails instead of shadowing", async () => {
+  fs.mkdirSync(resolvePath("/project/.operator/operator.md"), { recursive: true });
+
+  const result = await executeCli(["project", "init"], context);
+  expect(result.exitCode).toBe(1);
+  expect(result.output).toContain("Failed");
+  expect(fs.existsSync(resolvePath("/project/.operator/vcc-brain.md"))).toBe(false);
+  expect(fs.readFileSync(resolvePath("/project/.operator/catalog.md"), "utf8")).toBe(
+    readTemplate(TemplatePath.ProjectCatalog),
+  );
+});
+
 test("warns when both primary and legacy partitions exist", async () => {
   seed({
     "/project/.vcc-brain/vcc-brain.md": "current",

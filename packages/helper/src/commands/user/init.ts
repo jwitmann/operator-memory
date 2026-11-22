@@ -1,12 +1,22 @@
 import { Effect, Path, Result } from "effect";
 
-import { ensurePrivateDirectory, writeTextIfMissing } from "../../filesystem.ts";
+import {
+  ensurePrivateDirectory,
+  renameFileIfTargetMissing,
+  writeTextIfMissing,
+} from "../../filesystem.ts";
 import { renderTable } from "../../output.ts";
 import { readTemplate, TemplatePath } from "../../templates.ts";
 import type { CliContext } from "../../utils.ts";
 import { fileErrorMessage, fileFailure } from "../common.ts";
 import { resolveEffectivePartition } from "../project/brain-roots.ts";
-import { BRAIN_INSTRUCTIONS_FILENAME, USER_FILES, USER_LEGACY_ROOT, USER_ROOT } from "./common.ts";
+import {
+  BRAIN_INSTRUCTIONS_FILENAME,
+  BRAIN_INSTRUCTIONS_LEGACY_FILENAME,
+  USER_FILES,
+  USER_LEGACY_ROOT,
+  USER_ROOT,
+} from "./common.ts";
 
 export const userInit = Effect.fn("userInit")((context: CliContext) =>
   Effect.gen(function* () {
@@ -30,7 +40,25 @@ export const userInit = Effect.fn("userInit")((context: CliContext) =>
 
     const rows: string[][] = [];
     let failed = false;
-    for (const file of USER_FILES) {
+    const migrated = yield* renameFileIfTargetMissing(
+      pathService.join(root, BRAIN_INSTRUCTIONS_LEGACY_FILENAME),
+      pathService.join(root, BRAIN_INSTRUCTIONS_FILENAME),
+    ).pipe(Effect.result);
+    if (Result.isFailure(migrated)) {
+      failed = true;
+      rows.push([
+        "Failed",
+        `${displayRoot}/${BRAIN_INSTRUCTIONS_FILENAME}: ${fileErrorMessage(migrated.failure)}`,
+      ]);
+    } else if (migrated.success === "moved") {
+      rows.push(["Migrated", `${displayRoot}/${BRAIN_INSTRUCTIONS_FILENAME}`]);
+    }
+    // On migration failure the legacy file is still in place: skip the
+    // instructions template so a fresh file never shadows real content.
+    const filesToScaffold = Result.isFailure(migrated)
+      ? USER_FILES.filter(file => file !== BRAIN_INSTRUCTIONS_FILENAME)
+      : USER_FILES;
+    for (const file of filesToScaffold) {
       const written = yield* writeTextIfMissing(pathService.join(root, file), templates[file]).pipe(
         Effect.result,
       );

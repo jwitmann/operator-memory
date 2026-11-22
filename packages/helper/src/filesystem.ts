@@ -95,6 +95,29 @@ export const writeTextIfMissing = Effect.fn("writeTextIfMissing")(function* (
   return "created";
 });
 
+export const renameFileIfTargetMissing = Effect.fn("renameFileIfTargetMissing")(function* (
+  source: string,
+  target: string,
+) {
+  const targetKind = yield* inspectPath(target);
+  if (targetKind === "file") {
+    return "already-present";
+  }
+  if (targetKind !== "missing") {
+    return yield* new PathKindError({ path: target, expected: "file", actual: targetKind });
+  }
+  const sourceKind = yield* inspectPath(source);
+  if (sourceKind === "missing") {
+    return "source-missing";
+  }
+  if (sourceKind !== "file") {
+    return yield* new PathKindError({ path: source, expected: "file", actual: sourceKind });
+  }
+  const fileSystem = yield* FileSystem.FileSystem;
+  yield* fileSystem.rename(source, target);
+  return "moved";
+});
+
 export const listFiles = Effect.fn("listFiles")(function* (root: string) {
   const kind = yield* inspectPath(root);
   if (kind === "missing") {

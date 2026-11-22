@@ -16,7 +16,9 @@ export const USER_LEGACY_DISPLAY = `~/${USER_HOME_LEGACY_ROOT}/user`;
 
 export const PROJECT_CONFIG_FILE = "config.json";
 export const BRAIN_INSTRUCTIONS_FILENAME = "vcc-brain.md";
-const BRAIN_INSTRUCTIONS_LEGACY_FILENAME = "operator.md";
+// Legacy inner filename, kept readable by resolveInstructionsPath and
+// migrated forward by init flows. Never written by new code.
+export const BRAIN_INSTRUCTIONS_LEGACY_FILENAME = "operator.md";
 export const PROJECT_CONFIG_PRIMARY_RELATIVE_PATH = join(PROJECT_PRIVATE_ROOT, PROJECT_CONFIG_FILE);
 export const PROJECT_CONFIG_LEGACY_RELATIVE_PATH = join(
   PROJECT_PRIVATE_LEGACY_ROOT,

@@ -4,6 +4,7 @@ import {
   ensureDirectory,
   inspectPath,
   PathKindError,
+  renameFileIfTargetMissing,
   writeTextIfMissing,
 } from "../../filesystem.ts";
 import { ensureGlobalIgnore } from "../../git.ts";
@@ -14,6 +15,7 @@ import { fileErrorMessage, fileFailure } from "../common.ts";
 import { resolveEffectivePartition } from "./brain-roots.ts";
 import {
   BRAIN_INSTRUCTIONS_FILENAME,
+  BRAIN_INSTRUCTIONS_LEGACY_FILENAME,
   CORE_FILES,
   PRIVATE_LEGACY_ROOT,
   PRIVATE_ROOT,
@@ -61,7 +63,25 @@ export const projectInit = Effect.fn("projectInit")((context: CliContext) =>
     }
     const privateRows: string[][] = [];
     let failed = false;
-    for (const file of CORE_FILES) {
+    const migrated = yield* renameFileIfTargetMissing(
+      pathService.join(privateRoot, BRAIN_INSTRUCTIONS_LEGACY_FILENAME),
+      pathService.join(privateRoot, BRAIN_INSTRUCTIONS_FILENAME),
+    ).pipe(Effect.result);
+    if (Result.isFailure(migrated)) {
+      failed = true;
+      privateRows.push([
+        "Failed",
+        `${privateDisplay}/${BRAIN_INSTRUCTIONS_FILENAME}: ${fileErrorMessage(migrated.failure)}`,
+      ]);
+    } else if (migrated.success === "moved") {
+      privateRows.push(["Migrated", `${privateDisplay}/${BRAIN_INSTRUCTIONS_FILENAME}`]);
+    }
+    // On migration failure the legacy file is still in place: skip the
+    // instructions template so a fresh file never shadows real content.
+    const filesToScaffold = Result.isFailure(migrated)
+      ? CORE_FILES.filter(file => file !== BRAIN_INSTRUCTIONS_FILENAME)
+      : CORE_FILES;
+    for (const file of filesToScaffold) {
       const written = yield* writeTextIfMissing(
         pathService.join(privateRoot, file),
         templates[file],
