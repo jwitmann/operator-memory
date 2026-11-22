@@ -42,6 +42,8 @@ Once the basics are running, see [Context Management](#context-management): host
 
 ### Context Management
 
+Long sessions must compact, and a plain summarizer rewrites your rules in the process — a restated rule is a different rule. The adapter shapes every compaction it requests so the summary references Brain paths instead of restating them, with durable findings written to the Brain first.
+
 The adapter participates in host-driven compaction; there is no trim port. DeepSeek freezes agent-loop requests by host contract ("listeners read it, never rewrite it"), so request-view reduction has no legal seam — the host's own tool-result pruner owns that layer. There is no omission store and no `read_omitted`/`prune` tools on this adapter (`keepRecentTurns` is parsed for compatibility but reserved). Recovery reads the durable session log directly through `operator-recall` (seq, tool-result, or checkpoint restore) and `operator-search` (keyword or regex returning `(seq N)` pointers); checkpoint pointers address the host-readable log natively, so no snapshot file exists.
 
 When session pressure or a completed run fires, the adapter requests compaction through the host's own compaction service — the same hook the host backend uses — so host policy stays authoritative. Verbatim deterministic compaction is a backend choice, not adapter code: [dsh-compaction-vcc](https://github.com/tingfeng-droid/dsh-compaction-vcc) installs as a drop-in for `dsh-compaction-basic` at the profile layer. Compact receipts attribute the engine from the session's compaction provenance (`vcc`, `shaped`, or `unknown`), reusing Core's receipt shapes in the session context log at `~/.operator/state/context-log/<sessionID>.log`.

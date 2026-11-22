@@ -1,39 +1,41 @@
-# Review — docs-only: compaction install-phase pointers (this session)
+# Review — docs-only: benefit-first compaction framing (this session)
 
 ## Scope — every changed file
 
-- `docs/harnesses/opencode-v2.md` — Commands section gains one
-  pointer line to `#context-management` (deterministic trim and
-  compaction, off by default, enable during project setup).
-- `docs/harnesses/deepseek.md` — Commands section gains the twin
-  pointer (host-driven compaction, per-session receipts).
-- `docs/getting-started.md` — `/operator:project-init` bullet
-  gains the cross-harness offer line (deterministic context
-  management on OpenCode, DeepSeek).
+- `README.md` — Features bullet gains the survival clause
+  (summaries must reference Brain paths instead of
+  paraphrasing them).
+- `docs/harnesses/opencode-v2.md` — Context Management gains
+  a problem-first paragraph (rewritten-rules harm,
+  reference-don't-restate, write-first, verbatim omission
+  handles, prompt-only boundary).
+- `docs/harnesses/deepseek.md` — Context Management gains the
+  same shape minus trim (recovery via recall/search, unchanged
+  below).
 - `.dev-framework/review.md` — this artifact.
 
-No product code. No new sections; each addition is one to two
-sentences inside its existing section. Adapter claims checked
-against tree truth: trim+compaction on opencode-v2 only
-(`packages/opencode-v2/src`, core context engine), compaction-only
-on DeepSeek (`packages/deepseek/src`, host owns reduction), no
-context code in pi/codex/claude-code/kiro — hence the
-"on supported harnesses (OpenCode, DeepSeek)" qualifier. Already
-advertised elsewhere and untouched: README Features bullet,
-both harness Context Management sections, project-init guide
-(template `setup.ts`), troubleshooting receipts.
+No product code. Claims verified against the tree before
+writing: core `context/compaction.ts` never inlines Brain
+content (references paths, mandates write-to-Brain-first,
+"compaction is lossy; the Brain is not"); both adapters render
+that prompt (opencode-v2 directly, deepseek via
+`shaping.ts`); shaping is prompt-only per the code comment;
+post-compaction preamble re-render needs the refresh switch
+(not claimed otherwise). Pi/codex/claude-code/kiro have no
+context code — untouched. Wording is our own; the reference
+repo supplied structure (problem → example → capabilities),
+not sentences.
 
 ## Findings and resolutions
 
-- **Gap as reported, narrower than suspected.** Install-phase
-  flows (Install → Verify → Commands) never pointed at the
-  existing Context Management sections; fixed with in-flow
-  pointers rather than duplicated content.
-- **No specialists dispatched — docs-only cadence.** Per the
-  gate, docs-only changes get markdown lint instead of
-  specialists; that is the entire cadence. No product code
-  changed, so pattern/correctness/style batteries do not apply
-  to this scope.
+- **Gap as reported, confirmed.** Our framing led with
+  mechanism (token arithmetic, receipts); the harm
+  (summarizer rewrites your rules) and the benefit (rules
+  survive as pointers to verbatim source) were never stated.
+  Fixed with one clause plus two paragraphs in existing
+  sections; no new sections.
+- **No specialists dispatched — docs-only cadence.** Markdown
+  lint is the entire battery for this scope.
 
 ## Verification (final tree)
 

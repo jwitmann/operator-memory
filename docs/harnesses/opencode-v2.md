@@ -40,6 +40,8 @@ Once the basics are running, see [Context Management](#context-management): dete
 
 When enabled, Operator Memory reduces what a session resends to the model. Three deterministic rules, evaluated with token arithmetic and host-reported run outcomes — never model judgment. Compaction runs through the deterministic VCC engine, ported in-tree from the [VCC reference engine](https://github.com/jwitmann/opencode-vcc-compaction):
 
+Why shaped compaction matters: a plain summarizer rewrites what it touches, including your rules — a restated rule is a different rule, and the next session treats the paraphrase as fact. Operator's compaction instructions forbid restating Brain content: durable findings are written to the Brain before summarizing, the summary references Brain paths instead of inlining them, and trimmed tool output keeps verbatim omission handles recoverable through `operator-read_omitted`. Your rules survive long sessions as pointers to verbatim source. Shaping is prompt-only — the host still writes the summary.
+
 1. A run ends successfully and context clears `compactFloorTokens`: compact once.
 2. Estimated context passes `ratio` of the model window: trim bulky tool I/O, then compact if still over.
 3. Estimated context passes `hardCapTokens`: same as above, absolute.
