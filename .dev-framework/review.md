@@ -1,50 +1,42 @@
-# Review — README OpenCode VCC wording (this session)
+# Review — README OpenCode VCC correction (this session)
 
 ## Scope — every changed file
 
 - `README.md` — "For the best long-session results" OpenCode bullet only.
-  Rewrote the single bullet from "ships inside — enable during project-init,
-  which flips enabled on" to the non-magical contract: bundled but inert
-  until opt-in, Brain required, both enable paths (per-project
-  `<project>/.operator/config.json` scaffolded disabled with a
-  setup-interview prompt, org defaults via `operator.contextManagement` in
-  `opencode.json`, project file wins), deterministic `vcc` only when the
-  framed checkpoint is smaller with a keepID tail else host summary with
-  Brain-referencing shaping (`shaped`), verified via
-  `~/.operator/state/context-log/<sessionID>.log`
-  (`engine=vcc|shaped`, `refusal reason=brain-unavailable`).
+  Replaced the "no extra install — bundled compiler" claim with the
+  symmetric VCC requirement: install `opencode-vcc-compaction` alongside
+  the Operator plugin (`opencode plugin add opencode-vcc-compaction`).
+  Without it, compaction falls back to the in-tree reference port plus
+  the host summarizer — works but not the same (no
+  `vccRev`/`vccConfigHash` stamping, no tunables, debug-rev header).
 - `.dev-framework/review.md` — this artifact.
 
 No product code. Docs-only change.
 
 ## Findings and resolutions
 
-- **Finding 1 (user): "flips enabled on" read as automatic — misleading.**
-  Source of truth is `packages/helper/src/templates/project/setup.ts`
-  Phase 6: scaffold disabled, agent asks via question tool, writes flipped
-  flags only on opt-in, only when `Created` this run (`Preserved` skips).
-  Config precedence confirmed in `packages/opencode-v2/src/index.ts` and
-  `src/project-config.ts` (defaults < `opencode.json` < `.operator/config.json`).
-  Resolution: bullet now says "scaffolded disabled ... with a
-  setup-interview prompt to enable it", plus the `opencode.json` alternative.
-- **Finding 2 (user): bundled does not mean it magically works.**
-  Confirmed in `packages/opencode-v2/src/compaction.ts` and
-  `src/compaction-compiler.ts`: deterministic override persists verbatim
-  with no model call only when the checkpoint is smaller and a keepID tail
-  exists at/after the cut (proven live on v2.3.2); otherwise abstains and
-  shapes the host summary. Feature is off by default and Brain-gated
-  (refusal receipt, one per session). Spec:
-  `.operator-shared/specs/opencode-v2/implementation.md` (Context Management).
-  Resolution: bullet now states the off-by-default + Brain-inert + `vcc`
-  vs `shaped` conditions and the receipts log as the verification surface.
+- **Finding (user): bundled reference port is not VCC — best results
+  requires the engine on both harnesses.**
+  Verified: `packages/opencode-v2` has no dependency on
+  `opencode-vcc-compaction`; its `src/compaction-compiler.ts` ports the
+  same `COMPILER_REV` (`vcc-compiler-debug-2`) and defaults (8192/6) but
+  emits header `[vcc-compaction …]` vs standalone
+  `[opencode-vcc-compaction …]` and persists
+  `event.result = { summary, metadata: { keepID } }` only, against the
+  standalone (`/home/jerome/opencode-vcc-port/adapter.mjs`) which stamps
+  `{ keepID, vccRev, vccConfigHash }`, supports tunable options, and
+  ships as `opencode-vcc-compaction@0.4.0` (`opencode plugin add
+  opencode-vcc-compaction`, live-verified on host v2.3.2).
+  Operator without the standalone still compacts (deterministic-first,
+  shaped fallback) but that path is reference-grade, not full VCC.
+  Resolution: bullet now mirrors the DeepSeek half — install the engine
+  alongside, name the fallback cost honestly.
 - **Cadence: docs-only, no specialists.**
-  Per the gate instructions, product-code battery (style-enforcer,
-  test-grounder, code-reviewer / pattern-guardian) is out of scope;
-  markdown lint is the entire battery. No specialist re-runs needed;
-  nothing to invalidate.
+  Markdown lint is the entire battery. No specialist re-runs; nothing to
+  invalidate.
 
 ## Verification (final tree)
 
 - `bun run lint:md` — 135 files, 0 issues.
-- `git diff --stat` — `README.md` only (1 insertion, 1 deletion in effect;
-  single-bullet rewrite). Uncommitted; no push.
+- `git diff --stat` — `README.md` only (plus this artifact). Uncommitted;
+  no push.
