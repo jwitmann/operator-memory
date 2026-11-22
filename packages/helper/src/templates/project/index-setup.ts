@@ -88,7 +88,7 @@ After plan approval, flesh out each agreed index and subindex.
 - Read only what is needed for short, accurate descriptions
 - Describe generic files with \`Ditto\`
 - Omit build/cache/packages directories; document .gitignored entries only when relevant
-- List and index similar files together together in groups for efficiency
+- List and index similar files together in groups for efficiency
 - Use directory-only lines for large/low-value trees; keep index information rich and dense
 
 ### Subagent prompt
@@ -129,7 +129,7 @@ You are responsible for filling one Operator Project Index subindex. Do not edit
 - Read only what is needed for short, accurate descriptions
 - Describe generic files with \`Ditto\`
 - Omit build/cache/node_modules directories; document .gitignored entries only when relevant
-- List and index similar files together together in groups for efficiency
+- List and index similar files together in groups for efficiency
 - Use directory-only lines for large/low-value trees; keep index information rich and dense
 
 ## Done When
@@ -150,7 +150,7 @@ Main agent after subagents return:
 
 ## Phase 5: Verify
 
-- Run \`operator-helper index lint\` and fix reported issues
+- Run \`operator-helper index stamp\` to record the current tree hash in each main index, then run \`operator-helper index lint\` and fix reported issues
 - Re-read written files for broken subindex links, empty required sections, or wrong partition
 
 ## Phase 6: Confirm
@@ -161,7 +161,7 @@ Give the user a concise summary:
 - Subindexes added, removed, or kept
 - Dual split (if any)
 - Intentional depth limits or coverage gaps
-- Lint result
+- Tree hash stamped (\`stamped_at\` per main index) and lint result
 
 Ask whether anything is incorrect, missing, or improperly private/shared. Do not use the \`question\` tool for this free-response confirmation.
 

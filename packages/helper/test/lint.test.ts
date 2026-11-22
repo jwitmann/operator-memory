@@ -7,8 +7,14 @@ import { Effect, type FileSystem, Layer, type Path } from "effect";
 import { afterEach, beforeEach, expect, test } from "vitest";
 
 import { lintProjectIndexes } from "../src/lint.ts";
+import { GitError, type GitRunner } from "../src/git.ts";
+import { makeGitRunnerLayer } from "./mocks/git-runner.ts";
 
-const services = Layer.merge(NodeFileSystem.layer, NodePath.layer);
+const services = Layer.mergeAll(
+  NodeFileSystem.layer,
+  NodePath.layer,
+  makeGitRunnerLayer(() => Effect.fail(new GitError({ message: "no git" }))),
+);
 
 let project: string;
 
@@ -49,6 +55,14 @@ test("requires the literal partition name in each main title", async () => {
   expect(result.map(finding => finding.message)).toEqual([
     'Main index title should explicitly state "Shared"',
     'Main index title should explicitly state "Private"',
+    "Index was never stamped — run `index stamp` after refreshing the index.",
+    "Index was never stamped — run `index stamp` after refreshing the index.",
+  ]);
+  expect(result.map(finding => finding.path)).toEqual([
+    ".operator-shared/index/index.md",
+    ".operator/index/index.md",
+    ".operator-shared/index/index.md",
+    ".operator/index/index.md",
   ]);
 });
 
@@ -74,7 +88,59 @@ test("accepts valid partition-specific main titles", async () => {
       "---\ndescription: Private\nread_if: Always\n---\n# Private Project Index",
   });
 
-  expect(await run(lintProjectIndexes(project))).toEqual([]);
+  expect(await run(lintProjectIndexes(project))).toEqual([
+    {
+      error: false,
+      path: ".operator-shared/index/index.md",
+      message: "Index was never stamped — run `index stamp` after refreshing the index.",
+    },
+    {
+      error: false,
+      path: ".operator/index/index.md",
+      message: "Index was never stamped — run `index stamp` after refreshing the index.",
+    },
+  ]);
+});
+
+test("warns on incomplete stamps", async () => {
+  seed({
+    ".operator/index/index.md":
+      "---\ndescription: Private\nread_if: Always\ntree_hash: abc\n---\n# Private Project Index",
+  });
+
+  expect(await run(lintProjectIndexes(project))).toEqual([
+    {
+      error: false,
+      path: ".operator/index/index.md",
+      message: "Index stamp is incomplete — run `index stamp` to rewrite it.",
+    },
+  ]);
+});
+
+test("reports tree-hash failures as errors", async () => {
+  seed({
+    ".operator/index/index.md":
+      '---\ndescription: Private\nread_if: Always\ntree_hash: abc\nstamped_at: "t"\nstamped_commit: null\n---\n# Private Project Index',
+  });
+  const gitFails = Layer.mergeAll(
+    NodeFileSystem.layer,
+    NodePath.layer,
+    makeGitRunnerLayer(arguments_ =>
+      arguments_.includes("ls-files")
+        ? Effect.fail(new GitError({ message: "corrupt" }))
+        : Effect.succeed("true\n"),
+    ),
+  );
+  const result = await Effect.runPromise(
+    lintProjectIndexes(project).pipe(Effect.provide(gitFails)),
+  );
+  expect(result).toEqual([
+    {
+      error: true,
+      path: ".operator/index/index.md",
+      message: "Failed to compute tree hash: corrupt",
+    },
+  ]);
 });
 
 function seed(files: Readonly<Record<string, string>>): void {
@@ -85,6 +151,8 @@ function seed(files: Readonly<Record<string, string>>): void {
   }
 }
 
-function run<A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>): Promise<A> {
+function run<A, E>(
+  effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path | GitRunner.Service>,
+): Promise<A> {
   return Effect.runPromise(effect.pipe(Effect.provide(services)));
 }

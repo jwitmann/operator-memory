@@ -1,18 +1,17 @@
 import { Effect, Path } from "effect";
 
 import { inspectPath, PathKindError } from "../../filesystem.ts";
+import { PARTITIONS } from "../../lint.ts";
 import { renderTable } from "../../output.ts";
 import { readTemplate, TemplatePath } from "../../templates.ts";
 import type { CliContext } from "../../utils.ts";
 import { fileFailure } from "../common.ts";
 
-const PARTITION_ROOTS = [".operator-shared", ".operator"] as const;
-
 export const indexInit = Effect.fn("indexInit")((context: CliContext) =>
   Effect.gen(function* () {
     const pathService = yield* Path.Path;
     const rootKinds = yield* Effect.all(
-      PARTITION_ROOTS.map(root => inspectPath(pathService.join(context.cwd, root))),
+      PARTITIONS.map(partition => inspectPath(pathService.join(context.cwd, partition.root))),
       { concurrency: "unbounded" },
     );
     const projectExists = rootKinds.some(kind => kind === "directory");
@@ -30,8 +29,8 @@ For Agents: Run \`operator-helper project init\` and follow the guide in its out
     }
 
     const rows: string[][] = [];
-    for (const root of PARTITION_ROOTS) {
-      rows.push(yield* inspectMainIndex(context.cwd, root));
+    for (const partition of PARTITIONS) {
+      rows.push(yield* inspectMainIndex(context.cwd, partition.root));
     }
     return {
       exitCode: 0,

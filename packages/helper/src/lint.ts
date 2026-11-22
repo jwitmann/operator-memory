@@ -2,9 +2,10 @@ import { Effect, Path, Result } from "effect";
 import { parseDocument } from "yaml";
 
 import { listFiles, readText } from "./filesystem.ts";
+import { computeTreeHash, FRONTMATTER_PATTERN, readStampFields } from "./tree-hash.ts";
 import { getErrorMessage, isRecord } from "./utils.ts";
 
-const PARTITIONS = [
+export const PARTITIONS = [
   { root: ".operator-shared", title: "Shared", shared: true },
   { root: ".operator", title: "Private", shared: false },
 ] as const;
@@ -24,6 +25,7 @@ export type LintFinding = {
 export const lintProjectIndexes = Effect.fn("lintProjectIndexes")(function* (cwd: string) {
   const pathService = yield* Path.Path;
   const findings: LintFinding[] = [];
+  const mains: Array<{ displayPath: string; content: string }> = [];
 
   for (const partition of PARTITIONS) {
     const root = pathService.join(cwd, partition.root, "index");
@@ -59,10 +61,62 @@ export const lintProjectIndexes = Effect.fn("lintProjectIndexes")(function* (cwd
             message: `Main index title should explicitly state "${partition.title}"`,
           });
         }
+        mains.push({ displayPath, content });
       }
     }
   }
 
+  findings.push(...(yield* checkStaleness(cwd, mains)));
+
+  return findings;
+});
+
+const checkStaleness = Effect.fn("checkStaleness")(function* (
+  cwd: string,
+  mains: ReadonlyArray<{ displayPath: string; content: string }>,
+) {
+  const findings: LintFinding[] = [];
+  const stamped = mains.map(main => ({ ...main, stamp: readStampFields(main.content) }));
+  for (const main of stamped) {
+    if (main.stamp.treeHash === null) {
+      findings.push({
+        error: false,
+        path: main.displayPath,
+        message: "Index was never stamped — run `index stamp` after refreshing the index.",
+      });
+    } else if (!main.stamp.complete) {
+      findings.push({
+        error: false,
+        path: main.displayPath,
+        message: "Index stamp is incomplete — run `index stamp` to rewrite it.",
+      });
+    }
+  }
+  const complete = stamped.filter(main => main.stamp.complete);
+  if (complete.length === 0) {
+    return findings;
+  }
+  const hashed = yield* computeTreeHash(cwd).pipe(
+    Effect.map(tree => ({ ok: true as const, tree })),
+    Effect.catch(error => Effect.succeed({ ok: false as const, message: getErrorMessage(error) })),
+  );
+  if (!hashed.ok) {
+    findings.push({
+      error: true,
+      path: complete[0]?.displayPath ?? "index",
+      message: `Failed to compute tree hash: ${hashed.message}`,
+    });
+    return findings;
+  }
+  for (const main of complete) {
+    if (main.stamp.treeHash !== hashed.tree.hash) {
+      findings.push({
+        error: false,
+        path: main.displayPath,
+        message: `Index is stale (tree changed since ${main.stamp.stampedAt ?? "unknown date"}: ${main.stamp.treeHash?.slice(0, 12)} → ${hashed.tree.hash.slice(0, 12)}). Run 'index stamp' after refreshing the index.`,
+      });
+    }
+  }
   return findings;
 });
 
@@ -79,7 +133,7 @@ function checkMetadata(path: string, content: string): LintFinding[] {
 }
 
 function readMetadata(content: string): Metadata {
-  const source = /^---[\t ]*\r?\n([\s\S]*?)\r?\n---[\t ]*(?:\r?\n|$)/.exec(content)?.[1];
+  const source = FRONTMATTER_PATTERN.exec(content)?.[1];
   if (source === undefined) {
     return {
       description: null,

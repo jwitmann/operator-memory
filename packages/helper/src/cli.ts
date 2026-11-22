@@ -4,6 +4,7 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 import { fileFailure } from "./commands/common.ts";
 import { indexInit } from "./commands/index/init.ts";
 import { indexLint } from "./commands/index/lint.ts";
+import { indexStamp } from "./commands/index/stamp.ts";
 import { installClaudeCode } from "./commands/install/claude-code.ts";
 import { installCodex } from "./commands/install/codex.ts";
 import { installDeepSeek } from "./commands/install/deepseek.ts";
@@ -50,6 +51,7 @@ ${renderTable([
   ["project init", "Initialize project partitions and print the setup guide"],
   ["index init", "Show Project Index status and print the setup guide"],
   ["index lint", "Check Project Index structure and frontmatter"],
+  ["index stamp", "Stamp Project Index with the current tree hash"],
   ["memory check", "Check that all Operator memory can be loaded"],
   ["preamble", "Render the Operator preamble"],
 ])}`;
@@ -98,6 +100,8 @@ export function runCli(
         return yield* indexInit(context);
       case "index lint":
         return yield* indexLint(context);
+      case "index stamp":
+        return yield* indexStamp(context);
       case "memory check":
         return yield* memoryCheck(context);
       case "install codex":

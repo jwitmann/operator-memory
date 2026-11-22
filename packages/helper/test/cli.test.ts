@@ -62,6 +62,7 @@ test("routes help, version, and invalid commands", async () => {
   expect(help.output).not.toMatch(/^index status\s/m);
   expect(help.output).not.toMatch(/^user guide\s/m);
   expect(help.output).toMatch(/^index lint\s+Check Project Index structure/m);
+  expect(help.output).toMatch(/^index stamp\s+Stamp Project Index/m);
   expect(help.output).toMatch(/^memory check\s+Check that all Operator memory/m);
   expect(help.output).toMatch(/^preamble\s+Render the Operator preamble/m);
   expect(help.output).toMatch(/^install codex\s+Install or update the Codex plugin/m);
