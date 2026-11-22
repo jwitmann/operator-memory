@@ -185,6 +185,9 @@ for item in $releases; do
   if [ "$pkg" = "claude-code" ]; then
     node --input-type=module -e 'import { readFileSync, writeFileSync } from "node:fs"; const path = "packages/claude-code/.claude-plugin/plugin.json"; const manifest = JSON.parse(readFileSync(path, "utf8")); manifest.version = JSON.parse(readFileSync("packages/claude-code/package.json", "utf8")).version; writeFileSync(path, `${JSON.stringify(manifest, null, 2)}\n`);'
   fi
+  if [ "$pkg" = "codex" ]; then
+    node --input-type=module -e 'import { readFileSync, writeFileSync } from "node:fs"; const path = "packages/codex/.codex-plugin/plugin.json"; const manifest = JSON.parse(readFileSync(path, "utf8")); manifest.version = JSON.parse(readFileSync("packages/codex/package.json", "utf8")).version; writeFileSync(path, `${JSON.stringify(manifest, null, 2)}\n`);'
+  fi
   note=""
   case "$item" in
     *"core cascade"* )
@@ -206,7 +209,7 @@ IFS="$OLD_IFS"
 
 echo ""
 echo "==> Committing and tagging..."
-git add packages/*/package.json packages/*/CHANGELOG.md packages/claude-code/.claude-plugin/plugin.json
+git add packages/*/package.json packages/*/CHANGELOG.md packages/claude-code/.claude-plugin/plugin.json packages/codex/.codex-plugin/plugin.json
 git commit -m "Release ${summary%, }"
 for tag in $tags; do
   git tag -a "$tag" -m "Release $tag"

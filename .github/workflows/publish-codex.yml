@@ -37,6 +37,7 @@ jobs:
         run: |
           version=$(node -e 'process.stdout.write(require("./packages/codex/package.json").version)')
           test "$GITHUB_REF_NAME" = "codex@v$version"
+          test "$(node -p 'require("./packages/codex/.codex-plugin/plugin.json").version')" = "$version"
 
       - name: Check Codex plugin
         run: bun run check packages/codex

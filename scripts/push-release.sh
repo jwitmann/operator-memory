@@ -48,6 +48,22 @@ if [ -z "$tags" ]; then
   fi
 fi
 
+# Helper first: if a multi-tag sequence breaks midway, the foundation CLI
+# everything else references is already published (upstream order, #72).
+ordered=""
+for tag in $tags; do
+  case "$tag" in
+    helper@v*) ordered+="$tag " ;;
+  esac
+done
+for tag in $tags; do
+  case "$tag" in
+    helper@v*) ;;
+    *) ordered+="$tag " ;;
+  esac
+done
+tags="$ordered"
+
 branch="$(git symbolic-ref --quiet --short HEAD || true)"
 if [ -z "$branch" ]; then
   echo "Detached HEAD: switch to the release branch first." >&2
