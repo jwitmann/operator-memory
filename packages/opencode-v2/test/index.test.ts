@@ -364,10 +364,11 @@ test("refreshes the preamble end to end when the Brain changes cold", async () =
   expect(loadPreamble).toHaveBeenCalledTimes(3);
   expect(event.system).toEqual([{ type: "text", text: "operator preamble" }]);
   const { readReceipts } = await import("@jwitmann/operator-core/context/receipts");
+  const { resolveStateDirectory } = await import("@jwitmann/operator-core/memory/roots");
   const { join } = await import("node:path");
   const { homedir } = await import("node:os");
   const receipts = await readReceipts(
-    join(homedir(), ".operator", "state", "context-log"),
+    join(resolveStateDirectory(homedir()), "context-log"),
     "ses-refresh-e2e",
   );
   expect(receipts.ok ? receipts.value : null).toMatchObject([

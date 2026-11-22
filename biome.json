@@ -9,6 +9,8 @@
     "ignoreUnknown": true,
     "includes": [
       "**",
+      "!.vcc-brain",
+      "!.vcc-brain-shared",
       "!.operator",
       "!.operator-shared",
       "!reference",

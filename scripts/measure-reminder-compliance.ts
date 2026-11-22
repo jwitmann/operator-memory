@@ -1,11 +1,11 @@
 // Joins log-only brain-reminder receipts to the subsequent brain-changed
 // refresh per fingerprint era, per session log: moved vs unanswered, plus
 // time lag. See "Measure brain-reminder compliance" in
-// docs/dev/follow-ups.md. Read-only over ~/.operator/state/context-log/.
+// docs/dev/follow-ups.md. Read-only over ~/.vcc-brain/state/context-log/.
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const dir = join(process.env.HOME ?? "~", ".operator/state/context-log");
+const dir = join(process.env.HOME ?? "~", ".vcc-brain/state/context-log");
 
 type Verdict = { moved: number; unanswered: number; lagsMin: number[] };
 const total: Verdict = { moved: 0, unanswered: 0, lagsMin: [] };

@@ -24,9 +24,14 @@ coverage/
 .cache/
 /opencode.jsonc
 /.dev-framework/runtime-status.json
+/.vcc-brain-shared/references/
 /.operator-shared/references/
 /.opencode/opencode.json
 /.opencode/tui.json
+
+# Brain private partition (also in global Git ignore; belt and braces)
+/.vcc-brain/
+/.operator/
 
 # Editors and operating systems
 .idea/
