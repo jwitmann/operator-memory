@@ -10,7 +10,7 @@ VCC Brain gives your agent a brain for documenting all their work. As the agent 
 
 #### Origin
 
-Originally forked from [aerovato/vcc-brain](https://github.com/aerovato/vcc-brain); continued here as an independent line with deterministic context management (VCC compaction, lossless trim, recall/search recovery), cache-aware preamble refresh, and the DeepSeek Harness adapter.
+Originally forked from [aerovato/operator-memory](https://github.com/aerovato/operator-memory); continued here as an independent line with deterministic context management (VCC compaction, lossless trim, recall/search recovery), cache-aware preamble refresh, and the DeepSeek Harness adapter.
 
 #### Features
 
