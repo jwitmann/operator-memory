@@ -11,15 +11,36 @@ import { renderTable } from "../../output.ts";
 import { readTemplate, TemplatePath } from "../../templates.ts";
 import type { CliContext } from "../../utils.ts";
 import { fileErrorMessage, fileFailure } from "../common.ts";
-import { CORE_FILES, PRIVATE_ROOT, SHARED_ROOT } from "./common.ts";
+import { resolveEffectivePartition } from "./brain-roots.ts";
+import {
+  CORE_FILES,
+  PRIVATE_LEGACY_ROOT,
+  PRIVATE_ROOT,
+  SHARED_LEGACY_ROOT,
+  SHARED_ROOT,
+} from "./common.ts";
 
 export const projectInit = Effect.fn("projectInit")((context: CliContext) =>
   Effect.gen(function* () {
     const pathService = yield* Path.Path;
     const ignored = yield* ensureGlobalIgnore(context.home, context.xdgConfigHome);
 
-    const privateRoot = pathService.join(context.cwd, PRIVATE_ROOT);
-    const sharedRoot = pathService.join(context.cwd, SHARED_ROOT);
+    // .vcc-brain first, fallback to .operator (see resolveEffectivePartition).
+    const effective = yield* resolveEffectivePartition(
+      context.cwd,
+      PRIVATE_ROOT,
+      PRIVATE_LEGACY_ROOT,
+    );
+    const privateRoot = effective.absoluteRoot;
+    const privateDisplay = effective.displayRoot;
+    // .vcc-brain first, fallback to .operator (see resolveEffectivePartition).
+    const effectiveShared = yield* resolveEffectivePartition(
+      context.cwd,
+      SHARED_ROOT,
+      SHARED_LEGACY_ROOT,
+    );
+    const sharedRoot = effectiveShared.absoluteRoot;
+    const sharedDisplay = effectiveShared.displayRoot;
     yield* ensureDirectory(privateRoot);
 
     const templates = {
@@ -29,6 +50,14 @@ export const projectInit = Effect.fn("projectInit")((context: CliContext) =>
     } satisfies Record<(typeof CORE_FILES)[number], string>;
 
     const lines = ["✓ Project Private Initialized"];
+    if (effective.usingLegacy) {
+      lines.push(`ℹ Reusing legacy ${PRIVATE_LEGACY_ROOT}/ (no ${PRIVATE_ROOT}/ yet).`);
+    }
+    if (effective.primaryObstructed) {
+      lines.push(
+        `⚠ ${PRIVATE_ROOT}/ is obstructed (${effective.primaryKind}); using legacy ${PRIVATE_LEGACY_ROOT}/ until it is repaired.`,
+      );
+    }
     const privateRows: string[][] = [];
     let failed = false;
     for (const file of CORE_FILES) {
@@ -40,12 +69,12 @@ export const projectInit = Effect.fn("projectInit")((context: CliContext) =>
         failed = true;
         privateRows.push([
           "Failed",
-          `${PRIVATE_ROOT}/${file}: ${fileErrorMessage(written.failure)}`,
+          `${privateDisplay}/${file}: ${fileErrorMessage(written.failure)}`,
         ]);
       } else {
         privateRows.push([
           written.success === "created" ? "Created" : "Preserved",
-          `${PRIVATE_ROOT}/${file}`,
+          `${privateDisplay}/${file}`,
         ]);
       }
     }
@@ -57,17 +86,18 @@ export const projectInit = Effect.fn("projectInit")((context: CliContext) =>
       failed = true;
       privateRows.push([
         "Failed",
-        `${PRIVATE_ROOT}/config.json: ${fileErrorMessage(configResult.failure)}`,
+        `${privateDisplay}/config.json: ${fileErrorMessage(configResult.failure)}`,
       ]);
     } else {
       privateRows.push([
         configResult.success === "created" ? "Created" : "Preserved",
-        `${PRIVATE_ROOT}/config.json`,
+        `${privateDisplay}/config.json`,
       ]);
     }
     lines.push(renderTable(privateRows));
 
-    const sharedKind = yield* inspectPath(sharedRoot);
+    const sharedKind =
+      sharedDisplay === SHARED_ROOT ? effectiveShared.primaryKind : effectiveShared.legacyKind;
     if (sharedKind === "missing") {
       lines.push("", "⚠ Project Shared Not Initialized");
     } else if (sharedKind !== "directory") {
@@ -90,12 +120,12 @@ export const projectInit = Effect.fn("projectInit")((context: CliContext) =>
         failed = true;
         sharedRows.push([
           "Failed",
-          `${SHARED_ROOT}/README.md: ${fileErrorMessage(readmeResult.failure)}`,
+          `${sharedDisplay}/README.md: ${fileErrorMessage(readmeResult.failure)}`,
         ]);
       } else {
         sharedRows.push([
           readmeResult.success === "created" ? "Created" : "Preserved",
-          `${SHARED_ROOT}/README.md`,
+          `${sharedDisplay}/README.md`,
         ]);
       }
 
@@ -103,12 +133,12 @@ export const projectInit = Effect.fn("projectInit")((context: CliContext) =>
         const path = pathService.join(sharedRoot, file);
         const kind = yield* inspectPath(path);
         if (kind === "file" || kind === "missing") {
-          sharedRows.push([kind === "file" ? "Present" : "Missing", `${SHARED_ROOT}/${file}`]);
+          sharedRows.push([kind === "file" ? "Present" : "Missing", `${sharedDisplay}/${file}`]);
         } else {
           failed = true;
           sharedRows.push([
             "Failed",
-            `${SHARED_ROOT}/${file}: ${fileErrorMessage(new PathKindError({ path, expected: "file", actual: kind }))}`,
+            `${sharedDisplay}/${file}: ${fileErrorMessage(new PathKindError({ path, expected: "file", actual: kind }))}`,
           ]);
         }
       }

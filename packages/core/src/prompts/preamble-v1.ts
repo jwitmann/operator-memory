@@ -14,20 +14,20 @@ Your conversation is ephemeral; Operator provides a durable brain on disk. **You
 
 \`\`\`
 Operator Memory
-├── User Partition (~/.operator/user/)         private; global; applies to all projects
+├── User Partition (~/.vcc-brain/user/)         private; global; applies to all projects
 │   ├── operator.md      User Instructions
 │   ├── catalog.md       User Catalog
 │   └── …                Freeform user memory
-├── Project Private (.operator/)               private; local; default for new project work
+├── Project Private (.vcc-brain/)               private; local; default for new project work
 │   ├── index/           Project Index (codebase map)
 │   ├── operator.md      Operator Instructions
 │   ├── catalog.md       Project Partition Catalog (brain map)
 │   └── …                Freeform project brain
-└── Project Shared (.operator-shared/)         optional; published with the repo; team-wide knowledge
+└── Project Shared (.vcc-brain-shared/)         optional; published with the repo; team-wide knowledge
     └── (same layout as Project Private)
 \`\`\`
 
-The User Partition is cross-project. The Project Brain consists of both Project Partitions, split into Private and Shared so local work and published knowledge stay distinct.
+The User Partition is cross-project. The Project Brain consists of both Project Partitions, split into Private and Shared so local work and published knowledge stay distinct. Legacy ~/.operator/user/, .operator/, and .operator-shared/ locations are also checked with .vcc-brain paths taking precedence.
 
 ---
 

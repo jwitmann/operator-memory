@@ -7,7 +7,7 @@ import type { CompactionCause } from "./compaction.ts";
 
 // Receipt log: one JSON line per trim or compaction under
 // <root>/<sessionID>.log, append-only, plain text. The caller supplies the
-// root (the adapter passes `~/.operator/state/context-log`) and the timestamp;
+// root (the adapter passes `~/.vcc-brain/state/context-log` (legacy `~/.operator/state/` also checked)) and the timestamp;
 // failures and refusals are recorded in the same file, never silent.
 
 export type ReceiptLogError = {

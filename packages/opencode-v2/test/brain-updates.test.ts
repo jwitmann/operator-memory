@@ -25,15 +25,15 @@ const HOME = "/home/user";
 const STATE = "/state";
 
 function seedBrain(): void {
-  for (const root of [`${PROJECT}/.operator`, `${PROJECT}/.operator-shared`]) {
+  for (const root of [`${PROJECT}/.vcc-brain`, `${PROJECT}/.vcc-brain-shared`]) {
     fs.mkdirSync(`${root}/index`, { recursive: true });
     fs.writeFileSync(`${root}/operator.md`, `# ops ${root}`);
     fs.writeFileSync(`${root}/catalog.md`, `# catalog ${root}`);
     fs.writeFileSync(`${root}/index/index.md`, `# index ${root}`);
   }
-  fs.mkdirSync(`${HOME}/.operator/user`, { recursive: true });
-  fs.writeFileSync(`${HOME}/.operator/user/operator.md`, "# user ops");
-  fs.writeFileSync(`${HOME}/.operator/user/catalog.md`, "# user catalog");
+  fs.mkdirSync(`${HOME}/.vcc-brain/user`, { recursive: true });
+  fs.writeFileSync(`${HOME}/.vcc-brain/user/operator.md`, "# user ops");
+  fs.writeFileSync(`${HOME}/.vcc-brain/user/catalog.md`, "# user catalog");
 }
 
 function completedMessages(count: number): RequestMessage[] {
@@ -60,7 +60,7 @@ function completedMessages(count: number): RequestMessage[] {
 // fingerprint unmoved and the reset-asserting test would (incorrectly for
 // its purpose) see a threshold crossing instead of a quiet reset.
 function rewriteCatalog(text: string): void {
-  const path = `${PROJECT}/.operator/catalog.md`;
+  const path = `${PROJECT}/.vcc-brain/catalog.md`;
   fs.writeFileSync(path, text);
   const later = new Date(Date.now() + 1000);
   fs.utimesSync(path, later, later);
@@ -204,8 +204,8 @@ test("a Brain change resets the baseline without reminding", async () => {
 
 test("stays quiet when the fingerprint cannot be read", async () => {
   seedBrain();
-  fs.rmSync(`${PROJECT}/.operator/index`, { recursive: true });
-  fs.writeFileSync(`${PROJECT}/.operator/index`, "not a directory");
+  fs.rmSync(`${PROJECT}/.vcc-brain/index`, { recursive: true });
+  fs.writeFileSync(`${PROJECT}/.vcc-brain/index`, "not a directory");
   const runtime = createContextRuntime();
 
   const unchanged = await maybeAppendBrainUpdateReminder(

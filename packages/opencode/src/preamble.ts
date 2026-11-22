@@ -1,4 +1,5 @@
 import { loadMemorySnapshot } from "@jwitmann/operator-core/memory/load";
+import { resolveBrainRoots } from "@jwitmann/operator-core/memory/roots";
 import { renderPreamble, type RenderedPreamble } from "@jwitmann/operator-core/preamble";
 
 import { failure, type Result, success } from "./utils.ts";
@@ -34,8 +35,20 @@ async function readPreamble(
   homeDirectory: string,
 ): Promise<Result<RenderedPreamble, PreambleError>> {
   try {
-    const memory = await loadMemorySnapshot(projectDirectory, homeDirectory, true);
-    return success(renderPreamble(memory));
+    const snapshotPromise = loadMemorySnapshot(projectDirectory, homeDirectory, true);
+    const roots = await resolveBrainRoots(projectDirectory, homeDirectory);
+    return success(
+      renderPreamble(await snapshotPromise, {
+        shared: roots.sharedDisplay,
+        private: roots.privateDisplay,
+        user: roots.userDisplay,
+        legacyIgnored: {
+          private: roots.privateLegacyAlsoExists,
+          shared: roots.sharedLegacyAlsoExists,
+          user: roots.userLegacyAlsoExists,
+        },
+      }),
+    );
   } catch (cause) {
     return failure({
       message: "Operator failed to create the session preamble.",

@@ -121,12 +121,12 @@ test("computeTreeHash ignores content edits but sees structural change", async (
 });
 
 test("computeTreeHash skips brain and build trees", async () => {
-  mkdirSync(join(project, ".operator", "index"), { recursive: true });
+  mkdirSync(join(project, ".vcc-brain", "index"), { recursive: true });
   mkdirSync(join(project, "node_modules", "dep"), { recursive: true });
-  writeFileSync(join(project, ".operator", "index", "index.md"), "brain", "utf8");
+  writeFileSync(join(project, ".vcc-brain", "index", "index.md"), "brain", "utf8");
   writeFileSync(join(project, "node_modules", "dep", "i.js"), "dep", "utf8");
   const before = await runWalk(computeTreeHash(project));
-  writeFileSync(join(project, ".operator", "index", "index.md"), "brain changed", "utf8");
+  writeFileSync(join(project, ".vcc-brain", "index", "index.md"), "brain changed", "utf8");
   writeFileSync(join(project, "node_modules", "dep", "i.js"), "dep changed", "utf8");
   expect(await runWalk(computeTreeHash(project))).toEqual(before);
 });
@@ -136,7 +136,7 @@ test("computeTreeHash prefers git ls-files and records the commit", async () => 
     computeTreeHash(project),
     {
       probe: "true\n",
-      ls: "b/a.ts\0a.ts\0.operator/index/index.md\0",
+      ls: "b/a.ts\0a.ts\0.vcc-brain/index/index.md\0",
       head: "deadbeef\n",
     },
     false,
@@ -169,9 +169,9 @@ test("computeTreeHash records a null commit when HEAD cannot resolve", async () 
 });
 
 test("indexStamp round-trips through lint, then warns on drift", async () => {
-  mkdirSync(join(project, ".operator", "index"), { recursive: true });
+  mkdirSync(join(project, ".vcc-brain", "index"), { recursive: true });
   mkdirSync(join(project, "src"), { recursive: true });
-  writeFileSync(join(project, ".operator", "index", "index.md"), MAIN, "utf8");
+  writeFileSync(join(project, ".vcc-brain", "index", "index.md"), MAIN, "utf8");
   writeFileSync(join(project, "src", "a.ts"), "v1", "utf8");
 
   const stamped = await runWalk(
@@ -179,19 +179,19 @@ test("indexStamp round-trips through lint, then warns on drift", async () => {
   );
   expect(stamped.exitCode).toEqual(0);
   expect(stamped.output).toMatch(/stamped [0-9a-f]{12}/);
-  const file = readFileSync(join(project, ".operator", "index", "index.md"), "utf8");
+  const file = readFileSync(join(project, ".vcc-brain", "index", "index.md"), "utf8");
   expect(file).toContain("description: Private\n");
 
   const clean = await runWalk(lintProjectIndexes(project));
-  expect(clean.filter(finding => finding.path === ".operator/index/index.md")).toEqual([]);
+  expect(clean.filter(finding => finding.path === ".vcc-brain/index/index.md")).toEqual([]);
 
   writeFileSync(join(project, "src", "a.ts"), "v2", "utf8");
   const churn = await runWalk(lintProjectIndexes(project));
-  expect(churn.filter(finding => finding.path === ".operator/index/index.md")).toEqual([]);
+  expect(churn.filter(finding => finding.path === ".vcc-brain/index/index.md")).toEqual([]);
 
   writeFileSync(join(project, "src", "b.ts"), "new", "utf8");
   const drifted = await runWalk(lintProjectIndexes(project));
-  const stale = drifted.filter(finding => finding.path === ".operator/index/index.md");
+  const stale = drifted.filter(finding => finding.path === ".vcc-brain/index/index.md");
   expect(stale).toHaveLength(1);
   expect(stale[0]?.error).toEqual(false);
   expect(stale[0]?.message).toMatch(
@@ -206,8 +206,8 @@ test("indexStamp fails without a main index and on malformed frontmatter", async
   expect(missing.exitCode).toEqual(1);
   expect(missing.output).toContain("No main index found");
 
-  mkdirSync(join(project, ".operator", "index"), { recursive: true });
-  writeFileSync(join(project, ".operator", "index", "index.md"), "# No block\n", "utf8");
+  mkdirSync(join(project, ".vcc-brain", "index"), { recursive: true });
+  writeFileSync(join(project, ".vcc-brain", "index", "index.md"), "# No block\n", "utf8");
   const malformed = await runWalk(
     indexStamp({ cwd: project, home: project, xdgConfigHome: null, version: "0" }),
   );

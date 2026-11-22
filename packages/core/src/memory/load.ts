@@ -1,14 +1,11 @@
-import { resolve } from "node:path";
-
 import type { Result } from "../utils.ts";
 import type { MemoryLoadError } from "./common.ts";
 import {
   loadProjectPartition,
-  PROJECT_PRIVATE_ROOT,
-  PROJECT_SHARED_ROOT,
   type ProjectPartitionSnapshot,
   type ProjectPartitionStatusSnapshot,
 } from "./project.ts";
+import { resolveBrainRoots } from "./roots.ts";
 import {
   loadUserPartition,
   type UserPartitionSnapshot,
@@ -43,9 +40,10 @@ export async function loadMemorySnapshot(
   homeDirectory: string,
   loadFiles: boolean,
 ): Promise<MemorySnapshot | MemoryStatusSnapshot> {
-  const sharedRoot = resolve(projectDirectory, PROJECT_SHARED_ROOT);
-  const userRoot = resolve(homeDirectory, ".operator", "user");
-  const privateRoot = resolve(projectDirectory, PROJECT_PRIVATE_ROOT);
+  const roots = await resolveBrainRoots(projectDirectory, homeDirectory);
+  const sharedRoot = roots.sharedRoot;
+  const userRoot = roots.userRoot;
+  const privateRoot = roots.privateRoot;
 
   if (!loadFiles) {
     const [shared, user, privatePartition] = await Promise.all([

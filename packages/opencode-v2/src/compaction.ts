@@ -1,6 +1,8 @@
 import { buildCompactionPrompt } from "@jwitmann/operator-core/context/compaction";
 import { appendReceipt, type CompactReceipt } from "@jwitmann/operator-core/context/receipts";
 import { estimateContextTokens, type RequestMessage } from "@jwitmann/operator-core/context/tokens";
+
+export { DEFAULT_BRAIN_PATHS } from "@jwitmann/operator-core/memory/roots";
 import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
 
@@ -34,8 +36,6 @@ import {
 // (observed live on v2.0.22); excluding a "protected tail" from the request
 // still preserves nothing: hidden from the summarizer, it drops from view
 // (v2.0.22 finding, not re-probed).
-
-export const DEFAULT_BRAIN_PATHS = ["~/.operator/user", ".operator", ".operator-shared"];
 
 export type CompactionHookDeps = Omit<ContextManagementDeps, "requestCompaction"> & {
   readonly brainPaths: readonly string[];

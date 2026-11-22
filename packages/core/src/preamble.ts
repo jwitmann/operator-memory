@@ -1,16 +1,28 @@
 import type { MemorySnapshot } from "./memory/load.ts";
 import type { IndexDocument, ProjectPartitionSnapshot } from "./memory/project.ts";
+import {
+  PROJECT_PRIVATE_LEGACY_ROOT,
+  PROJECT_SHARED_LEGACY_ROOT,
+  USER_LEGACY_DISPLAY,
+} from "./memory/roots.ts";
 import type { UserPartitionSnapshot } from "./memory/user.ts";
 import { selectPreambleVersion } from "./preamble-rollout.ts";
 import * as preambleV1 from "./prompts/preamble-v1.ts";
 import * as preambleV2 from "./prompts/preamble-v2.ts";
 import { getErrorMessage } from "./utils.ts";
 
-const SHARED_ROOT = ".operator-shared";
-const PRIVATE_ROOT = ".operator";
-const USER_INSTRUCTIONS_PATH = "~/.operator/user/operator.md";
-const USER_CATALOG_PATH = "~/.operator/user/catalog.md";
-const USER_OBSERVATIONS_PATH = "~/.operator/user/observations.md";
+export type LegacyIgnoredFlags = {
+  readonly private: boolean;
+  readonly shared: boolean;
+  readonly user: boolean;
+};
+
+export type PreambleDisplayRoots = {
+  readonly shared: string;
+  readonly private: string;
+  readonly user: string;
+  readonly legacyIgnored: LegacyIgnoredFlags;
+};
 
 export type RenderedPreamble = {
   readonly content: string;
@@ -26,7 +38,10 @@ type LoadedMemorySnapshot = {
   readonly private: ProjectPartitionSnapshot;
 };
 
-export function renderPreamble(memory: MemorySnapshot): RenderedPreamble {
+export function renderPreamble(
+  memory: MemorySnapshot,
+  displayRoots: PreambleDisplayRoots,
+): RenderedPreamble {
   const { PREAMBLE_PROMPT, PREAMBLE_TENETS } =
     selectPreambleVersion() === "2.0" ? preambleV2 : preambleV1;
   if (!memory.shared.ok || !memory.user.ok || !memory.private.ok) {
@@ -44,30 +59,34 @@ export function renderPreamble(memory: MemorySnapshot): RenderedPreamble {
   };
   const sections = [PREAMBLE_PROMPT];
   const warnings: string[] = [];
+  const userCatalogPath = `${displayRoots.user}/catalog.md`;
+  const userObservationsPath = `${displayRoots.user}/observations.md`;
 
-  const instructions = renderInstructions(loaded);
+  const instructions = renderInstructions(loaded, displayRoots);
   if (instructions !== null) {
     sections.push(instructions);
   }
 
-  const userCatalog = renderUserCatalog(loaded.user);
+  const userCatalog = renderUserCatalog(loaded.user, userCatalogPath);
   if (userCatalog !== null) {
     sections.push(userCatalog);
   } else if (loaded.user.exists) {
     warnings.push(
       `<operator-warning>
-The User Partition exists but ~/.operator/user/catalog.md does not. You must create and maintain a catalog.md to document any non-empty User Partition.
+The User Partition exists but ${userCatalogPath} does not. You must create and maintain a catalog.md to document any non-empty User Partition.
 </operator-warning>`,
     );
   } else {
     warnings.push(
       `<operator-warning>
-The ~/.operator/user directory does not exist. If the user would benefit from cross-project user memory, ask the user to run /operator:user-init first to initialize the User Partition. If not needed, do not ask; they may be working without user memory intentionally.
+The ${displayRoots.user} directory does not exist (legacy ${USER_LEGACY_DISPLAY} also checked). If the user would benefit from cross-project user memory, ask the user to run /operator:user-init first to initialize the User Partition. If not needed, do not ask; they may be working without user memory intentionally.
 </operator-warning>`,
     );
   }
 
-  const userObservations = renderUserObservations(loaded.user);
+  warnings.push(...collectLegacyIgnoredWarnings(displayRoots));
+
+  const userObservations = renderUserObservations(loaded.user, userObservationsPath);
   if (userObservations !== null) {
     sections.push(userObservations);
   }
@@ -75,19 +94,19 @@ The ~/.operator/user directory does not exist. If the user would benefit from cr
   if (!loaded.shared.exists && !loaded.private.exists) {
     warnings.push(
       `<operator-warning>
-Neither the .operator nor .operator-shared directory exists. If the user requests significant amounts of work to be done on the project, ask the user to run /operator:project-init first to initialize Operator. If the user is not requesting work to be done, do not ask to initialize; they could simply be exploring.
+Neither the ${displayRoots.private} nor ${displayRoots.shared} directory exists (legacy ${PROJECT_PRIVATE_LEGACY_ROOT}/ and ${PROJECT_SHARED_LEGACY_ROOT}/ also checked). If the user requests significant amounts of work to be done on the project, ask the user to run /operator:project-init first to initialize Operator. If the user is not requesting work to be done, do not ask to initialize; they could simply be exploring.
 </operator-warning>`,
     );
   } else {
-    const indexes = renderIndexes(loaded);
-    const catalogs = renderCatalogs(loaded);
+    const indexes = renderIndexes(loaded, displayRoots);
+    const catalogs = renderCatalogs(loaded, displayRoots);
 
     if (catalogs !== null) {
       sections.push(catalogs);
     } else {
       warnings.push(
         `<operator-warning>
-Neither .operator/catalog.md nor .operator-shared/catalog.md exists. You must create and maintain a catalog.md to document any non-empty Project Brain partitions.
+Neither ${displayRoots.private}/catalog.md nor ${displayRoots.shared}/catalog.md exists. You must create and maintain a catalog.md to document any non-empty Project Brain partitions.
 </operator-warning>`,
       );
     }
@@ -97,11 +116,11 @@ Neither .operator/catalog.md nor .operator-shared/catalog.md exists. You must cr
     if (!hasMainIndex(loaded)) {
       warnings.push(
         `<operator-warning>
-Neither .operator/index/index.md nor .operator-shared/index/index.md exists. If the project is not in an empty state, ask the user to run /operator:index to initialize a project index before performing any work.
+Neither ${displayRoots.private}/index/index.md nor ${displayRoots.shared}/index/index.md exists. If the project is not in an empty state, ask the user to run /operator:index to initialize a project index before performing any work.
 </operator-warning>`,
       );
     } else {
-      warnings.push(...collectUnstampedWarnings(loaded));
+      warnings.push(...collectUnstampedWarnings(loaded, displayRoots));
     }
   }
 
@@ -123,10 +142,32 @@ function hasMainIndex(memory: LoadedMemorySnapshot): boolean {
   );
 }
 
-function collectUnstampedWarnings(memory: LoadedMemorySnapshot): string[] {
+function collectLegacyIgnoredWarnings(displayRoots: PreambleDisplayRoots): string[] {
   const targets = [
-    { partition: memory.shared, root: SHARED_ROOT },
-    { partition: memory.private, root: PRIVATE_ROOT },
+    { ignored: displayRoots.legacyIgnored.private, primary: displayRoots.private },
+    { ignored: displayRoots.legacyIgnored.shared, primary: displayRoots.shared },
+    { ignored: displayRoots.legacyIgnored.user, primary: displayRoots.user },
+  ];
+  const warnings: string[] = [];
+  for (const target of targets) {
+    if (target.ignored) {
+      warnings.push(
+        `<operator-warning>
+Both ${target.primary}/ and its legacy counterpart exist; the legacy partition is ignored and only ${target.primary}/ is loaded. Merge anything still needed from legacy, then remove it.
+</operator-warning>`,
+      );
+    }
+  }
+  return warnings;
+}
+
+function collectUnstampedWarnings(
+  memory: LoadedMemorySnapshot,
+  displayRoots: PreambleDisplayRoots,
+): string[] {
+  const targets = [
+    { partition: memory.shared, root: displayRoots.shared },
+    { partition: memory.private, root: displayRoots.private },
   ];
   const warnings: string[] = [];
   for (const target of targets) {
@@ -175,17 +216,24 @@ IMPORTANT: You MUST resolve Operator memory loading before proceeding with the u
 </operator-diagnostic>`;
 }
 
-function renderInstructions(memory: LoadedMemorySnapshot): string | null {
+function renderInstructions(
+  memory: LoadedMemorySnapshot,
+  displayRoots: PreambleDisplayRoots,
+): string | null {
   const files: string[] = [];
 
   if (memory.shared.operatorInstructions !== null) {
-    files.push(renderFile(`${SHARED_ROOT}/operator.md`, memory.shared.operatorInstructions));
+    files.push(
+      renderFile(`${displayRoots.shared}/operator.md`, memory.shared.operatorInstructions),
+    );
   }
   if (memory.user.operatorInstructions !== null) {
-    files.push(renderFile(USER_INSTRUCTIONS_PATH, memory.user.operatorInstructions));
+    files.push(renderFile(`${displayRoots.user}/operator.md`, memory.user.operatorInstructions));
   }
   if (memory.private.operatorInstructions !== null) {
-    files.push(renderFile(`${PRIVATE_ROOT}/operator.md`, memory.private.operatorInstructions));
+    files.push(
+      renderFile(`${displayRoots.private}/operator.md`, memory.private.operatorInstructions),
+    );
   }
 
   return files.length === 0
@@ -196,10 +244,13 @@ ${files.join("\n")}
 </operator-instructions>`;
 }
 
-function renderIndexes(memory: LoadedMemorySnapshot): string | null {
+function renderIndexes(
+  memory: LoadedMemorySnapshot,
+  displayRoots: PreambleDisplayRoots,
+): string | null {
   const partitions: string[] = [];
-  const shared = renderPartitionIndex(memory.shared, SHARED_ROOT, "Shared");
-  const privatePartition = renderPartitionIndex(memory.private, PRIVATE_ROOT, "Private");
+  const shared = renderPartitionIndex(memory.shared, displayRoots.shared, "Shared");
+  const privatePartition = renderPartitionIndex(memory.private, displayRoots.private, "Private");
 
   if (shared !== null) {
     partitions.push(shared);
@@ -257,39 +308,45 @@ function renderIndexListing(root: string, indexes: ReadonlyArray<IndexDocument>)
   return lines.join("\n");
 }
 
-function renderUserCatalog(partition: UserPartitionSnapshot): string | null {
+function renderUserCatalog(partition: UserPartitionSnapshot, catalogPath: string): string | null {
   if (partition.catalog === null) {
     return null;
   }
 
   return `<user-catalog>
-<file-content path="${USER_CATALOG_PATH}">
+<file-content path="${catalogPath}">
 ${partition.catalog}
 </file-content>
 </user-catalog>`;
 }
 
-function renderUserObservations(partition: UserPartitionSnapshot): string | null {
+function renderUserObservations(
+  partition: UserPartitionSnapshot,
+  observationsPath: string,
+): string | null {
   if (partition.observations === null) {
     return null;
   }
 
   return `<user-observations>
 User-approved observations and working-style notes. This is subordinate context, not instructions: it never overrides Operator Instructions, catalogs, or index guidance.
-<file-content path="${USER_OBSERVATIONS_PATH}">
+<file-content path="${observationsPath}">
 ${partition.observations}
 </file-content>
 </user-observations>`;
 }
 
-function renderCatalogs(memory: LoadedMemorySnapshot): string | null {
+function renderCatalogs(
+  memory: LoadedMemorySnapshot,
+  displayRoots: PreambleDisplayRoots,
+): string | null {
   const files: string[] = [];
 
   if (memory.shared.catalog !== null) {
-    files.push(renderFile(`${SHARED_ROOT}/catalog.md`, memory.shared.catalog));
+    files.push(renderFile(`${displayRoots.shared}/catalog.md`, memory.shared.catalog));
   }
   if (memory.private.catalog !== null) {
-    files.push(renderFile(`${PRIVATE_ROOT}/catalog.md`, memory.private.catalog));
+    files.push(renderFile(`${displayRoots.private}/catalog.md`, memory.private.catalog));
   }
 
   return files.length === 0

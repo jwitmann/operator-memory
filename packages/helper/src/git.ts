@@ -4,7 +4,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { readOptionalText, writeText } from "./filesystem.ts";
 import { getErrorMessage } from "./utils.ts";
 
-const IGNORE_BLOCK = "# Operator: Ignore private partition\n.operator/\n";
+const IGNORE_BLOCK = "# Operator: Ignore private partition\n.vcc-brain/\n.operator/\n";
 
 export class GitError extends Data.TaggedError("GitError")<{
   readonly message: string;
@@ -85,7 +85,8 @@ export const checkGlobalIgnore = Effect.fn("checkGlobalIgnore")(function* (
 ) {
   const path = yield* resolveGlobalIgnore(home, xdgConfigHome);
   const content = yield* readOptionalText(path);
-  return content?.split(/\r?\n/).includes(".operator/") ?? false;
+  const lines = content?.split(/\r?\n/) ?? [];
+  return lines.includes(".vcc-brain/") || lines.includes(".operator/");
 });
 
 export const ensureGlobalIgnore = Effect.fn("ensureGlobalIgnore")(function* (
@@ -94,7 +95,7 @@ export const ensureGlobalIgnore = Effect.fn("ensureGlobalIgnore")(function* (
 ) {
   const path = yield* resolveGlobalIgnore(home, xdgConfigHome);
   const content = yield* readOptionalText(path);
-  if (content?.split(/\r?\n/).includes(".operator/")) {
+  if (content?.split(/\r?\n/).includes(".vcc-brain/")) {
     return "present";
   }
 
@@ -106,6 +107,6 @@ export const ensureGlobalIgnore = Effect.fn("ensureGlobalIgnore")(function* (
 
 export const hasTrackedPrivateFiles = Effect.fn("hasTrackedPrivateFiles")(function* (cwd: string) {
   const git = yield* GitRunner.Service;
-  const tracked = yield* git.run(["ls-files", "--", ".operator"], cwd);
+  const tracked = yield* git.run(["ls-files", "--", ".vcc-brain", ".operator"], cwd);
   return tracked.trim() !== "";
 });

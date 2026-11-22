@@ -1,24 +1,25 @@
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+
+import { projectConfigPaths } from "@jwitmann/operator-core/memory/roots";
 
 import { parseBrainUpdatesBlock, type BrainUpdatesConfig } from "./brain-updates-config.ts";
 import { parseContextManagementBlock, type ContextManagementConfig } from "./context-config.ts";
 import { parsePreambleRefreshBlock, type PreambleRefreshConfig } from "./refresh-config.ts";
 import { failure, success, type Result } from "./utils.ts";
 
-// Optional per-project override: `<project>/.operator/config.json`, same
-// block and key names as the `operator` blocks in opencode.json (without the
-// `operator` wrapper). Present fields merge over the already parsed
+// Optional per-project override: `<project>/.vcc-brain/config.json` (legacy
+// `<project>/.operator/config.json` also checked — see projectConfigPaths),
+// same block and key names as the `operator` blocks in opencode.json (without
+// the `operator` wrapper). Present fields merge over the already parsed
 // opencode.json config; absent file or absent blocks inherit it.
 //
 // Precedence, lowest first: defaults < opencode.json (global, then project)
-// < `.operator/config.json`. Per-block fallback: an invalid block warns and
+// < `.vcc-brain/config.json` (legacy `.operator/config.json` also checked).
+// Per-block fallback: an invalid block warns and
 // keeps the opencode.json block while valid sibling blocks still merge; a
 // non-object root or unparsable content warns and keeps everything.
 // Resolution is setup-time (one setup per project directory); absent or
 // unreadable files fall back silently.
-
-export const PROJECT_CONFIG_RELATIVE_PATH = join(".operator", "config.json");
 
 export type ProjectFileConfigs = {
   readonly contextManagement: ContextManagementConfig;
@@ -31,27 +32,25 @@ export type ProjectConfigOutcome = {
   readonly warnings: readonly string[];
 };
 
-export function projectConfigPath(projectDirectory: string): string {
-  return join(projectDirectory, PROJECT_CONFIG_RELATIVE_PATH);
-}
-
 export async function resolveProjectConfig(
   projectDirectory: string,
   base: ProjectFileConfigs,
 ): Promise<ProjectConfigOutcome> {
-  let text: string;
-  try {
-    text = await readFile(projectConfigPath(projectDirectory), "utf8");
-  } catch {
-    return { config: base, warnings: [] };
+  for (const candidate of projectConfigPaths(projectDirectory)) {
+    try {
+      const text = await readFile(candidate, "utf8");
+      let raw: unknown;
+      try {
+        raw = JSON.parse(text);
+      } catch {
+        return { config: base, warnings: ["the project config is not valid JSON"] };
+      }
+      return parseProjectConfig(raw, base);
+    } catch {
+      // Unreadable candidate: try the next one, else fall back silently.
+    }
   }
-  let raw: unknown;
-  try {
-    raw = JSON.parse(text);
-  } catch {
-    return { config: base, warnings: ["the project config is not valid JSON"] };
-  }
-  return parseProjectConfig(raw, base);
+  return { config: base, warnings: [] };
 }
 
 // Exported for tests. Unknown keys are ignored, as in the options parser.

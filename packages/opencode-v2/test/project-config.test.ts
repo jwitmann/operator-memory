@@ -78,9 +78,9 @@ describe("resolveProjectConfig", () => {
 
   it("merges a valid project file over the base", async () => {
     const dir = await makeProject();
-    await mkdir(join(dir, ".operator"), { recursive: true });
+    await mkdir(join(dir, ".vcc-brain"), { recursive: true });
     await writeFile(
-      join(dir, ".operator", "config.json"),
+      join(dir, ".vcc-brain", "config.json"),
       JSON.stringify({ contextManagement: { enabled: false } }),
     );
     const outcome = await resolveProjectConfig(dir, BASE);
@@ -91,8 +91,8 @@ describe("resolveProjectConfig", () => {
 
   it("warns and falls back on invalid JSON", async () => {
     const dir = await makeProject();
-    await mkdir(join(dir, ".operator"), { recursive: true });
-    await writeFile(join(dir, ".operator", "config.json"), "{not json");
+    await mkdir(join(dir, ".vcc-brain"), { recursive: true });
+    await writeFile(join(dir, ".vcc-brain", "config.json"), "{not json");
     const outcome = await resolveProjectConfig(dir, BASE);
     expect(outcome.config).toEqual(BASE);
     expect(outcome.warnings).toHaveLength(1);

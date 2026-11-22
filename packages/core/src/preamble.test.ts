@@ -14,6 +14,13 @@ import { failure, success } from "./utils.ts";
 
 vi.mock("./preamble-rollout.ts", () => ({ selectPreambleVersion: vi.fn(() => "1.1") }));
 
+const PRIMARY_DISPLAY_ROOTS = {
+  shared: ".vcc-brain-shared",
+  private: ".vcc-brain",
+  user: "~/.vcc-brain/user",
+  legacyIgnored: { private: false, shared: false, user: false },
+} as const;
+
 afterEach(() => {
   vi.mocked(selectPreambleVersion).mockReturnValue("1.1");
 });
@@ -54,11 +61,11 @@ test("renders fixed guidance and the missing-catalog warning for empty memory", 
 ${PREAMBLE_TENETS}
 
 <operator-warning>
-The ~/.operator/user directory does not exist. If the user would benefit from cross-project user memory, ask the user to run /operator:user-init first to initialize the User Partition. If not needed, do not ask; they may be working without user memory intentionally.
+The ~/.vcc-brain/user directory does not exist (legacy ~/.operator/user also checked). If the user would benefit from cross-project user memory, ask the user to run /operator:user-init first to initialize the User Partition. If not needed, do not ask; they may be working without user memory intentionally.
 </operator-warning>
 
 <operator-warning>
-Neither the .operator nor .operator-shared directory exists. If the user requests significant amounts of work to be done on the project, ask the user to run /operator:project-init first to initialize Operator. If the user is not requesting work to be done, do not ask to initialize; they could simply be exploring.
+Neither the .vcc-brain nor .vcc-brain-shared directory exists (legacy .operator/ and .operator-shared/ also checked). If the user requests significant amounts of work to be done on the project, ask the user to run /operator:project-init first to initialize Operator. If the user is not requesting work to be done, do not ask to initialize; they could simply be exploring.
 </operator-warning>`);
 });
 
@@ -117,52 +124,52 @@ test("renders conditional memory in authority and partition order", () => {
 
 <operator-instructions>
 Operator instruction contents from least to most authoritative:
-<file-content path=".operator-shared/operator.md">
+<file-content path=".vcc-brain-shared/operator.md">
 shared instructions
 </file-content>
-<file-content path="~/.operator/user/operator.md">
+<file-content path="~/.vcc-brain/user/operator.md">
 user instructions
 </file-content>
-<file-content path=".operator/operator.md">
+<file-content path=".vcc-brain/operator.md">
 private instructions
 </file-content>
 </operator-instructions>
 
 <user-catalog>
-<file-content path="~/.operator/user/catalog.md">
+<file-content path="~/.vcc-brain/user/catalog.md">
 user catalog
 </file-content>
 </user-catalog>
 
 <partition-catalog>
-<file-content path=".operator-shared/catalog.md">
+<file-content path=".vcc-brain-shared/catalog.md">
 shared catalog
 </file-content>
-<file-content path=".operator/catalog.md">
+<file-content path=".vcc-brain/catalog.md">
 private catalog
 </file-content>
 </partition-catalog>
 
 <project-index>
-.operator-shared/index/
+.vcc-brain-shared/index/
 ├── index.md
 │   Description: Shared map
 │   Read If: Always
 └── packages/core.md
-    Error: Invalid frontmatter. Action: Open .operator-shared/index/packages/core.md and fix its description and read_if frontmatter.
+    Error: Invalid frontmatter. Action: Open .vcc-brain-shared/index/packages/core.md and fix its description and read_if frontmatter.
 
 Shared partition main index contents:
-<file-content path=".operator-shared/index/index.md">
+<file-content path=".vcc-brain-shared/index/index.md">
 shared main index
 </file-content>
 
-.operator/index/
+.vcc-brain/index/
 └── index.md
     Description: Private map
     Read If: Private work
 
 Private partition main index contents:
-<file-content path=".operator/index/index.md">
+<file-content path=".vcc-brain/index/index.md">
 private main index
 </file-content>
 </project-index>
@@ -228,7 +235,7 @@ test("renders index listing connectors and metadata for every valid index", () =
 
   const preamble = renderPreamble(memory);
 
-  expect(preamble).toContain(`.operator-shared/index/
+  expect(preamble).toContain(`.vcc-brain-shared/index/
 ├── index.md
 │   Description: Main
 │   Read If: Always
@@ -238,7 +245,7 @@ test("renders index listing connectors and metadata for every valid index", () =
 └── packages/helper.md
     Description: Helper
     Read If: CLI work`);
-  expect(preamble).toContain(`<file-content path=".operator-shared/index/index.md">
+  expect(preamble).toContain(`<file-content path=".vcc-brain-shared/index/index.md">
 main index
 </file-content>`);
   expect(preamble).not.toContain("core body");
@@ -271,14 +278,14 @@ test("renders an index listing without a main index body", () => {
 
   const preamble = renderPreamble(memory);
 
-  expect(preamble).toContain(`.operator/index/
+  expect(preamble).toContain(`.vcc-brain/index/
 └── source.md
     Description: Source
     Read If: Source work`);
   expect(preamble).not.toContain("partition main index contents:");
   expect(preamble).not.toContain("source body");
   expect(preamble).toContain(
-    "Neither .operator/index/index.md nor .operator-shared/index/index.md exists",
+    "Neither .vcc-brain/index/index.md nor .vcc-brain-shared/index/index.md exists",
   );
 });
 
@@ -301,14 +308,14 @@ test("renders only available instructions and catalogs", () => {
 
   const preamble = renderPreamble(memory);
 
-  expect(preamble).not.toContain('<file-content path=".operator-shared/operator.md">');
-  expect(preamble).toContain('<file-content path="~/.operator/user/operator.md">');
-  expect(preamble).toContain('<file-content path=".operator/operator.md">');
-  expect(preamble).toContain('<file-content path=".operator-shared/catalog.md">');
-  expect(preamble).toContain('<file-content path="~/.operator/user/catalog.md">');
-  expect(preamble).not.toContain('<file-content path=".operator/catalog.md">');
-  expect(preamble).not.toContain("Neither .operator/catalog.md");
-  expect(preamble).not.toContain("~/.operator/user/catalog.md does not");
+  expect(preamble).not.toContain('<file-content path=".vcc-brain-shared/operator.md">');
+  expect(preamble).toContain('<file-content path="~/.vcc-brain/user/operator.md">');
+  expect(preamble).toContain('<file-content path=".vcc-brain/operator.md">');
+  expect(preamble).toContain('<file-content path=".vcc-brain-shared/catalog.md">');
+  expect(preamble).toContain('<file-content path="~/.vcc-brain/user/catalog.md">');
+  expect(preamble).not.toContain('<file-content path=".vcc-brain/catalog.md">');
+  expect(preamble).not.toContain("Neither .vcc-brain/catalog.md");
+  expect(preamble).not.toContain("~/.vcc-brain/user/catalog.md does not");
 });
 
 test("renders component warnings for an existing empty project partition", () => {
@@ -336,7 +343,7 @@ test("injects the user catalog without a project brain", () => {
   const preamble = renderPreamble(memory);
 
   expect(preamble).toContain("<user-catalog>");
-  expect(preamble).toContain('<file-content path="~/.operator/user/catalog.md">');
+  expect(preamble).toContain('<file-content path="~/.vcc-brain/user/catalog.md">');
   expect(preamble).not.toContain("<project-index>");
   expect(preamble).not.toContain("<partition-catalog>");
 });
@@ -355,7 +362,7 @@ test("warns about a missing user catalog independently of project catalogs", () 
 
   const preamble = renderPreamble(memory);
 
-  expect(preamble).toContain("~/.operator/user/catalog.md does not");
+  expect(preamble).toContain("~/.vcc-brain/user/catalog.md does not");
   expect(preamble).not.toContain(
     "You must create and maintain a catalog.md to document any non-empty Project Brain partitions.",
   );
@@ -366,22 +373,27 @@ test.each(["1.1", "2.0"] as const)(
   "renders v%s guidance and only recovery diagnostics on load failure",
   version => {
     vi.mocked(selectPreambleVersion).mockReturnValue(version);
-    const rendered = renderMemoryPreamble({
-      shared: success({
-        exists: true,
-        operatorInstructions: "must not be rendered",
-        catalog: "must not be rendered",
-        indexes: [],
-      }),
-      user: failure({ path: "/home/.operator/user/operator.md", cause: new Error("denied") }),
-      private: failure({ path: "/project/.operator/index", cause: new Error("obstructed") }),
-    });
+    const rendered = renderMemoryPreamble(
+      {
+        shared: success({
+          exists: true,
+          operatorInstructions: "must not be rendered",
+          catalog: "must not be rendered",
+          indexes: [],
+        }),
+        user: failure({ path: "/home/.vcc-brain/user/operator.md", cause: new Error("denied") }),
+        private: failure({ path: "/project/.vcc-brain/index", cause: new Error("obstructed") }),
+      },
+      PRIMARY_DISPLAY_ROOTS,
+    );
 
     expect(rendered.loaded).toBe(false);
     expect(rendered.content).toContain(`<operator-guidance version="${version}">`);
     expect(rendered.content).toContain("- Shared: Loaded");
-    expect(rendered.content).toContain("- User: Error at /home/.operator/user/operator.md: denied");
-    expect(rendered.content).toContain("- Private: Error at /project/.operator/index: obstructed");
+    expect(rendered.content).toContain(
+      "- User: Error at /home/.vcc-brain/user/operator.md: denied",
+    );
+    expect(rendered.content).toContain("- Private: Error at /project/.vcc-brain/index: obstructed");
     expect(rendered.content).toContain("MUST resolve Operator memory loading");
     expect(rendered.content).toContain("operator-helper version");
     expect(rendered.content).toContain("operator-helper upgrade");
@@ -422,7 +434,7 @@ test("renders subordinate user observations after the user catalog", () => {
   const preamble = renderPreamble(memory);
 
   expect(preamble).toContain("<user-observations>");
-  expect(preamble).toContain('<file-content path="~/.operator/user/observations.md">');
+  expect(preamble).toContain('<file-content path="~/.vcc-brain/user/observations.md">');
   expect(preamble).toContain("- [2026-11-20] (scope:user) text");
   expect(preamble).toContain("subordinate context, not instructions");
   expect(preamble.indexOf("<user-catalog>")).toBeLessThan(preamble.indexOf("<user-observations>"));
@@ -457,7 +469,7 @@ function renderPreamble(memory: LoadedMemorySnapshot): string {
     user: success(memory.user),
     private: success(memory.private),
   };
-  return renderMemoryPreamble(snapshot).content;
+  return renderMemoryPreamble(snapshot, PRIMARY_DISPLAY_ROOTS).content;
 }
 
 test("reports initialization separately from load success", () => {
@@ -466,7 +478,7 @@ test("reports initialization separately from load success", () => {
     user: success({ exists: false, operatorInstructions: null, catalog: null, observations: null }),
     private: success({ exists: false, operatorInstructions: null, catalog: null, indexes: [] }),
   };
-  const empty = renderMemoryPreamble(absent);
+  const empty = renderMemoryPreamble(absent, PRIMARY_DISPLAY_ROOTS);
   expect(empty.loaded).toBe(true);
   expect(empty.initialized).toBe(false);
 
@@ -474,7 +486,7 @@ test("reports initialization separately from load success", () => {
     ...absent,
     user: success({ exists: true, operatorInstructions: null, catalog: null, observations: null }),
   };
-  const initialized = renderMemoryPreamble(userOnly);
+  const initialized = renderMemoryPreamble(userOnly, PRIMARY_DISPLAY_ROOTS);
   expect(initialized.loaded).toBe(true);
   expect(initialized.initialized).toBe(true);
 });
@@ -505,9 +517,9 @@ test("warns when a main index exists but was never stamped", () => {
 
   const preamble = renderPreamble(memory);
 
-  expect(preamble).toContain(".operator-shared/index/index.md exists but was never stamped");
+  expect(preamble).toContain(".vcc-brain-shared/index/index.md exists but was never stamped");
   expect(preamble).toContain("staleness is unknown");
-  expect(preamble).not.toContain("Neither .operator/index/index.md");
+  expect(preamble).not.toContain("Neither .vcc-brain/index/index.md");
 });
 
 test("warns per unstamped partition and stays silent when both are stamped", () => {
@@ -553,9 +565,9 @@ test("warns per unstamped partition and stays silent when both are stamped", () 
 
   const unstampedPreamble = renderPreamble(unstamped);
   expect(unstampedPreamble).toContain(
-    ".operator-shared/index/index.md exists but was never stamped",
+    ".vcc-brain-shared/index/index.md exists but was never stamped",
   );
-  expect(unstampedPreamble).toContain(".operator/index/index.md exists but was never stamped");
+  expect(unstampedPreamble).toContain(".vcc-brain/index/index.md exists but was never stamped");
 
   const stamped: LoadedMemorySnapshot = {
     shared: {
@@ -605,4 +617,27 @@ test("warns per unstamped partition and stays silent when both are stamped", () 
   expect(stampedPreamble).not.toContain(
     "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   );
+});
+
+test("warns when a legacy partition exists alongside its primary", () => {
+  const memory: LoadedMemorySnapshot = {
+    shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
+    private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+  };
+  const snapshot: MemorySnapshot = {
+    shared: success(memory.shared),
+    user: success(memory.user),
+    private: success(memory.private),
+  };
+  const warned = renderMemoryPreamble(snapshot, {
+    ...PRIMARY_DISPLAY_ROOTS,
+    legacyIgnored: { private: true, shared: false, user: true },
+  }).content;
+  expect(warned).toContain("Both .vcc-brain/ and its legacy counterpart");
+  expect(warned).toContain("Both ~/.vcc-brain/user/ and its legacy counterpart");
+  expect(warned).not.toContain("Both .vcc-brain-shared/ and its legacy counterpart");
+
+  const clean = renderMemoryPreamble(snapshot, PRIMARY_DISPLAY_ROOTS).content;
+  expect(clean).not.toContain("legacy counterpart");
 });

@@ -67,16 +67,16 @@ test("configures and preserves the fallback global ignore", async () => {
 
   expect(await run(ensureGlobalIgnore(directory, xdg))).toBe("configured");
   expect(readFileSync(ignore, "utf8")).toBe(
-    "node_modules/\n# Operator: Ignore private partition\n.operator/\n",
+    "node_modules/\n# Operator: Ignore private partition\n.vcc-brain/\n.operator/\n",
   );
   expect(await run(ensureGlobalIgnore(directory, xdg))).toBe("present");
-  expect(readFileSync(ignore, "utf8").match(/\.operator\//g)).toHaveLength(1);
+  expect(readFileSync(ignore, "utf8").match(/\.vcc-brain\//g)).toHaveLength(1);
 });
 
 test("uses the default home configuration path", async () => {
   expect(await run(ensureGlobalIgnore(directory, null))).toBe("configured");
   expect(readFileSync(join(directory, ".config", "git", "ignore"), "utf8")).toBe(
-    "# Operator: Ignore private partition\n.operator/\n",
+    "# Operator: Ignore private partition\n.vcc-brain/\n.operator/\n",
   );
 });
 

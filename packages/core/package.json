@@ -20,6 +20,7 @@
     "./utils": "./src/utils.ts",
     "./memory/frontmatter": "./src/memory/frontmatter.ts",
     "./memory/load": "./src/memory/load.ts",
+    "./memory/roots": "./src/memory/roots.ts",
     "./preamble": "./src/preamble.ts",
     "./preamble-refresh": "./src/preamble-refresh.ts",
     "./templates/project-index": "./src/templates/project-index.ts",

@@ -1,6 +1,6 @@
 export const PROJECT_INDEX_SETUP_TEMPLATE = `# Project Index Setup
 
-You are helping the user build or refresh the Operator Project Index — the living map of **codebase** structure and intent under \`.operator/index/\` and/or \`.operator-shared/index/\`.
+You are helping the user build or refresh the Operator Project Index — the living map of **codebase** structure and intent under \`.vcc-brain/index/\` and/or \`.vcc-brain-shared/index/\`.
 
 Only populate or update the **main project code** index. Do not put brain layout, doctrine, specs, plans, or setup metadata in the index. You may re-run \`operator-helper index init\` and \`operator-helper index lint\` as needed.
 
@@ -16,7 +16,7 @@ Only populate or update the **main project code** index. Do not put brain layout
 
 ## Out of scope
 
-- \`.operator/\` / \`.operator-shared/\` brain structure → Brain structure belongs to the Partition Catalog
+- \`.vcc-brain/\` / \`.vcc-brain-shared/\` brain structure → Brain structure belongs to the Partition Catalog
 - Non-project code and private corpora (unless the user explicitly expands scope)
 
 ## Phase 1: Orient
@@ -24,14 +24,14 @@ Only populate or update the **main project code** index. Do not put brain layout
 Read when present:
 
 - Status listings from \`operator-helper index init\`
-- \`.operator/operator.md\` and \`.operator-shared/operator.md\` (placement / share policy)
-- All existing files under \`.operator/index/\` and \`.operator-shared/index/\`
+- \`.vcc-brain/operator.md\` and \`.vcc-brain-shared/operator.md\` (placement / share policy)
+- All existing files under \`.vcc-brain/index/\` and \`.vcc-brain-shared/index/\`
 
 Decide write targets:
 
 - Only one index root (\`<partition>/index/\`) exists → that root is the main codebase map
 - Both exist → Shared = publishable main codebase; Private = private corpora only; keep coverage mostly mutually exclusive
-- No index root yet → default to Private (\`.operator/index/\`) unless policy/user says otherwise
+- No index root yet → default to Private (\`.vcc-brain/index/\`) unless policy/user says otherwise
 - Default scope: main project code only; ignore non-project trees and private corpora unless the user asks
 
 If partition choice is ambiguous, ask for user selection via \`question\` tool, then continue.

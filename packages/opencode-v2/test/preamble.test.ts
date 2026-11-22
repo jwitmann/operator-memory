@@ -17,7 +17,7 @@ afterEach(async () => {
 test("returns an immutable preamble for each session", async () => {
   const projectDirectory = await temporaryDirectory("operator-v2-project-");
   const homeDirectory = await temporaryDirectory("operator-v2-home-");
-  const privateRoot = join(projectDirectory, ".operator");
+  const privateRoot = join(projectDirectory, ".vcc-brain");
   await mkdir(privateRoot);
   await writeFile(join(privateRoot, "operator.md"), "original instructions");
 

@@ -5,8 +5,9 @@ import type { GenerateOptions, StreamChunk } from "@deepseek-ai/dsh-llm";
 import { type DshDeps, isDshStale } from "./runtime.ts";
 
 // Brain partition roots, least to most authoritative, exactly as the
-// preamble renders them. Shared with the receipt label path.
-export const DEFAULT_BRAIN_PATHS = ["~/.operator/user", ".operator", ".operator-shared"] as const;
+// preamble renders them. Shared with the receipt label path (canonical
+// definition lives in core; re-exported here for the existing import path).
+export { DEFAULT_BRAIN_PATHS } from "@jwitmann/operator-core/memory/roots";
 
 // Compaction shaping via the `llm/stream` waterfall, keyed on
 // `options.purpose === 'compaction'`.

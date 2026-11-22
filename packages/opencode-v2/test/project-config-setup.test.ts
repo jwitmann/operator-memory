@@ -73,9 +73,9 @@ beforeEach(() => {
 });
 
 test("project file disable wins over opencode.json through setup", async () => {
-  fs.mkdirSync(`${PROJECT}/.operator`, { recursive: true });
+  fs.mkdirSync(`${PROJECT}/.vcc-brain`, { recursive: true });
   fs.writeFileSync(
-    `${PROJECT}/.operator/config.json`,
+    `${PROJECT}/.vcc-brain/config.json`,
     JSON.stringify({ brainUpdates: { enabled: false } }),
   );
   const { context, sessionHook } = setupContext({
@@ -112,8 +112,8 @@ test("opencode.json enable reminds without a project file (control)", async () =
 });
 
 test("invalid project JSON toasts and falls back to opencode.json", async () => {
-  fs.mkdirSync(`${PROJECT}/.operator`, { recursive: true });
-  fs.writeFileSync(`${PROJECT}/.operator/config.json`, "{not json");
+  fs.mkdirSync(`${PROJECT}/.vcc-brain`, { recursive: true });
+  fs.writeFileSync(`${PROJECT}/.vcc-brain/config.json`, "{not json");
   const { context } = setupContext({
     operator: { brainUpdates: { enabled: true, toolCallThreshold: 25 } },
   });
@@ -121,6 +121,6 @@ test("invalid project JSON toasts and falls back to opencode.json", async () => 
 
   expect(emitToast).toHaveBeenCalledWith(
     "toast",
-    expect.objectContaining({ message: expect.stringContaining(".operator/config.json") }),
+    expect.objectContaining({ message: expect.stringContaining(".vcc-brain/config.json") }),
   );
 });

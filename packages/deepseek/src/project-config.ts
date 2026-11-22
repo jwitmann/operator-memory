@@ -1,21 +1,21 @@
 import { readFile, stat } from "node:fs/promises";
-import { join } from "node:path";
+
+import { projectConfigPaths } from "@jwitmann/operator-core/memory/roots";
 
 import { parseProjectConfig, type OperatorDeepseekConfig } from "./config.ts";
 
-// Optional per-project override: `<project>/.operator/config.json`, same
-// block/key names as the profile plugin config. Absent or unreadable files
-// (the common case) silently fall back to the profile config — the hot path
-// must not warn per step on transient IO. Unparsable content and validation
-// failures are actionable user errors, so they warn once per file content
-// and fall back (per block for validation, whole file for bad JSON).//
+// Optional per-project override: `<project>/.vcc-brain/config.json` (legacy
+// `<project>/.operator/config.json` also checked — see projectConfigPaths),
+// same block/key names as the profile plugin config. Absent or unreadable
+// files (the common case) silently fall back to the profile config — the hot
+// path must not warn per step on transient IO. Unparsable content and
+// validation failures are actionable user errors, so they warn once per file
+// content and fall back (per block for validation, whole file for bad JSON).
 // Resolution is mtime-cached per project directory: repeat resolves pay one
 // stat, re-parsing only when the file moves. The synchronous shaping hook
 // cannot do IO, so it reads through `cachedProjectConfig` (warmed by the
 // async sites); an unwarned session falls back to the profile config, which
 // is exactly the pre-override behavior.
-
-export const PROJECT_CONFIG_RELATIVE_PATH = join(".operator", "config.json");
 
 type CacheEntry = {
   readonly stamp: string;
@@ -23,12 +23,23 @@ type CacheEntry = {
 };
 
 const cache = new Map<string, CacheEntry>();
-export function projectConfigPath(projectDirectory: string): string {
-  return join(projectDirectory, PROJECT_CONFIG_RELATIVE_PATH);
+
+function stampOf(path: string, mtimeMs: number, size: number): string {
+  return `${path}:${mtimeMs}:${size}`;
 }
 
-function stampOf(mtimeMs: number, size: number): string {
-  return `${mtimeMs}:${size}`;
+async function findConfigFile(
+  projectDirectory: string,
+): Promise<{ readonly path: string; readonly mtimeMs: number; readonly size: number } | null> {
+  for (const candidate of projectConfigPaths(projectDirectory)) {
+    try {
+      const st = await stat(candidate);
+      return { path: candidate, mtimeMs: st.mtimeMs, size: st.size };
+    } catch {
+      // Unreadable candidate: try the next one, else fall back silently.
+    }
+  }
+  return null;
 }
 
 export async function resolveProjectConfig(
@@ -36,22 +47,18 @@ export async function resolveProjectConfig(
   profile: OperatorDeepseekConfig,
   warn: (message: string) => void,
 ): Promise<OperatorDeepseekConfig> {
-  const path = projectConfigPath(projectDirectory);
-  let info: { readonly mtimeMs: number; readonly size: number } | null = null;
-  try {
-    const st = await stat(path);
-    info = { mtimeMs: st.mtimeMs, size: st.size };
-  } catch {
+  const found = await findConfigFile(projectDirectory);
+  if (found === null) {
     cache.delete(projectDirectory);
     return profile;
   }
-  const stamp = stampOf(info.mtimeMs, info.size);
+  const stamp = stampOf(found.path, found.mtimeMs, found.size);
   const cached = cache.get(projectDirectory);
   if (cached !== undefined && cached.stamp === stamp) return cached.config;
 
   let text: string;
   try {
-    text = await readFile(path, "utf8");
+    text = await readFile(found.path, "utf8");
   } catch {
     cache.delete(projectDirectory);
     return profile;
@@ -62,13 +69,13 @@ export async function resolveProjectConfig(
   } catch {
     // Unparsable content is an actionable user error: warn once per content
     // (the stamp gate above dedups repeats) and fall back to the profile.
-    warnOnce(warn, path, "the project config is not valid JSON");
+    warnOnce(warn, found.path, "the project config is not valid JSON");
     cache.set(projectDirectory, { stamp, config: profile });
     return profile;
   }
   const outcome = parseProjectConfig(raw, profile);
   if (outcome.warnings.length > 0) {
-    warnOnce(warn, path, outcome.warnings.join("; "));
+    warnOnce(warn, found.path, outcome.warnings.join("; "));
   }
   cache.set(projectDirectory, { stamp, config: outcome.config });
   return outcome.config;

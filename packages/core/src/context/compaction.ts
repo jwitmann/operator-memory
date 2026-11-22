@@ -20,8 +20,8 @@ export type CompactionCause = TriggerKind | "manual";
 
 export type CompactionPromptInput = {
   // Brain partition roots, least to most authoritative, exactly as the
-  // preamble renders them (for example "~/.operator/user", ".operator",
-  // ".operator-shared").
+  // preamble renders them (for example "~/.vcc-brain/user", ".vcc-brain",
+  // ".vcc-brain-shared").
   readonly brainPaths: readonly string[];
   // How the next session recovers content the summary elides. Null selects
   // the omission-store sentence (adapters with a trim port); adapters

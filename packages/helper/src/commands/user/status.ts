@@ -1,9 +1,10 @@
 import { Effect, Path } from "effect";
 
-import { inspectPath, listFiles, PathKindError, readOptionalText } from "../../filesystem.ts";
+import { listFiles, PathKindError, readOptionalText } from "../../filesystem.ts";
 import { renderTable } from "../../output.ts";
 import type { CliContext } from "../../utils.ts";
-import { USER_ROOT } from "./common.ts";
+import { resolveEffectivePartition } from "../project/brain-roots.ts";
+import { USER_LEGACY_ROOT, USER_ROOT } from "./common.ts";
 
 const INIT_HINT = [
   "For Users: Run `/operator:user-init` in your harness to initialize.",
@@ -12,17 +13,26 @@ const INIT_HINT = [
 
 export const userStatus = Effect.fn("userStatus")(function* (context: CliContext) {
   const pathService = yield* Path.Path;
-  const root = pathService.join(context.home, ".operator", "user");
-  const kind = yield* inspectPath(root);
+  // .vcc-brain first, fallback to .operator (see resolveEffectivePartition).
+  const effective = yield* resolveEffectivePartition(
+    context.home,
+    ".vcc-brain/user",
+    ".operator/user",
+    USER_ROOT,
+    USER_LEGACY_ROOT,
+  );
+  const root = effective.absoluteRoot;
+  const displayRoot = effective.displayRoot;
+  const kind = effective.usingLegacy ? effective.legacyKind : effective.primaryKind;
 
   if (kind === "missing") {
     return {
       exitCode: 0,
       output: [
-        `User Partition: ${USER_ROOT}`,
+        `User Partition: ${displayRoot} (legacy ${USER_LEGACY_ROOT} also checked)`,
         "",
         "⚠ User Partition Missing",
-        renderTable([["Expected Location", `${USER_ROOT}/`]]),
+        renderTable([["Expected Location", `${displayRoot}/`]]),
         "",
         ...INIT_HINT,
       ].join("\n"),
@@ -49,8 +59,8 @@ export const userStatus = Effect.fn("userStatus")(function* (context: CliContext
     rows.push([
       label,
       content === null
-        ? `Missing (${USER_ROOT}/${file})`
-        : `${USER_ROOT}/${file} (${Buffer.byteLength(content)} bytes)`,
+        ? `Missing (${displayRoot}/${file})`
+        : `${displayRoot}/${file} (${Buffer.byteLength(content)} bytes)`,
     ]);
   }
 
@@ -60,7 +70,19 @@ export const userStatus = Effect.fn("userStatus")(function* (context: CliContext
   );
   rows.push(["Freeform Content", `${freeform.length} files`]);
 
-  const lines = [`User Partition: ${USER_ROOT}`, "", "✓ User Partition Found", renderTable(rows)];
+  const lines = [`User Partition: ${displayRoot}`, "", "✓ User Partition Found", renderTable(rows)];
+  if (effective.bothDirectories) {
+    lines.push(
+      "",
+      "⚠ Both ~/.vcc-brain/user/ and legacy ~/.operator/user/ exist; legacy is ignored — merge anything still needed, then remove it.",
+    );
+  }
+  if (effective.primaryObstructed) {
+    lines.push(
+      "",
+      `⚠ ~/.vcc-brain/user/ is obstructed (${effective.primaryKind}); using legacy ~/.operator/user/ until it is repaired.`,
+    );
+  }
   if (missingCore) {
     lines.push("", ...INIT_HINT);
   }

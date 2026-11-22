@@ -19,7 +19,7 @@ import {
 } from "./compaction-snapshot.ts";
 
 export type ReadOmittedDeps = {
-  // ~/.operator/state; the adapter computes it from the user home.
+  // ~/.vcc-brain/state (legacy ~/.operator/state also checked); the adapter computes it from the user home.
   readonly stateDirectory: string;
 };
 

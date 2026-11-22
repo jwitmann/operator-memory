@@ -27,7 +27,7 @@ export type StampFields = {
   readonly complete: boolean;
 };
 
-const BRAIN_ROOTS = new Set([".operator", ".operator-shared"]);
+const BRAIN_ROOTS = new Set([".vcc-brain", ".vcc-brain-shared", ".operator", ".operator-shared"]);
 
 const WALK_PRUNED_SEGMENTS = new Set([
   ...BRAIN_ROOTS,
@@ -121,8 +121,8 @@ export function readStampFields(content: string): StampFields {
     stampedAt: getString("stamped_at"),
     stampedCommit: getString("stamped_commit"),
     complete:
-      typeof value["tree_hash"] === "string"
-      && typeof value["stamped_at"] === "string"
+      typeof value.tree_hash === "string"
+      && typeof value.stamped_at === "string"
       && "stamped_commit" in value,
   };
 }

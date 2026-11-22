@@ -1,14 +1,31 @@
 import { Effect, Path, Result } from "effect";
 
-import { inspectPath, listFiles, PathKindError, readOptionalText } from "../../filesystem.ts";
+import { listFiles, PathKindError, readOptionalText, type PathKind } from "../../filesystem.ts";
 import { checkGlobalIgnore, hasTrackedPrivateFiles } from "../../git.ts";
 import { renderTable } from "../../output.ts";
 import type { CliContext } from "../../utils.ts";
-import { CORE_FILES, PRIVATE_ROOT, SHARED_ROOT } from "./common.ts";
+import {
+  CORE_FILES,
+  PRIVATE_LEGACY_ROOT,
+  PRIVATE_ROOT,
+  SHARED_LEGACY_ROOT,
+  SHARED_ROOT,
+} from "./common.ts";
+import { resolveEffectivePartition } from "./brain-roots.ts";
 
 export const projectStatus = Effect.fn("projectStatus")(function* (context: CliContext) {
-  const privateStatus = yield* inspectPartition(context.cwd, PRIVATE_ROOT, false);
-  const sharedStatus = yield* inspectPartition(context.cwd, SHARED_ROOT, true);
+  const privateStatus = yield* inspectEffectivePartition(
+    context.cwd,
+    PRIVATE_ROOT,
+    PRIVATE_LEGACY_ROOT,
+    false,
+  );
+  const sharedStatus = yield* inspectEffectivePartition(
+    context.cwd,
+    SHARED_ROOT,
+    SHARED_LEGACY_ROOT,
+    true,
+  );
   const ignored = yield* checkGlobalIgnore(context.home, context.xdgConfigHome);
   const tracked = yield* hasTrackedPrivateFiles(context.cwd).pipe(Effect.result);
   const lines = [
@@ -18,7 +35,7 @@ export const projectStatus = Effect.fn("projectStatus")(function* (context: CliC
     "",
     ...sharedStatus.lines,
     "",
-    `${ignored ? "✓" : "✗"} Global Git Ignore ${ignored ? "Contains" : "Missing"} .operator/`,
+    `${ignored ? "✓" : "✗"} Global Git Ignore ${ignored ? "Contains" : "Missing"} .vcc-brain/ (legacy .operator/ and .operator-shared/ also checked)`,
   ];
 
   const privateFilesAreTracked = Result.isSuccess(tracked) && tracked.success;
@@ -53,14 +70,44 @@ type PartitionStatus = {
   readonly lines: string[];
 };
 
+const inspectEffectivePartition = Effect.fn("inspectEffectivePartition")(function* (
+  cwd: string,
+  primary: string,
+  legacy: string,
+  shared: boolean,
+) {
+  const effective = yield* resolveEffectivePartition(cwd, primary, legacy);
+  const status = yield* inspectPartition(
+    cwd,
+    effective.displayRoot,
+    effective.absoluteRoot,
+    effective.usingLegacy ? effective.legacyKind : effective.primaryKind,
+    shared,
+  );
+  if (!status.exists) {
+    return status;
+  }
+  const lines = [...status.lines];
+  if (effective.bothDirectories) {
+    lines.push(
+      `⚠ Both ${primary}/ and legacy ${legacy}/ exist; legacy is ignored — merge anything still needed, then remove it.`,
+    );
+  }
+  if (effective.primaryObstructed) {
+    lines.push(
+      `⚠ ${primary}/ is obstructed (${effective.primaryKind}); using legacy ${legacy}/ until it is repaired.`,
+    );
+  }
+  return { exists: status.exists, lines } satisfies PartitionStatus;
+});
+
 const inspectPartition = Effect.fn("inspectPartition")(function* (
   cwd: string,
   root: string,
+  absoluteRoot: string,
+  kind: PathKind,
   shared: boolean,
 ) {
-  const pathService = yield* Path.Path;
-  const absoluteRoot = pathService.join(cwd, root);
-  const kind = yield* inspectPath(absoluteRoot);
   const label = shared ? "Project Shared" : "Project Private";
   if (kind === "missing") {
     return {

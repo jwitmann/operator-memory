@@ -9,7 +9,7 @@ import { failure, hasNodeErrorCode, type Result, success } from "../utils.ts";
 // (`<callID>:input` / `<callID>:output`) to its content ID. Re-storing an
 // existing key returns the existing ID without rewriting anything, which is
 // what makes re-trimming byte-identical across requests. The caller supplies
-// the root (the adapter passes `~/.operator/state/omitted`); core stays
+// the root (the adapter passes `~/.vcc-brain/state/omitted` (legacy `~/.operator/state/` also checked)); core stays
 // harness-agnostic.
 
 export type OmissionStoreError = {

@@ -3,6 +3,7 @@ import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { loadMemorySnapshot } from "@jwitmann/operator-core/memory/load";
+import { resolveBrainRoots } from "@jwitmann/operator-core/memory/roots";
 import { renderPreamble } from "@jwitmann/operator-core/preamble";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
@@ -70,7 +71,19 @@ function installationDetail(moduleUrl: string): string {
 }
 
 async function renderMessage(projectDirectory: string) {
-  const preamble = renderPreamble(await loadMemorySnapshot(projectDirectory, homedir(), true));
+  const home = homedir();
+  const snapshotPromise = loadMemorySnapshot(projectDirectory, home, true);
+  const roots = await resolveBrainRoots(projectDirectory, home);
+  const preamble = renderPreamble(await snapshotPromise, {
+    shared: roots.sharedDisplay,
+    private: roots.privateDisplay,
+    user: roots.userDisplay,
+    legacyIgnored: {
+      private: roots.privateLegacyAlsoExists,
+      shared: roots.sharedLegacyAlsoExists,
+      user: roots.userLegacyAlsoExists,
+    },
+  });
   return {
     loaded: preamble.loaded,
     value: {

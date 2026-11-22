@@ -15,8 +15,12 @@ import {
   parseIndexFrontmatter,
 } from "./frontmatter.ts";
 
-export const PROJECT_PRIVATE_ROOT = ".operator";
-export const PROJECT_SHARED_ROOT = ".operator-shared";
+export {
+  PROJECT_PRIVATE_LEGACY_ROOT,
+  PROJECT_PRIVATE_ROOT,
+  PROJECT_SHARED_LEGACY_ROOT,
+  PROJECT_SHARED_ROOT,
+} from "./roots.ts";
 
 export type IndexDocument = {
   readonly path: string;

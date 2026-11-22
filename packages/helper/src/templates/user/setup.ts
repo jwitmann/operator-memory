@@ -6,7 +6,7 @@ export const USER_SETUP_TEMPLATE = `# User Setup
 
 You are helping the user configure their Operator User Partition, the global memory that defines how Operator agents should work with them across all projects.
 
-The User Partition lives at \`~/.operator/user/\`:
+The User Partition lives at \`~/.vcc-brain/user/\`:
 
 - \`operator.md\` — User Instructions; standing doctrine, always injected
 - \`catalog.md\` — User Partition Catalog; map of all other files, injected when present
@@ -26,7 +26,7 @@ Read both core files and the embedded seeds, then assess whether each of \`opera
 - Partially configured
 - Fully configured
 
-Also list every other path in \`~/.operator/user/\` (User Partition freeform).
+Also list every other path in \`~/.vcc-brain/user/\` (User Partition freeform).
 
 Use your own judgment by comparing the files.
 
@@ -66,15 +66,15 @@ When all information is collected, proceed to write the User Instructions file a
 
 ## Phase 4: Catalog
 
-Maintain the User Partition Catalog at \`~/.operator/user/catalog.md\`.
+Maintain the User Partition Catalog at \`~/.vcc-brain/user/catalog.md\`.
 
-First: List every path in \`~/.operator/user/\` except \`operator.md\` and \`catalog.md\`. Verify every listed path has a catalog entry with a Description and Read If; add entries for any paths that lack them. For artifact-backed freeform, catalog the entry file path (for example \`powerpoint-builder/SKILL.md\`) as a single entry; do not catalog the folder as a separate item and do not catalog individual artifacts.
+First: List every path in \`~/.vcc-brain/user/\` except \`operator.md\` and \`catalog.md\`. Verify every listed path has a catalog entry with a Description and Read If; add entries for any paths that lack them. For artifact-backed freeform, catalog the entry file path (for example \`powerpoint-builder/SKILL.md\`) as a single entry; do not catalog the folder as a separate item and do not catalog individual artifacts.
 
 Next: Offer to port the user's existing skills. Make it explicit that Operator Memory user freeform is a direct, idiomatic replacement for what is commonly known as "Agent Skills" and recommend porting skills over instead of leaving them in harness-specific skill systems. To find candidates, look inside common skill directories such as \`.claude/skills/\`, \`~/.claude/skills/\`, \`~/.agents/skills/\`, and \`.opencode/skills/\`, and ask the user about any other skill locations they know but you do not.
 
 This is global setup: the User Partition applies across all projects. Port only skills the user explicitly wants available globally; do not bulk-port local project skills. Project-specific skills belong in the corresponding Project Brain, not here.
 
-With the user's approval, copy each selected skill into \`~/.operator/user/\`:
+With the user's approval, copy each selected skill into \`~/.vcc-brain/user/\`:
 
 - A standalone Markdown skill is copied as a file.
 - An artifact-backed skill (folder containing an entry document plus code, images, or other artifacts) is copied as the entire folder. The brain is not limited to Markdown; these folders are perfectly acceptable.
@@ -83,7 +83,7 @@ Then catalog each ported skill as above: the entry file only. Do not invent file
 
 ## Phase 5: Confirm
 
-Give the user a concise summary of the current contents of \`~/.operator/user/operator.md\`, \`~/.operator/user/catalog.md\`, and any newly cataloged paths.
+Give the user a concise summary of the current contents of \`~/.vcc-brain/user/operator.md\`, \`~/.vcc-brain/user/catalog.md\`, and any newly cataloged paths.
 
 Ask naturally whether anything is incorrect, missing, too strict, or too permissive. Do not use the \`question\` tool for this free-response confirmation.
 
@@ -91,7 +91,7 @@ After user responds: Apply requested corrections with the user's approval. Finis
 
 ## Canonical Seeds
 
-When creating or restoring the core files, write these bodies to \`~/.operator/user/\`.
+When creating or restoring the core files, write these bodies to \`~/.vcc-brain/user/\`.
 
 \`operator.md\`:
 

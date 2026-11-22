@@ -3,7 +3,7 @@ import { PROJECT_SHARED_README_TEMPLATE } from "./shared-readme.ts";
 
 export const PROJECT_SETUP_TEMPLATE = `# Project Setup
 
-You are helping the user configure the Operator Project Brain across the private \`.operator/\` partition and shared \`.operator-shared/\` partition.
+You are helping the user configure the Operator Project Brain across the private \`.vcc-brain/\` partition and shared \`.vcc-brain-shared/\` partition.
 
 Project indexing is excluded from the setup phases; you offer it as the final step in Phase 8.
 
@@ -41,15 +41,15 @@ Use the embedded Operator Instructions and Shared README seeds below. Do not tre
 
 Read the following core files. Some files may be missing; that is acceptable. You will create them later if the user desires.
 
-- Private Operator Instructions: \`.operator/operator.md\`
-- Private Partition Catalog: \`.operator/catalog.md\`
-- Private Project Index: \`.operator/index/index.md\`
-- Shared Operator Instructions: \`.operator-shared/operator.md\`
-- Shared Partition Catalog: \`.operator-shared/catalog.md\`
-- Shared Project Index: \`.operator-shared/index/index.md\`
-- Shared README: \`.operator-shared/README.md\`
+- Private Operator Instructions: \`.vcc-brain/operator.md\`
+- Private Partition Catalog: \`.vcc-brain/catalog.md\`
+- Private Project Index: \`.vcc-brain/index/index.md\`
+- Shared Operator Instructions: \`.vcc-brain-shared/operator.md\`
+- Shared Partition Catalog: \`.vcc-brain-shared/catalog.md\`
+- Shared Project Index: \`.vcc-brain-shared/index/index.md\`
+- Shared README: \`.vcc-brain-shared/README.md\`
 
-Inspect the overall directory structure and contents of \`.operator/\` and \`.operator-shared/\`.
+Inspect the overall directory structure and contents of \`.vcc-brain/\` and \`.vcc-brain-shared/\`.
 
 After reading, determine if any **private core** file is empty, corrupted, or structurally unusable. Skip if none are affected.
 
@@ -66,7 +66,7 @@ Do not use this phase to repair incomplete, stale, or low-quality content; fix i
 
 Skip this phase when the project already defines whether and how Project Shared is used.
 
-Task: Use the harness's \`question\` tool with multiple selection to ask what, if anything, the user wants published through \`.operator-shared/\`. Offer reasonable choices including:
+Task: Use the harness's \`question\` tool with multiple selection to ask what, if anything, the user wants published through \`.vcc-brain-shared/\`. Offer reasonable choices including:
 
 - Keep all Operator content private
 - Share the main project index
@@ -78,15 +78,15 @@ Do not ask whether to share \`catalog.md\`; \`catalog.md\` should be automatical
 
 After the user chooses:
 
-- If the user chooses to share content, create \`.operator-shared/\` and seed new shared files as needed.
-  - If \`.operator-shared/README.md\` is missing, write it from the embedded Shared README seed. Preserve an existing README.
+- If the user chooses to share content, create \`.vcc-brain-shared/\` and seed new shared files as needed.
+  - If \`.vcc-brain-shared/README.md\` is missing, write it from the embedded Shared README seed. Preserve an existing README.
   - For shared \`operator.md\`, start from the embedded Operator Instructions seed when creating a new file.
   - For shared catalog or index files, write using the fixed preamble document syntax.
-  - Record the content that the user wishes to share in \`.operator-shared/operator.md\`
-  - Record the content that the user wishes to keep private in \`.operator/operator.md\`
+  - Record the content that the user wishes to share in \`.vcc-brain-shared/operator.md\`
+  - Record the content that the user wishes to keep private in \`.vcc-brain/operator.md\`
 - If the user wants to keep everything private:
-  - Record that the user wishes to keep everything private in \`.operator/operator.md\`
-  - If \`.operator-shared/\` exists, ask the user what they wish to do with the brain contents. (Options: Remove, merge with private, keep)
+  - Record that the user wishes to keep everything private in \`.vcc-brain/operator.md\`
+  - If \`.vcc-brain-shared/\` exists, ask the user what they wish to do with the brain contents. (Options: Remove, merge with private, keep)
 
 ## Phase 3: Configure Instructions
 
@@ -127,17 +127,17 @@ After the user chooses:
 
 ## Phase 5: Catalog
 
-Run this phase when the Partition Catalog \`.operator/catalog.md\`/\`.operator-shared/catalog.md\` is unconfigured or out of date.
+Run this phase when the Partition Catalog \`.vcc-brain/catalog.md\`/\`.vcc-brain-shared/catalog.md\` is unconfigured or out of date.
 
-Task: For each active partition: Populate or update the Partition Catalog from the contents and structure of the corresponding partition (\`.operator/\` or \`.operator-shared/\`). Catalog each partition independently. Catalog brain content, not repository source code.
+Task: For each active partition: Populate or update the Partition Catalog from the contents and structure of the corresponding partition (\`.vcc-brain/\` or \`.vcc-brain-shared/\`). Catalog each partition independently. Catalog brain content, not repository source code.
 
 **You must follow the Partition Catalog document syntax from the fixed preamble** (required shape, Description / Read If entries, coverage rules).
 
 ## Phase 6: Configure Operator Features
 
-\`operator-helper project init\` scaffolds \`.operator/config.json\` with context management, preamble refresh, and brain-update nudges present but disabled — the safe default, behaviorally identical to no config file. Ask the user which, if any, to enable now.
+\`operator-helper project init\` scaffolds \`.vcc-brain/config.json\` with context management, preamble refresh, and brain-update nudges present but disabled — the safe default, behaviorally identical to no config file. Ask the user which, if any, to enable now.
 
-Ask only when the Helper output above shows \`Created .operator/config.json\` this run. When it shows \`Preserved\`, a previous run already handled this choice — skip the phase.
+Ask only when the Helper output above shows \`Created .vcc-brain/config.json\` this run. When it shows \`Preserved\`, a previous run already handled this choice — skip the phase.
 
 Task: Use the harness's \`question\` tool with multiple selection. Describe each feature in one line, harness-accurately (you know which harness this is):
 
@@ -145,7 +145,7 @@ Task: Use the harness's \`question\` tool with multiple selection. Describe each
 - Preamble refresh — re-renders the preamble mid-session when the Brain changes, only at cold prompt-cache moments so it costs nothing.
 - Brain-update nudges — one quiet reminder per Brain-change era after enough new tool calls; never an automatic writer.
 
-If the user enables anything, write only the flipped \`enabled\` flags into the existing \`.operator/config.json\`, preserving the scaffolded thresholds; never rewrite the whole file from memory. If the user declines everything, leave the file as scaffolded.
+If the user enables anything, write only the flipped \`enabled\` flags into the existing \`.vcc-brain/config.json\`, preserving the scaffolded thresholds; never rewrite the whole file from memory. If the user declines everything, leave the file as scaffolded.
 
 ## Phase 7: Confirm
 

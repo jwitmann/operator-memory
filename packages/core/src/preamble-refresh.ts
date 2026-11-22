@@ -2,6 +2,8 @@ import type { Dirent } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 
+import { resolveBrainRoots } from "./memory/roots.ts";
+
 import { failure, hasNodeErrorCode, type Result, success } from "./utils.ts";
 
 // Cache-aware preamble refresh: deterministic, local-only. The preamble
@@ -34,9 +36,10 @@ export async function fingerprintPreamble(
   homeDirectory: string,
 ): Promise<Result<string, FingerprintError>> {
   const entries: string[] = [];
-  const sharedRoot = join(projectDirectory, ".operator-shared");
-  const privateRoot = join(projectDirectory, ".operator");
-  const userRoot = join(homeDirectory, ".operator", "user");
+  const roots = await resolveBrainRoots(projectDirectory, homeDirectory);
+  const sharedRoot = roots.sharedRoot;
+  const privateRoot = roots.privateRoot;
+  const userRoot = roots.userRoot;
 
   for (const root of [sharedRoot, privateRoot]) {
     for (const file of ["operator.md", "catalog.md"]) {

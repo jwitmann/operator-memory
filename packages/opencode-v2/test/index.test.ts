@@ -350,8 +350,8 @@ test("refreshes the preamble end to end when the Brain changes cold", async () =
   });
   expect(loadPreamble).toHaveBeenCalledTimes(1);
 
-  fs.mkdirSync("/project/.operator", { recursive: true });
-  fs.writeFileSync("/project/.operator/operator.md", "# changed");
+  fs.mkdirSync("/project/.vcc-brain", { recursive: true });
+  fs.writeFileSync("/project/.vcc-brain/operator.md", "# changed");
 
   const event = {
     sessionID: "ses-refresh-e2e",

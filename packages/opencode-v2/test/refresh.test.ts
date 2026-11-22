@@ -19,20 +19,20 @@ vi.mock("node:fs/promises", async () => {
 });
 
 const SESSION = "ses_test";
-const STATE = "/home/.operator/state";
+const STATE = "/home/.vcc-brain/state";
 const PROJECT = "/project";
 const HOME = "/home/user";
 
 function seedBrain(): void {
-  for (const root of [`${PROJECT}/.operator`, `${PROJECT}/.operator-shared`]) {
+  for (const root of [`${PROJECT}/.vcc-brain`, `${PROJECT}/.vcc-brain-shared`]) {
     fs.mkdirSync(`${root}/index`, { recursive: true });
     fs.writeFileSync(`${root}/operator.md`, `# ops ${root}`);
     fs.writeFileSync(`${root}/catalog.md`, `# catalog ${root}`);
     fs.writeFileSync(`${root}/index/index.md`, `# index ${root}`);
   }
-  fs.mkdirSync(`${HOME}/.operator/user`, { recursive: true });
-  fs.writeFileSync(`${HOME}/.operator/user/operator.md`, "# user ops");
-  fs.writeFileSync(`${HOME}/.operator/user/catalog.md`, "# user catalog");
+  fs.mkdirSync(`${HOME}/.vcc-brain/user`, { recursive: true });
+  fs.writeFileSync(`${HOME}/.vcc-brain/user/operator.md`, "# user ops");
+  fs.writeFileSync(`${HOME}/.vcc-brain/user/catalog.md`, "# user catalog");
 }
 
 function deps(overrides: Record<string, unknown> = {}) {
@@ -60,7 +60,7 @@ function bulkyMessages() {
 // fingerprint unmoved and the refresh would (correctly) stay quiet,
 // making move-asserting tests timing-flaky.
 function rewriteCatalog(text: string): void {
-  const path = `${PROJECT}/.operator/catalog.md`;
+  const path = `${PROJECT}/.vcc-brain/catalog.md`;
   fs.writeFileSync(path, text);
   const later = new Date(Date.now() + 1000);
   fs.utimesSync(path, later, later);
@@ -136,7 +136,7 @@ test("defers while the cache is hot and keeps the stale baseline", async () => {
   const cache = new Map();
   await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache, bulkyMessages());
 
-  fs.writeFileSync(`${PROJECT}/.operator/catalog.md`, "# changed");
+  fs.writeFileSync(`${PROJECT}/.vcc-brain/catalog.md`, "# changed");
   const session = sessionRuntime(runtime, SESSION);
   const baseline = session.preambleFingerprint;
   session.lastStepTokens = { input: 1, output: 1, reasoning: 0, cacheRead: 28529, cacheWrite: 0 };
@@ -163,7 +163,7 @@ test("defers below the estimate floor", async () => {
   const cache = new Map();
   await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache, bulkyMessages());
 
-  fs.writeFileSync(`${PROJECT}/.operator/catalog.md`, "# changed");
+  fs.writeFileSync(`${PROJECT}/.vcc-brain/catalog.md`, "# changed");
 
   const outcome = await maybeRefreshPreamble(deps(), runtime, SESSION, PROJECT, HOME, cache, [
     { role: "user", content: [{ type: "text", text: "tiny" }] },
@@ -273,8 +273,8 @@ test("a failed render toasts once and keeps serving the cached preamble", async 
 
   // Break the render after the baseline: reading a directory as a file
   // throws instead of returning a diagnostic.
-  fs.unlinkSync(`${PROJECT}/.operator/operator.md`);
-  fs.mkdirSync(`${PROJECT}/.operator/operator.md`);
+  fs.unlinkSync(`${PROJECT}/.vcc-brain/operator.md`);
+  fs.mkdirSync(`${PROJECT}/.vcc-brain/operator.md`);
 
   expect(await invoke()).toBe("cached");
   expect(await invoke()).toBe("cached");

@@ -47,9 +47,9 @@ const HOME = homedir();
 
 function seedBrain(): void {
   for (const root of [
-    `${PROJECT}/.operator`,
-    `${PROJECT}/.operator-shared`,
-    `${HOME}/.operator/user`,
+    `${PROJECT}/.vcc-brain`,
+    `${PROJECT}/.vcc-brain-shared`,
+    `${HOME}/.vcc-brain/user`,
   ]) {
     fs.mkdirSync(`${root}/index`, { recursive: true });
     fs.writeFileSync(`${root}/operator.md`, `# ops ${root}`);

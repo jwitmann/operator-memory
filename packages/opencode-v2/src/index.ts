@@ -1,8 +1,9 @@
 import { homedir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { loadMemorySnapshot, type MemoryStatusSnapshot } from "@jwitmann/operator-core/memory/load";
+import { resolveStateDirectory } from "@jwitmann/operator-core/memory/roots";
 import type { TriggerKind } from "@jwitmann/operator-core/context/triggers";
 import { Plugin } from "@opencode/plugin";
 import { pluginId } from "./id.ts";
@@ -107,7 +108,8 @@ const OperatorPlugin = Plugin.define({
       }).catch(() => undefined);
     }
     const contextManagementBase = parsed.ok ? parsed.value : DEFAULT_CONTEXT_MANAGEMENT_CONFIG;
-    // Per-project override: `<project>/.operator/config.json` merges over
+    // Per-project override: `<project>/.vcc-brain/config.json` (legacy
+    // `.operator/config.json` also checked) merges over
     // the opencode.json config (setup-time: one setup per project
     // directory). Same block and key names without the `operator` wrapper;
     // present fields win, absent file or blocks inherit opencode.json.
@@ -119,7 +121,7 @@ const OperatorPlugin = Plugin.define({
     for (const warning of projectOverride.warnings) {
       await showToast({
         title: "Operator Error",
-        message: `Operator project config (.operator/config.json): ${warning}`,
+        message: `Operator project config (.vcc-brain/config.json): ${warning}`,
         variant: "error",
       }).catch(() => undefined);
     }
@@ -167,7 +169,7 @@ const OperatorPlugin = Plugin.define({
         content = await refreshPreambleContent(
           {
             config: effectiveRefreshConfig,
-            stateDirectory: join(homedir(), ".operator", "state"),
+            stateDirectory: resolveStateDirectory(homedir()),
             isBrainAvailable: sessionID => brainAvailable.get(sessionID) === true,
             isCurrent,
             reportFailure: () => {
@@ -194,7 +196,7 @@ const OperatorPlugin = Plugin.define({
             config: effectiveBrainUpdatesConfig,
             projectDirectory: context.location.directory,
             homeDirectory: homedir(),
-            stateDirectory: join(homedir(), ".operator", "state"),
+            stateDirectory: resolveStateDirectory(homedir()),
             isBrainAvailable: sessionID => brainAvailable.get(sessionID) === true,
             isCurrent,
           },
@@ -213,7 +215,7 @@ const OperatorPlugin = Plugin.define({
     // behind the context-management switch.
     if (parsed.ok && (contextManagementEnabled || effectiveRefreshConfig.enabled)) {
       const config = effectiveContextManagement;
-      const stateDirectory = join(homedir(), ".operator", "state");
+      const stateDirectory = resolveStateDirectory(homedir());
       // Shared across reloads so trigger dedup survives a teardown/setup
       // cycle; a requested-but-not-yet-executed compaction must still
       // suppress the next terminal signal after reload.

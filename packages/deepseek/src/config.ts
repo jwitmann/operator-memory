@@ -206,7 +206,8 @@ function parsePreambleRefreshBlock(
   return success({ enabled: enabled.value });
 }
 
-// Project-local override: `.operator/config.json` parsed over a base
+// Project-local override: `.vcc-brain/config.json` (legacy `.operator/config.json`
+// also checked) parsed over a base
 // (normally the profile config) so absent fields inherit the base.
 // Per-block fallback: an invalid block warns and keeps the base block
 // while valid sibling blocks still merge. A non-object root discards the

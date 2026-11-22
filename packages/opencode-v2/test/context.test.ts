@@ -24,7 +24,7 @@ vi.mock("node:fs/promises", async () => {
 });
 
 const SESSION = "ses_test";
-const STATE = "/home/.operator/state";
+const STATE = "/home/.vcc-brain/state";
 
 const CONFIG: ContextManagementConfig = {
   enabled: true,
@@ -385,7 +385,7 @@ test("stays off and records one refusal when the Brain is unavailable", async ()
 test("leaves parts intact when the omission store fails", async () => {
   // A file where the state directory should be makes every store and receipt
   // write fail; trimming degrades to a no-op instead of failing the request.
-  fs.mkdirSync("/home/.operator", { recursive: true });
+  fs.mkdirSync("/home/.vcc-brain", { recursive: true });
   fs.writeFileSync(STATE, "blocking");
   const { context, sessionHook } = contextHookFake(100000);
   const requestCompaction = vi.fn();

@@ -23,7 +23,7 @@ vi.mock("node:fs/promises", async () => {
 });
 
 const SESSION = "ses_test";
-const STATE = "/home/.operator/state";
+const STATE = "/home/.vcc-brain/state";
 
 const CONFIG: ContextManagementConfig = {
   enabled: true,
@@ -143,7 +143,7 @@ test("shapes the request and leaves messages intact", async () => {
   // removed or summarized by the hook itself.
   expect(event.system).toHaveLength(2);
   const instructions = event.system[1]?.text ?? "";
-  expect(instructions).toContain("~/.operator/user");
+  expect(instructions).toContain("~/.vcc-brain/user");
   expect(instructions).toContain("operator-read_omitted");
   expect(event.messages).toHaveLength(3);
   expect(event.result).toBeNull();

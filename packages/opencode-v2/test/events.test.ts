@@ -25,7 +25,7 @@ vi.mock("node:fs/promises", async () => {
 });
 
 const SESSION = "ses_test";
-const STATE = "/home/.operator/state";
+const STATE = "/home/.vcc-brain/state";
 
 const CONFIG: ContextManagementConfig = {
   enabled: true,

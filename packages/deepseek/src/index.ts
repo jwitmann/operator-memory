@@ -1,6 +1,6 @@
 import { homedir } from "node:os";
-import { join } from "node:path";
 import { loadMemorySnapshot } from "@jwitmann/operator-core/memory/load";
+import { resolveBrainRoots, resolveStateDirectory } from "@jwitmann/operator-core/memory/roots";
 import { renderPreamble } from "@jwitmann/operator-core/preamble";
 import { fingerprintPreamble } from "@jwitmann/operator-core/preamble-refresh";
 import type { Context } from "@deepseek-ai/cordis";
@@ -81,7 +81,7 @@ export function apply(context: Context, rawConfig?: unknown): void {
     registerCommands(scoped);
   });
 
-  const stateDirectory = join(homedir(), ".operator", "state");
+  const stateDirectory = resolveStateDirectory(homedir());
   const runtime: DshRuntime = sharedDshRuntime();
   const brainAvailable = new Map<string, boolean>();
   const isBrainAvailable = (sessionId: string): boolean => brainAvailable.get(sessionId) === true;
@@ -104,7 +104,8 @@ export function apply(context: Context, rawConfig?: unknown): void {
       // Logging must never break the hot path.
     }
   };
-  // Per-project override: `<project>/.operator/config.json` merges over the
+  // Per-project override: `<project>/.vcc-brain/config.json` (legacy
+  // `.operator/config.json` also checked) merges over the
   // profile config (absent file = profile). Total: IO failures fall back
   // silently, parse failures warn once per content inside the resolver.
   const resolveEffectiveConfig = (projectDirectory: string) =>
@@ -153,7 +154,7 @@ export function apply(context: Context, rawConfig?: unknown): void {
     }
 
     // Effective config for this session's project: the profile config with
-    // the project's `.operator/config.json` merged over it. One stat when
+    // the project's `.vcc-brain/config.json` merged over it. One stat when
     // unchanged, re-parse only on content moves.
     const effective = await resolveEffectiveConfig(projectDirectory);
 
@@ -528,6 +529,18 @@ function readAgentCwd(agent: Agent): string {
 
 async function renderAgentPreamble(agent: Agent): Promise<{ text: string; available: boolean }> {
   const projectDirectory = readAgentCwd(agent);
-  const rendered = renderPreamble(await loadMemorySnapshot(projectDirectory, homedir(), true));
+  const home = homedir();
+  const snapshotPromise = loadMemorySnapshot(projectDirectory, home, true);
+  const roots = await resolveBrainRoots(projectDirectory, home);
+  const rendered = renderPreamble(await snapshotPromise, {
+    shared: roots.sharedDisplay,
+    private: roots.privateDisplay,
+    user: roots.userDisplay,
+    legacyIgnored: {
+      private: roots.privateLegacyAlsoExists,
+      shared: roots.sharedLegacyAlsoExists,
+      user: roots.userLegacyAlsoExists,
+    },
+  });
   return { text: rendered.content, available: rendered.loaded && rendered.initialized };
 }

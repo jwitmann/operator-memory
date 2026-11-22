@@ -6,6 +6,8 @@ import { computeTreeHash, FRONTMATTER_PATTERN, readStampFields } from "./tree-ha
 import { getErrorMessage, isRecord } from "./utils.ts";
 
 export const PARTITIONS = [
+  { root: ".vcc-brain-shared", title: "Shared", shared: true },
+  { root: ".vcc-brain", title: "Private", shared: false },
   { root: ".operator-shared", title: "Shared", shared: true },
   { root: ".operator", title: "Private", shared: false },
 ] as const;
@@ -45,11 +47,11 @@ export const lintProjectIndexes = Effect.fn("lintProjectIndexes")(function* (cwd
       const content = yield* readText(file.path);
       findings.push(...checkMetadata(displayPath, content));
 
-      if (partition.shared && content.includes(".operator/")) {
+      if (partition.shared && (content.includes(".operator/") || content.includes(".vcc-brain/"))) {
         findings.push({
           error: true,
           path: displayPath,
-          message: "Shared index references private path (.operator/)",
+          message: "Shared index references private path (.vcc-brain/ or .operator/)",
         });
       }
       if (file.relativePath === "index.md") {

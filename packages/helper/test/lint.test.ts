@@ -32,22 +32,22 @@ test("returns no findings when index roots are absent", async () => {
 
 test("enforces the Private title when only the Private main index exists", async () => {
   seed({
-    ".operator/index/index.md": "---\ndescription: Main\nread_if: Always\n---\n# Project Index",
+    ".vcc-brain/index/index.md": "---\ndescription: Main\nread_if: Always\n---\n# Project Index",
   });
 
   const result = await run(lintProjectIndexes(project));
   expect(result).toContainEqual({
     error: false,
-    path: ".operator/index/index.md",
+    path: ".vcc-brain/index/index.md",
     message: 'Main index title should explicitly state "Private"',
   });
 });
 
 test("requires the literal partition name in each main title", async () => {
   seed({
-    ".operator-shared/index/index.md":
+    ".vcc-brain-shared/index/index.md":
       "---\ndescription: Main\nread_if: Always\n---\n# Public Project Index",
-    ".operator/index/index.md":
+    ".vcc-brain/index/index.md":
       "---\ndescription: Main\nread_if: Always\n---\n# Personal Project Index",
   });
 
@@ -59,44 +59,44 @@ test("requires the literal partition name in each main title", async () => {
     "Index was never stamped — run `index stamp` after refreshing the index.",
   ]);
   expect(result.map(finding => finding.path)).toEqual([
-    ".operator-shared/index/index.md",
-    ".operator/index/index.md",
-    ".operator-shared/index/index.md",
-    ".operator/index/index.md",
+    ".vcc-brain-shared/index/index.md",
+    ".vcc-brain/index/index.md",
+    ".vcc-brain-shared/index/index.md",
+    ".vcc-brain/index/index.md",
   ]);
 });
 
 test("checks nested metadata, Shared references, and non-Markdown files", async () => {
   seed({
-    ".operator-shared/index/nested/api.md": "# API\n.operator/private.md",
-    ".operator-shared/index/data.json": "{}",
+    ".vcc-brain-shared/index/nested/api.md": "# API\n.vcc-brain/private.md",
+    ".vcc-brain-shared/index/data.json": "{}",
   });
 
   const result = await run(lintProjectIndexes(project));
   expect(result.map(finding => finding.message)).toEqual([
     "Non-Markdown file in index tree",
     "Missing YAML frontmatter",
-    "Shared index references private path (.operator/)",
+    "Shared index references private path (.vcc-brain/ or .operator/)",
   ]);
 });
 
 test("accepts valid partition-specific main titles", async () => {
   seed({
-    ".operator-shared/index/index.md":
+    ".vcc-brain-shared/index/index.md":
       "---\ndescription: Shared\nread_if: Always\n---\n# Shared Project Index",
-    ".operator/index/index.md":
+    ".vcc-brain/index/index.md":
       "---\ndescription: Private\nread_if: Always\n---\n# Private Project Index",
   });
 
   expect(await run(lintProjectIndexes(project))).toEqual([
     {
       error: false,
-      path: ".operator-shared/index/index.md",
+      path: ".vcc-brain-shared/index/index.md",
       message: "Index was never stamped — run `index stamp` after refreshing the index.",
     },
     {
       error: false,
-      path: ".operator/index/index.md",
+      path: ".vcc-brain/index/index.md",
       message: "Index was never stamped — run `index stamp` after refreshing the index.",
     },
   ]);
@@ -104,14 +104,14 @@ test("accepts valid partition-specific main titles", async () => {
 
 test("warns on incomplete stamps", async () => {
   seed({
-    ".operator/index/index.md":
+    ".vcc-brain/index/index.md":
       "---\ndescription: Private\nread_if: Always\ntree_hash: abc\n---\n# Private Project Index",
   });
 
   expect(await run(lintProjectIndexes(project))).toEqual([
     {
       error: false,
-      path: ".operator/index/index.md",
+      path: ".vcc-brain/index/index.md",
       message: "Index stamp is incomplete — run `index stamp` to rewrite it.",
     },
   ]);
@@ -119,7 +119,7 @@ test("warns on incomplete stamps", async () => {
 
 test("reports tree-hash failures as errors", async () => {
   seed({
-    ".operator/index/index.md":
+    ".vcc-brain/index/index.md":
       '---\ndescription: Private\nread_if: Always\ntree_hash: abc\nstamped_at: "t"\nstamped_commit: null\n---\n# Private Project Index',
   });
   const gitFails = Layer.mergeAll(
@@ -137,7 +137,7 @@ test("reports tree-hash failures as errors", async () => {
   expect(result).toEqual([
     {
       error: true,
-      path: ".operator/index/index.md",
+      path: ".vcc-brain/index/index.md",
       message: "Failed to compute tree hash: corrupt",
     },
   ]);

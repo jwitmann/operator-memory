@@ -107,7 +107,7 @@ export const PENDING_CAUSE_TTL_MS = 10 * 60 * 1000;
 // extends this with its Brain path list.
 export type ContextManagementDeps = {
   readonly config: ContextManagementConfig;
-  // ~/.operator/state; the adapter computes it from the user home.
+  // ~/.vcc-brain/state (legacy ~/.operator/state also checked); the adapter computes it from the user home.
   readonly stateDirectory: string;
   readonly requestCompaction: (sessionID: string, cause: TriggerKind) => void;
   // Brain availability per session, tracked by setup from preamble loads.
