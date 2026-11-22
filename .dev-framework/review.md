@@ -1,46 +1,51 @@
-# Review — index-staleness detection spec (this session)
+# Review — index-staleness spec, post-review revision (this session)
 
 ## Scope — every changed file
 
-Docs-only: a new system contract plus its catalog entry. No product code,
-no templates, no tests touched:
+Docs-only revision of yesterday's new spec, driven by two review passes.
+No product code, no templates, no tests touched:
 
-- `.operator-shared/specs/index-staleness.md` — new spec: stamp fields
-  (`tree_hash`, `stamped_at`, `stamped_commit`), structural-hash definition
-  (SHA-256 over sorted relative paths; edits invisible, add/remove/rename
-  visible), covered file set (`git ls-files` preferred, fixed-ignore walk
-  fallback, brain partitions and `.git` always excluded), Helper `index stamp`
-  / `index lint` behavior with warning-level (exit-0) drift findings,
-  preamble limits (unstamped-nudge only, no per-prompt tree hashing),
-  test plan, and non-goals.
-- `.operator-shared/catalog.md` — catalog entry for the new spec
-  (Description + Read If), placed after `commands.md` in the `specs/` section.
+- `.operator-shared/specs/index-staleness.md` — rewritten to pin the 9
+  blocking precision items from the feasibility review plus the spec-quality
+  notes: stamp completeness rule (`tree_hash` drives the preamble nudge,
+  full-triple completeness enforced by lint), normative hash construction
+  (UTF-8, `/`-joined, code-unit sorted, `\n`-joined, no trailing newline,
+  empty-set rule, links never followed), one project-wide hash stamped into
+  each main index, git probing with silent walk fallback and erroring genuine
+  failures, closed walk ignore set, `stamped_commit` sourcing, textual-splice
+  YAML approach, fixed drift message template with cap 10, tests split by
+  package, and an Implementation surface section (including `preamble.md` as
+  a touched file). Unwrapped to sibling long-line style per the hard-wrap
+  rule; fixed a stray-backtick MD038 violation.
+- `.operator-shared/catalog.md` — unchanged this session (entry from the
+  prior commit stands as approved).
 - `.dev-framework/review.md` — this artifact, rewritten fresh.
 
 ## Findings and resolutions
 
-No specialists required: docs-only changes get the docs cadence in full.
-
-- **Docs cadence:** `bun run lint:md` — 135 files, 0 issues in 0 files
-  (exit 0, run after both files were final, before commit). Covers the new
-  spec's Markdown (H1 title + `##` sections matching neighbor spec files,
-  backticked code spans, no tables, no hard-wrap) and the catalog entry
-  shape (Description / Read If bullets matching adjacent entries).
-- **Self-review of contract coherence** (no product code to ground, so
-  checked by reading, not tests): stamp fields are additive to the
-  already-required frontmatter (`description`, `read_if`) — no conflict with
-  `lint.ts` `readMetadata`, which ignores unknown fields; warning-level
-  drift findings fit the existing `LintFinding.error: boolean` channel and
-  keep `indexLint` exit-0 semantics; the "no per-prompt hashing" limit is
-  consistent with the cold-prompt-cache cost rule; the self-staling
-  exclusion (brain partitions out of the file set) is stated explicitly.
-  No blocking issues.
+- **Design review, feasibility (subagent, this session): CHANGES REQUESTED
+  → all 9 resolved.** Verified clean as-is: additive frontmatter, exit-0
+  warning semantics, CLI dispatch shape, I/O-free preamble read of loaded
+  bodies, guide slot, no `commands.md` conflict, mtime fingerprint
+  unaffected. The 9 blocking precision items (preamble parse approach,
+  hash construction, per-partition scope, git ownership/failures, closed
+  ignore set, commit sourcing, YAML splice, message template + cap, test
+  split) are each pinned in the revised spec — resolutions summarized in
+  Scope above. Two notes: `commands.md` one-liner deferred to implementation;
+  Phase 8 handoff confirmed against the project-init template (hands off to
+  `index init` + guide, which owns the stamp step).
+- **Design review, spec quality (subagent, this session): APPROVED WITH
+  NOTES → all applied.** Hard-wrap fixed (unwrapped); `stamped_at` /
+  `stamped_commit` / ignore-set / cap pinned (overlaps the feasibility
+  items); two-sources-of-truth resolved by authority rule (normative
+  behavior here, `preamble.md` gains a deferring warnings entry);
+  upstream-idea hygiene passed with no action.
+- **Docs cadence:** `bun run lint:md` — 135 files, 0 issues (exit 0), run
+  after the final revision; one MD038 caught and fixed in the pass.
 - **Prior reports reused unchanged:** the `9331e05` template-port battery
-  (style-enforcer CLEAN, pattern-guardian NO DRIFT, code-reviewer NO BLOCKING
-  ISSUES, test-grounder GROUNDED) stands — none of those files were touched
-  this session, nothing re-run.
+  stands — none of those files touched.
 
 ## Verification (final tree)
 
 - `bun run lint:md` — exit 0, 0 issues (135 files).
-- Committed locally (`1a2a6c2` spec + follow-up review commit); nothing pushed.
+- Committed locally; nothing pushed.
