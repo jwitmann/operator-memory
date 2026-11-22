@@ -62,7 +62,7 @@ Long sessions must compact, and a plain summarizer rewrites your rules in the pr
 - On DeepSeek Harness, install the VCC engine alongside the Operator plugin — without it, compaction falls back to the host's LLM summarizer:
 
 ```sh
-dsh plugin --profile web add dsh-compaction-vcc
+dsh plugin --profile <profile-name> add dsh-compaction-vcc
 ```
 
 - On OpenCode, install the VCC engine alongside the Operator plugin — without it, compaction falls back to the in-tree reference port plus the host's LLM summarizer, which works but is not the same (no `vccRev`/`vccConfigHash` stamping, no tunables, debug-rev header):
