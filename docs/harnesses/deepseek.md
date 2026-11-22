@@ -38,6 +38,8 @@ DeepSeek command names use hyphens:
 
 Run each in a new conversation. See [Getting Started](../getting-started.md#appendix-commands) for what each command does. Profiles without DeepSeek's interactive command service still receive the Operator preamble but do not expose these commands.
 
+Once the basics are running, see [Context Management](#context-management): host-driven compaction with per-session receipts. Off by default — enable it during project setup.
+
 ### Context Management
 
 The adapter participates in host-driven compaction; there is no trim port. DeepSeek freezes agent-loop requests by host contract ("listeners read it, never rewrite it"), so request-view reduction has no legal seam — the host's own tool-result pruner owns that layer. There is no omission store and no `read_omitted`/`prune` tools on this adapter (`keepRecentTurns` is parsed for compatibility but reserved). Recovery reads the durable session log directly through `operator-recall` (seq, tool-result, or checkpoint restore) and `operator-search` (keyword or regex returning `(seq N)` pointers); checkpoint pointers address the host-readable log natively, so no snapshot file exists.

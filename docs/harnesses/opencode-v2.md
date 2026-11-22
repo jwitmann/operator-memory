@@ -34,6 +34,8 @@ Secondary signals: the home footer shows `Operator Ready (vX.Y.Z)` and the sessi
 
 Run each in a new conversation. See [Getting Started](../getting-started.md#appendix-commands) for what each command does.
 
+Once the basics are running, see [Context Management](#context-management): deterministic trim and compaction that reduce what a session resends to the model. Off by default — enable it during project setup.
+
 ### Context Management
 
 When enabled, Operator Memory reduces what a session resends to the model. Three deterministic rules, evaluated with token arithmetic and host-reported run outcomes — never model judgment. Compaction runs through the deterministic VCC engine, ported in-tree from the [VCC reference engine](https://github.com/jwitmann/opencode-vcc-compaction):
