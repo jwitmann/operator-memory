@@ -1,6 +1,6 @@
 # Commands
 
-Last Updated: November 3, 2026
+Last Updated: November 22, 2026
 
 Agent-assisted configuration of User Instructions, the Project Brain, and the Project Index. Deterministic work lives in `operator-helper`; phased agent work lives in emitted guides; harness commands orchestrate both.
 
@@ -36,7 +36,7 @@ Phases: assess and repair both core files (`operator.md`, `catalog.md`); customi
 
 `/operator:project-init` runs Project init, then the agent follows the guide in its output with the user.
 
-Project setup establishes partition scaffolding and placement rules. It does not populate the Project Index. Project init scaffolds `.operator/config.json` with context management, preamble refresh, and brain-update nudges present but disabled (behaviorally identical to no config file) and never overwrites it.
+Project setup establishes partition scaffolding and placement rules. It does not populate the Project Index. On a rerun, the agent follows existing structure and policy, skips completed phases, and initializes only missing pieces. Project init scaffolds `.operator/config.json` with context management, preamble refresh, and brain-update nudges present but disabled (behaviorally identical to no config file) and never overwrites it.
 
 The Project Setup guide classifies the repository once as **greenfield** (new, empty, or template) or **existing** (substantive code and/or agent-facing docs). Greenfield runs stay light: prefer all-private Shared policy, optional minimal instructions, and skip migration. Existing projects keep the full path, including migration.
 

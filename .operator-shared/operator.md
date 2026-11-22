@@ -47,6 +47,7 @@ Runtime code uses portable Node APIs. Bun owns workspace management, dependency 
 
 ## Documentation Style
 
+- Prefer declarative wording in documents and instruction files. Use imperatives for workflow steps or procedures that require explicit actions.
 - Documentation is English-only; do not add translated mirrors.
 - Use H3 headings or below in public documents; H2 headings are disallowed.
 

@@ -43,3 +43,24 @@ test("setup guides embed seeds and do not point at disk templates", () => {
 
   expect(readTemplate(TemplatePath.ProjectIndexSetup)).not.toContain("~/.operator/templates");
 });
+
+test("project operator seed prompts for purpose and architecture", () => {
+  const seed = readTemplate(TemplatePath.ProjectOperator);
+  expect(seed).toContain("## Overview");
+  expect(seed).toContain("Project purpose and current scope");
+  expect(seed).toContain("## Architecture");
+  expect(seed).toContain("Major components, how they fit together, and boundaries that matter");
+  expect(seed).toContain("Build and verification commands");
+  expect(seed.indexOf("## Overview")).toBeLessThan(seed.indexOf("## Architecture"));
+  expect(seed.indexOf("## Architecture")).toBeLessThan(seed.indexOf("## Workflow"));
+});
+
+test("project setup guide covers reruns and harness question tools", () => {
+  const projectGuide = readTemplate(TemplatePath.ProjectSetup);
+  expect(projectGuide).toContain("On a rerun, follow the existing structure and sharing policy");
+  expect(projectGuide).toContain(
+    "report stale or damaged content rather than repairing or rebuilding it unasked",
+  );
+  expect(projectGuide).toContain("inline question tool or equivalent");
+  expect(projectGuide).toContain("Use direct chat always for free-response prompts");
+});

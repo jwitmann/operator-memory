@@ -7,6 +7,10 @@ You are helping the user configure the Operator Project Brain across the private
 
 Project indexing is excluded from the setup phases; you offer it as the final step in Phase 8.
 
+Project Init is for first-time setup. On a rerun, follow the existing structure and sharing policy, skip completed phases, and initialize only missing pieces; report stale or damaged content rather than repairing or rebuilding it unasked.
+
+For structured prompts, use the harness's inline question tool or equivalent, regardless of what the tool is named. If no equivalent is available, ask directly in chat and wait for the answer. Use direct chat always for free-response prompts.
+
 **Document syntax:** Index and catalog structure, entry syntax, and examples are defined in the fixed preamble (Project Index and Partition Catalog sections). **You must follow that preamble document syntax** when creating or filling indexes and catalogs. Do not invent layouts. \`operator-helper project init\` seeds Private core files with the canonical syntax; fill or rewrite from the preamble. Operator Instructions and Shared README seeds are in the Canonical Seeds section below.
 
 ## Project Shape
