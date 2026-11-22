@@ -6,6 +6,12 @@ user-init template carries the proposal rubric); v3 full automation parked.
 Roadmap line resolved: *"Learn durable user observations over time, kept
 separate from explicit User Instructions."*
 
+Pilot tally (2026-11-22): 3/20 decided proposals (3 accepted, 0 rejected:
+2 user-scope in `~/.operator/user/observations.md`, 1 project-scope in
+animeRSS `docs/developer/PARSING.md`). First curation pass done: entry 1
+reworded from imperative to descriptive observation form; entry 2 scope
+confirmed (generalizes beyond thaifa).
+
 ## Question
 
 What do agents get re-taught across sessions that the Brain
