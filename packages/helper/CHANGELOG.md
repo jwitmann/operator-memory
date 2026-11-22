@@ -5,6 +5,13 @@
 Generated from conventional commits (`scripts/changelog.sh`).
 Human-readable record of what shipped, per package.
 
+## [v1.12.0] - 2026-11-22
+
+### Features
+
+- port rerun semantics and instruction prompts from upstream #71 ([`9331e05`](https://github.com/jwitmann/operator-memory/commit/9331e055911c0fa51bbc1a1fe65936cb4312833d))
+- index stamp command and staleness lint ([`360ca2b`](https://github.com/jwitmann/operator-memory/commit/360ca2b0a9ef57864e91b40c039f0db15f698dc1))
+
 ## [v1.11.0] - 2026-11-21
 
 ### Features
