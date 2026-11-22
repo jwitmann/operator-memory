@@ -31,6 +31,9 @@ Repository-wide Operator product knowledge published with the project.
 - `commands.md`
   - Description: Command contract for the three Operator workflows (`user-init`, `project-init`, `index`) and their setup guides.
   - Read If: Implementing adapter commands or changing setup workflows.
+- `index-staleness.md`
+  - Description: Structural-drift detection for the Project Index — stamp fields, structural hash definition, Helper stamp/lint behavior, preamble warning limits, and non-goals.
+  - Read If: Implementing or changing index stamping, staleness warnings, or the stamp/lint workflow.
 - `opencode/implementation.md`
   - Description: Frozen OpenCode V1 adapter contract and retained installation/recovery behavior; no further development or releases.
   - Read If: Checking existing OpenCode V1 behavior or recovering a legacy installation.
