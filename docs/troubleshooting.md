@@ -31,6 +31,8 @@ If a partition fails to load, the preamble directs the agent to repair loading b
 
 For on-demand diagnosis, ask the agent or run `operator-helper memory check` from the project directory. It validates loading only and does not modify files.
 
+A stale Project Index surfaces as a warning, not an error: ask the agent to refresh the index through the `/operator:index` flow, which re-stamps it. `operator-helper index lint` checks for structural drift without modifying files.
+
 #### Private Files Appear In Git
 
 Run `operator-helper project status` to inspect ignore and tracking status. Project initialization ensures the exact `.operator/` entry is in the global Git ignore, but does not untrack files already committed or staged.

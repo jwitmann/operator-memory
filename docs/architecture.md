@@ -64,7 +64,7 @@ For the full argument against replay-based memory, see [Operator VS Other Plugin
 
 ### Failure Is Visible
 
-The Brain can go stale — after significant upstream changes or if the agent simply forgets to update. Operator keeps that failure in ordinary files: inspectable, correctable.
+The Brain can go stale — after significant upstream changes or if the agent simply forgets to update. Operator keeps that failure in ordinary files: inspectable, correctable. The Project Index carries a structural stamp recorded at refresh time: adding, removing, or renaming files changes the tree hash, `index lint` reports the drift as a warning, and the preamble nudges when an index was never stamped. Content edits alone never stale the index.
 
 ### OpenCode
 

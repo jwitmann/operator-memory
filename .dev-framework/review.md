@@ -1,39 +1,53 @@
-# Review — docs-only: observation pilot tally (this session)
+# Review — docs staleness pass + release prep (this session)
 
 ## Scope — every changed file
 
-- `docs/dev/observation-engine.md` (+6 lines) — pilot tally
-  (`3/20 decided, 3 accepted, 0 rejected`) plus first-curation note
-  appended to the Status block. Prose only; committed as `60d3d25`.
-- `/home/jerome/.operator/user/observations.md` (out-of-repo user
-  partition, user-approved curation, never committed) — entry 1
-  reworded imperative → descriptive observation form; date, scope,
-  and provenance preserved. Entry 2 kept verbatim.
+- `docs/getting-started.md` — `/operator:index` line gains the
+  stamp sentence (refresh records a structural stamp; agent warns
+  on later staleness).
+- `docs/architecture.md` — "Failure Is Visible" gains one
+  mechanism sentence (tree hash on add/remove/rename, `index lint`
+  warns, preamble nudges unstamped, content edits never stale).
+- `docs/troubleshooting.md` — repair section gains the stale-index
+  line (warning not error, refresh via `/operator:index` flow,
+  `index lint` modifies nothing).
+- Observations docs checked, no gap: getting-started lines 22/30
+  and architecture lines 24/30-32 already describe v4 proposing
+  and subordinate loading. Untouched.
+- `.dev-framework/review.md` — this artifact.
 
-No product code, no new helpers, types, deps, config keys, or
-patterns. No Markdown tables added (grep `^|.*|` clean).
+No product code. Harness guides untouched (bare command listings;
+stamp is a flow sub-step, not a harness command). No tables added;
+H3-or-below, backticks, declarative voice throughout.
 
 ## Findings and resolutions
 
-- **odf-pattern-guardian-13 (this session): no drift.** Docs-only
-  prose edit; nothing to compare against prior art; consistent with
-  `docs/dev/` neighbors. No action.
-- **odf-code-reviewer-15 (this session): no correctness issues.**
-  No action.
-- **odf-style-enforcer-14 (this session): no style issues.**
-  No action.
-- **Prior-round reports reused, not re-run (scope unchanged):**
-  odf-10/11/12 covered the `/tmp/stale-probe` E2E fixtures, a
-  different scope already closed out (true paths located, re-reviewed
-  clean by agent-16; independent grounder re-run green). Nothing in
-  this session invalidates them.
-- **Docs cadence per gate:** specialists above are belt-and-braces;
-  the binding check for docs-only is `lint:md`, below.
+- **Docs review verdict: three minimal gaps, all filled.**
+  `/operator:index` was documented as build-or-refresh with no
+  staleness story; architecture's staleness paragraph named no
+  mechanism; troubleshooting had no stale-index diagnosis. Each
+  got one to two sentences in its existing section; no new
+  sections, no restructured pages. Approved before writing.
+- **Observations: no edit.** User-facing coverage already matches
+  the shipped v4 (propose-in-conversation, approved-only storage,
+  subordinate loading). Stating the check so it is not redone.
+- **Release prep: helper + core-cascade set, proven by dry run.**
+  `./scripts/release.sh minor --dry-run` on the clean tree
+  reports: helper (changed since v1.11.0: `9331e05`, `360ca2b`)
+  plus opencode-v2, pi, deepseek via the core cascade (phase-3
+  core change `cc66bad`; built dists bundle core). Codex and
+  claude-code are not core consumers per the script — no release.
+  Legacy `packages/opencode` excluded (frozen). Docs changes
+  release nothing. Minor bump is backward-compatible new surface
+  (stamp command, lint warnings, rerun prompts). No
+  bump/tag/push/publish performed — those stay explicit operator
+  actions; dry run stops before step 4 (validation skipped in
+  dry-run mode; the real run executes the full suite first).
 
 ## Verification (final tree)
 
-- `bun run lint:md` — 135 files, 0 issues (covers the tally edit
-  and this artifact).
-- Docs-only: no typecheck/test surface changed; per-package gates
-  re-ran green at the `60d3d25` commit hook (core 152, opencode-v2 166).
-- Working tree clean; nothing pushed.
+- `bun run lint:md` — 135 files, 0 issues (covers all three
+  doc edits and this artifact).
+- Release-set evidence: `./scripts/release.sh minor --dry-run`
+  on the clean tree (see handover note in chat).
+- Working tree clean after commit; nothing pushed.

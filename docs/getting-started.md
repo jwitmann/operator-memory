@@ -102,4 +102,4 @@ Tip: Run each Operator command in a new conversation so the agent can focus on s
 
 - `/operator:user-init` — Initializes or revises private user-global memory (instructions and freeform) in the current conversation.
 - `/operator:project-init` — Initializes or revises project setup without overwriting existing content. It configures Private, guides optional Shared activation, and indexes the repository.
-- `/operator:index` — Builds or refreshes the Project Index so future agents can navigate repository structure and applicable subsystem context.
+- `/operator:index` — Builds or refreshes the Project Index so future agents can navigate repository structure and applicable subsystem context. Refreshing records a structural stamp of the tree, and the agent warns when later changes make the index stale.
