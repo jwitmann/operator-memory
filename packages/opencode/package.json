@@ -1,12 +1,12 @@
 {
-  "name": "@jwitmann/operator-opencode",
+  "name": "@jwitmann/vcc-brain-opencode",
   "version": "1.1.1",
-  "description": "Operator Memory: durable context for agent-driven development.",
+  "description": "VCC Brain: durable context for agent-driven development.",
   "license": "BSD-3-Clause",
   "author": "jwitmann",
-  "homepage": "https://github.com/jwitmann/operator-memory#readme",
+  "homepage": "https://github.com/jwitmann/vcc-brain#readme",
   "bugs": {
-    "url": "https://github.com/jwitmann/operator-memory/issues"
+    "url": "https://github.com/jwitmann/vcc-brain/issues"
   },
   "type": "module",
   "main": "dist/index.js",
@@ -26,7 +26,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jwitmann/operator-memory.git",
+    "url": "git+https://github.com/jwitmann/vcc-brain.git",
     "directory": "packages/opencode"
   },
   "engines": {
@@ -64,7 +64,7 @@
     }
   },
   "devDependencies": {
-    "@jwitmann/operator-core": "workspace:*",
+    "@jwitmann/vcc-brain-core": "workspace:*",
     "@opentui/core": "0.4.5",
     "@opentui/keymap": "0.4.5",
     "@opentui/solid": "0.4.5",

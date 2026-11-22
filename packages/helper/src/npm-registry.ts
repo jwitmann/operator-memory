@@ -12,7 +12,7 @@ export namespace NpmRegistry {
   }
 
   export class Service extends Context.Service<Service, Interface>()(
-    "@jwitmann/operator-helper/npm-registry",
+    "@jwitmann/vcc-brain-helper/npm-registry",
   ) {}
 
   export const layer = Layer.effect(

@@ -12,7 +12,7 @@ CLI plugins extend the terminal: commands, routes, slots, Markdown renderers, no
 import { Plugin } from "@opencode/plugin/tui"
 
 export default Plugin.define({
-  id: "operator.cli",
+  id: "vcc-brain.cli",
   setup(context) {
     context.ui.toast.show({ message: "loaded", variant: "success" })
     return () => { /* cleanup */ }
@@ -55,16 +55,16 @@ context.keymap.layer(() => ({
   priority: 10,
   commands: [
     {
-      id: "operator.status",
-      title: "Operator status",
-      group: "Operator",
+      id: "vcc-brain.status",
+      title: "VCC Brain status",
+      group: "VCC Brain",
       bind: "ctrl+g",
       palette: true,
-      slash: { name: "operator", aliases: ["status"], arguments: true },
+      slash: { name: "vcc-brain", aliases: ["status"], arguments: true },
       run: async (input) => context.ui.toast.show({ message: input ?? "Ready" }),
     },
   ],
-  bindings: ["operator.status"],
+  bindings: ["vcc-brain.status"],
 }))
 ```
 

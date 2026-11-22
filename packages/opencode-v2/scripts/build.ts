@@ -5,7 +5,7 @@ import solidPlugin from "@opentui/solid/bun-plugin";
 
 const packageDirectory = resolve(import.meta.dir, "..");
 const outputDirectory = join(packageDirectory, "dist");
-const pluginId = process.env.OPERATOR_PLUGIN_ID ?? "jwitmann.operator-memory";
+const pluginId = process.env.VCC_BRAIN_PLUGIN_ID ?? "jwitmann.vcc-brain";
 
 await rm(outputDirectory, { recursive: true, force: true });
 const build = await Bun.build({
@@ -20,7 +20,7 @@ const build = await Bun.build({
   format: "esm",
   sourcemap: "external",
   plugins: [solidPlugin],
-  define: { __OPERATOR_PLUGIN_ID__: JSON.stringify(pluginId) },
+  define: { __VCC_BRAIN_PLUGIN_ID__: JSON.stringify(pluginId) },
   external: ["@opencode/plugin", "@opentui/core", "@opentui/solid", "solid-js"],
 });
 

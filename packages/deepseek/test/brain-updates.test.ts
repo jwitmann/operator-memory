@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, test } from "vitest";
 
-import { readReceipts } from "@jwitmann/operator-core/context/receipts";
+import { readReceipts } from "@jwitmann/vcc-brain-core/context/receipts";
 
 import { maybeAppendBrainUpdateReminder } from "../src/brain-updates.ts";
 import { createDshRuntime, sessionRuntime } from "../src/runtime.ts";
@@ -15,7 +15,7 @@ afterEach(async () => {
 });
 
 async function makeDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "operator-dsh-brain-"));
+  const dir = await mkdtemp(join(tmpdir(), "vcc-brain-dsh-brain-"));
   dirs.push(dir);
   return dir;
 }
@@ -23,12 +23,12 @@ async function makeDir(): Promise<string> {
 async function seedBrain(project: string, home: string): Promise<void> {
   for (const root of [join(project, ".operator"), join(project, ".operator-shared")]) {
     await mkdir(join(root, "index"), { recursive: true });
-    await writeFile(join(root, "operator.md"), `# ops ${root}`);
+    await writeFile(join(root, "vcc-brain.md"), `# ops ${root}`);
     await writeFile(join(root, "catalog.md"), `# catalog ${root}`);
     await writeFile(join(root, "index", "index.md"), `# index ${root}`);
   }
   await mkdir(join(home, ".operator", "user"), { recursive: true });
-  await writeFile(join(home, ".operator", "user", "operator.md"), "# user ops");
+  await writeFile(join(home, ".operator", "user", "vcc-brain.md"), "# user ops");
   await writeFile(join(home, ".operator", "user", "catalog.md"), "# user catalog");
 }
 
@@ -78,7 +78,7 @@ test("writes one log-only receipt when the reminder fires", async () => {
     "session-test",
     "preamble",
   );
-  expect(reminded).toContain("<operator-brain-update-reminder>");
+  expect(reminded).toContain("<vcc-brain-brain-update-reminder>");
 
   const raw = await readFile(join(state, "context-log", "session-test.log"), "utf8");
   const lines = raw.trim().split("\n");
@@ -142,5 +142,5 @@ test("a lost receipt never fails the reminder", async () => {
     "../escape",
     "preamble",
   );
-  expect(reminded).toContain("<operator-brain-update-reminder>");
+  expect(reminded).toContain("<vcc-brain-brain-update-reminder>");
 });

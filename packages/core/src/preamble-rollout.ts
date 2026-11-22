@@ -6,10 +6,13 @@ import { platform } from "node:os";
 export type PreambleVersion = "1.1" | "2.0";
 
 // Keep this namespace and bucketing stable across package and prompt versions.
+// The salt intentionally keeps the pre-rename value: it is an opaque hash
+// input, not branding, and changing it would reshuffle every machine's
+// pinned preamble version at upgrade.
 const ROLLOUT_NAMESPACE = "operator-preamble-rollout-v1:";
 
 export function selectPreambleVersion(): PreambleVersion {
-  if (process.env.OPERATOR_PREAMBLE_BETA === "1") {
+  if (process.env.VCC_BRAIN_PREAMBLE_BETA === "1") {
     return "2.0";
   }
 

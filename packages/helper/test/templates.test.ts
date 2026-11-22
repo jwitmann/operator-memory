@@ -12,7 +12,7 @@ test("reads an embedded template by its enum path", () => {
 });
 
 test("user operator seed carries the observation-proposal rubric", () => {
-  const seed = readTemplate(TemplatePath.UserOperator);
+  const seed = readTemplate(TemplatePath.UserVccBrain);
   expect(seed).toContain("Proposing lasting improvements (observation flow)");
   expect(seed).toContain("observations.md");
   expect(seed).toContain("at most one observation proposal per session");
@@ -33,11 +33,11 @@ test("setup guides allow optional topics to remain unfilled", () => {
 
 test("setup guides embed seeds and do not point at disk templates", () => {
   const userGuide = readTemplate(TemplatePath.UserSetup);
-  expect(userGuide).toContain(readTemplate(TemplatePath.UserOperator).trimEnd());
+  expect(userGuide).toContain(readTemplate(TemplatePath.UserVccBrain).trimEnd());
   expect(userGuide).not.toContain("~/.operator/templates");
 
   const projectGuide = readTemplate(TemplatePath.ProjectSetup);
-  expect(projectGuide).toContain(readTemplate(TemplatePath.ProjectOperator).trimEnd());
+  expect(projectGuide).toContain(readTemplate(TemplatePath.ProjectVccBrain).trimEnd());
   expect(projectGuide).toContain(readTemplate(TemplatePath.ProjectSharedReadme).trimEnd());
   expect(projectGuide).not.toContain("~/.operator/templates");
 
@@ -45,7 +45,7 @@ test("setup guides embed seeds and do not point at disk templates", () => {
 });
 
 test("project operator seed prompts for purpose and architecture", () => {
-  const seed = readTemplate(TemplatePath.ProjectOperator);
+  const seed = readTemplate(TemplatePath.ProjectVccBrain);
   expect(seed).toContain("## Overview");
   expect(seed).toContain("Project purpose and current scope");
   expect(seed).toContain("## Architecture");

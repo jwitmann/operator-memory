@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { $ } from "bun";
 
 const projectDirectory = resolve(import.meta.dirname, "..");
-const plugin = "jwitmann@operator-local";
+const plugin = "jwitmann@vcc-brain-local";
 
 await $`bun run install:helper`.cwd(projectDirectory);
 await $`bun run build:codex`.cwd(projectDirectory);
@@ -30,6 +30,6 @@ if (marketplace.status !== 0) {
   process.exitCode = installation.status ?? 1;
   if (installation.status === 0) {
     console.log(`Installed local Codex plugin: ${plugin}`);
-    console.log("Start a fresh Codex session and approve the Operator hooks when prompted.");
+    console.log("Start a fresh Codex session and approve the VCC Brain hooks when prompted.");
   }
 }

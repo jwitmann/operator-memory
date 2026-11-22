@@ -1,3 +1,3 @@
 ### Contributing
 
-All maintainers must use Operator Memory while working on this repository and must properly update the Operator documentation in `.operator-shared/` after implementation.
+All maintainers must use VCC Brain while working on this repository and must properly update the VCC Brain documentation in `.vcc-brain-shared/` after implementation.

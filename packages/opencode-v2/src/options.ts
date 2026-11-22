@@ -1,8 +1,9 @@
 import { failure, type Result, success } from "./utils.ts";
 
-// Shared plugin-option readers. Every `operator.<block>` surface parses
+// Shared plugin-option readers. Every `vcc-brain.<block>` surface parses
 // through these so absent blocks fall back to defaults while wrong-typed
-// values fail loudly instead of running with unintended thresholds.
+// values fail loudly instead of running with unintended thresholds. The
+// legacy `operator` key is still accepted when `vcc-brain` is absent.
 
 export type OptionError = {
   readonly message: string;
@@ -15,19 +16,23 @@ export function readOptionBlock(
   if (typeof options !== "object" || options === null) {
     return success(null);
   }
-  const operator = "operator" in options ? options.operator : null;
-  if (operator === null || operator === undefined) {
+  const primary = "vcc-brain" in options ? options["vcc-brain"] : undefined;
+  const legacy = "operator" in options ? options.operator : undefined;
+  const source = primary ?? legacy ?? null;
+  if (source === null || source === undefined) {
     return success(null);
   }
-  if (typeof operator !== "object" || Array.isArray(operator)) {
-    return failure({ message: 'The "operator" plugin option must be an object.' });
+  if (typeof source !== "object" || Array.isArray(source)) {
+    return failure({
+      message: 'The "vcc-brain" (legacy "operator") plugin option must be an object.',
+    });
   }
-  const section = block in operator ? (operator as Record<string, unknown>)[block] : null;
+  const section = block in source ? (source as Record<string, unknown>)[block] : null;
   if (section === null || section === undefined) {
     return success(null);
   }
   if (typeof section !== "object" || Array.isArray(section)) {
-    return failure({ message: `The "operator.${block}" option must be an object.` });
+    return failure({ message: `The "vcc-brain.${block}" option must be an object.` });
   }
   return success(section as Record<string, unknown>);
 }

@@ -11,7 +11,7 @@ import { startAutoUpdate } from "./update.ts";
 type PreambleHook = NonNullable<Hooks["experimental.chat.messages.transform"]>;
 type TransformMessage = Parameters<PreambleHook>[1]["messages"][number];
 
-const OperatorPlugin: Plugin = async input => {
+const VccBrainPlugin: Plugin = async input => {
   const client = createV2Client(input.client);
   const homeDirectory = homedir();
   const preambleCache = new Map<string, ReturnType<typeof loadPreamble>>();
@@ -25,8 +25,8 @@ const OperatorPlugin: Plugin = async input => {
     "experimental.chat.messages.transform": async (_hookInput, output) => {
       const sessionID = sessionIDFrom(output.messages);
       if (sessionID === null) {
-        const message = "Operator could not determine the session for preamble injection.";
-        await showErrorToast(client, "Operator Error", message);
+        const message = "VCC Brain could not determine the session for preamble injection.";
+        await showErrorToast(client, "VCC Brain Error", message);
         throw new Error(message);
       }
 
@@ -39,7 +39,7 @@ const OperatorPlugin: Plugin = async input => {
 
       if (!result.ok) {
         const cause = result.error.cause instanceof Error ? ` ${result.error.cause.message}` : "";
-        await showErrorToast(client, "Operator Error", `${result.error.message}${cause}`);
+        await showErrorToast(client, "VCC Brain Error", `${result.error.message}${cause}`);
         throw new Error(result.error.message, { cause: result.error.cause });
       }
 
@@ -47,8 +47,8 @@ const OperatorPlugin: Plugin = async input => {
         recoveryNotices.add(sessionID);
         await showErrorToast(
           client,
-          "Operator Error",
-          "Operator memory failed to load. The agent is attempting to recover.",
+          "VCC Brain Error",
+          "VCC Brain memory failed to load. The agent is attempting to recover.",
         );
       }
 
@@ -88,4 +88,4 @@ async function showErrorToast(
     .catch(() => undefined);
 }
 
-export default OperatorPlugin;
+export default VccBrainPlugin;

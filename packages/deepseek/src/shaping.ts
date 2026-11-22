@@ -1,4 +1,4 @@
-import { buildCompactionPrompt } from "@jwitmann/operator-core/context/compaction";
+import { buildCompactionPrompt } from "@jwitmann/vcc-brain-core/context/compaction";
 import type { Context } from "@deepseek-ai/cordis";
 import type { GenerateOptions, StreamChunk } from "@deepseek-ai/dsh-llm";
 
@@ -7,7 +7,7 @@ import { type DshDeps, isDshStale } from "./runtime.ts";
 // Brain partition roots, least to most authoritative, exactly as the
 // preamble renders them. Shared with the receipt label path (canonical
 // definition lives in core; re-exported here for the existing import path).
-export { DEFAULT_BRAIN_PATHS } from "@jwitmann/operator-core/memory/roots";
+export { DEFAULT_BRAIN_PATHS } from "@jwitmann/vcc-brain-core/memory/roots";
 
 // Compaction shaping via the `llm/stream` waterfall, keyed on
 // `options.purpose === 'compaction'`.
@@ -98,8 +98,8 @@ function shapeMessages(record: Record<string, unknown>, deps: ShapingDeps): bool
     brainPaths: [...deps.brainPaths],
     recoveryRule:
       "Checkpoint markers delimit compacted spans; the agent recovers elided\n"
-      + "  content from the durable session log with the operator-recall\n"
-      + "  (seq, result, or checkpoint reference) and operator-search tools.",
+      + "  content from the durable session log with the vcc-brain-recall\n"
+      + "  (seq, result, or checkpoint reference) and vcc-brain-search tools.",
   });
   messages.push({ role: "user", content: [{ type: "text", text: guidance }] });
   return true;

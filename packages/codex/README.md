@@ -1,17 +1,17 @@
-# Operator Memory for Codex
+# VCC Brain for Codex
 
-Operator Memory gives Codex durable project and user context maintained by agents as readable Markdown.
+VCC Brain gives Codex durable project and user context maintained by agents as readable Markdown.
 
 ## Install
 
 ```sh
-operator-helper install codex
+vcc-brain-helper install codex
 ```
 
-Start a fresh Codex session after installation. Codex reviews plugin hooks on startup; approve the Operator hooks when prompted. Until the hooks are trusted, Codex skips preamble injection.
+Start a fresh Codex session after installation. Codex reviews plugin hooks on startup; approve the VCC Brain hooks when prompted. Until the hooks are trusted, Codex skips preamble injection.
 
-The plugin injects the Operator preamble into new and cleared sessions, reinjects it after context compaction, and injects it into delegated subagents. Resumed and forked sessions keep their existing context.
+The plugin injects the VCC Brain preamble into new and cleared sessions, reinjects it after context compaction, and injects it into delegated subagents. Resumed and forked sessions keep their existing context.
 
-The three Operator workflows are available as explicitly invoked skills: `$operator-user-init`, `$operator-project-init`, and `$operator-index`. Codex plugins do not register slash commands; invoke the skills by name.
+The three VCC Brain workflows are available as explicitly invoked skills: `$vcc-brain-user-init`, `$vcc-brain-project-init`, and `$vcc-brain-index`. Codex plugins do not register slash commands; invoke the skills by name.
 
-Updates are applied by rerunning `operator-helper install codex`. Hook definitions stay byte-stable across releases, so updates normally do not require renewed trust.
+Updates are applied by rerunning `vcc-brain-helper install codex`. Hook definitions stay byte-stable across releases, so updates normally do not require renewed trust.

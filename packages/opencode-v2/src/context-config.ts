@@ -1,8 +1,8 @@
 import { success, type Result } from "./utils.ts";
 import { readOptionBlock, readOptionBoolean, readOptionNumber } from "./options.ts";
-import type { TriggerConfig } from "@jwitmann/operator-core/context/triggers";
+import type { TriggerConfig } from "@jwitmann/vcc-brain-core/context/triggers";
 
-// Parses the operator.contextManagement block from ctx.options. Absent means
+// Parses the vcc-brain.contextManagement block from ctx.options. Absent means
 // the defaults (disabled); a present block with a wrong-typed value is a
 // parse failure, not a silent fallback, so misconfiguration surfaces instead
 // of quietly running with unintended thresholds.
@@ -62,7 +62,7 @@ export function parseContextManagementBlock(
     return success(base);
   }
 
-  const path = "operator.contextManagement";
+  const path = "vcc-brain.contextManagement";
   const enabled = readOptionBoolean(path, block, "enabled", base.enabled);
   const ratio = readOptionNumber(path, block, "ratio", base.ratio);
   const hardCapTokens = readOptionNumber(path, block, "hardCapTokens", base.hardCapTokens);

@@ -9,7 +9,7 @@ let directory: string;
 const pluginDirectory = "/workspace/packages/opencode-v2/dist";
 
 beforeEach(async () => {
-  directory = await mkdtemp(join(tmpdir(), "operator-opencode-install-"));
+  directory = await mkdtemp(join(tmpdir(), "vcc-brain-opencode-install-"));
 });
 
 afterEach(async () => {
@@ -20,7 +20,7 @@ test("creates global configuration with the development build after the publishe
   const configPath = await registerLocalOpenCode(join(directory, "config"), pluginDirectory);
   expect(parse(await readFile(configPath, "utf8"))).toEqual({
     $schema: "https://opencode.ai/config.json",
-    plugins: ["-jwitmann.operator-memory", pluginDirectory],
+    plugins: ["-jwitmann.vcc-brain", pluginDirectory],
   });
 });
 
@@ -33,7 +33,7 @@ test("preserves JSONC comments, settings, and published registrations and is ide
   "model": "openai/model",
   "plugins": [
     // Keep the published registration.
-    "@jwitmann/operator-opencode-v2@latest",
+    "@jwitmann/vcc-brain-opencode-v2@latest",
     { "package": "other", "options": { "enabled": true } },
   ],
 }`,
@@ -45,9 +45,9 @@ test("preserves JSONC comments, settings, and published registrations and is ide
   expect(parse(first)).toEqual({
     model: "openai/model",
     plugins: [
-      "@jwitmann/operator-opencode-v2@latest",
+      "@jwitmann/vcc-brain-opencode-v2@latest",
       { package: "other", options: { enabled: true } },
-      "-jwitmann.operator-memory",
+      "-jwitmann.vcc-brain",
       pluginDirectory,
     ],
   });

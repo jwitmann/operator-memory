@@ -5,14 +5,14 @@
 Requires Kiro IDE or Kiro CLI V3, Node.js 20 or newer, and the [Helper](../../README.md#installation) installed on `PATH`.
 
 ```sh
-operator-helper install kiro
+vcc-brain-helper install kiro
 ```
 
 Helper writes the adapter into `~/.kiro`:
 
-- `hooks/operator-memory.json` — `SessionStart` hook that runs `operator-helper preamble`. Kiro adds its output to the agent's context.
-- `steering/operator-memory.md` — Always-included steering. If the hook did not inject the preamble, it tells the agent to run `operator-helper preamble` once itself.
-- `skills/operator-user-init/`, `skills/operator-project-init/`, `skills/operator-index/` — Operator commands as Kiro skills.
+- `hooks/vcc-brain.json` — `SessionStart` hook that runs `vcc-brain-helper preamble`. Kiro adds its output to the agent's context.
+- `steering/vcc-brain.md` — Always-included steering. If the hook did not inject the preamble, it tells the agent to run `vcc-brain-helper preamble` once itself.
+- `skills/vcc-brain-user-init/`, `skills/vcc-brain-project-init/`, `skills/vcc-brain-index/` — VCC Brain commands as Kiro skills.
 
 Start a new Kiro session after installation.
 
@@ -21,7 +21,7 @@ Start a new Kiro session after installation.
 In a new session, ask:
 
 ```text
-Is Operator Memory guidance available to you? Give a brief outline of what it says.
+Is VCC Brain guidance available to you? Give a brief outline of what it says.
 ```
 
 The agent should confirm the guidance is loaded and outline the brain, partitions, and memory-aware workflow. If it cannot, confirm the hook is enabled and the steering file is installed, or rerun the install command and start a new session.
@@ -30,9 +30,9 @@ The agent should confirm the guidance is loaded and outline the brain, partition
 
 Kiro invokes skills as slash commands:
 
-- `/operator-user-init`
-- `/operator-project-init`
-- `/operator-index`
+- `/vcc-brain-user-init`
+- `/vcc-brain-project-init`
+- `/vcc-brain-index`
 
 Run each in a new session. See [Getting Started](../getting-started.md#appendix-commands) for what each command does.
 
@@ -41,17 +41,17 @@ Run each in a new session. See [Getting Started](../getting-started.md#appendix-
 Kiro runs the hook at the start of every session, so a new session loads changed memory. When a Helper release changes the Kiro adapter, rerun the install command to refresh the adapter files:
 
 ```sh
-operator-helper install kiro
+vcc-brain-helper install kiro
 ```
 
 ### Known Bugs and Limitations
 
-- `KIRO_HOME` is ignored in V3: hooks, steering, and skills still load from ordinary `~/.kiro`. Operator installs there accordingly. Verified with CLI binary `2.27.1`, the V3 engine (`--v3`), and KAS `0.66.22`.
-- No automatic subagent injection: Kiro has no subagent start hook. Subagents must follow the inherited Operator steering instructions and run `operator-helper preamble` themselves.
-- Hook failures do not block the session: a failed `SessionStart` command shows a warning to the user. The agent must follow the steering instructions to load Operator manually; if that command fails, it reports the failure and stops.
+- `KIRO_HOME` is ignored in V3: hooks, steering, and skills still load from ordinary `~/.kiro`. VCC Brain installs there accordingly. Verified with CLI binary `2.27.1`, the V3 engine (`--v3`), and KAS `0.66.22`.
+- No automatic subagent injection: Kiro has no subagent start hook. Subagents must follow the inherited VCC Brain steering instructions and run `vcc-brain-helper preamble` themselves.
+- Hook failures do not block the session: a failed `SessionStart` command shows a warning to the user. The agent must follow the steering instructions to load VCC Brain manually; if that command fails, it reports the failure and stops.
 
 ### Troubleshooting
 
-- The agent runs `operator-helper preamble` at the start of a session: the hook did not fire and the steering fallback loaded the preamble instead. Confirm `~/.kiro/hooks/operator-memory.json` exists and is enabled in Kiro's hooks panel, or rerun the install command.
+- The agent runs `vcc-brain-helper preamble` at the start of a session: the hook did not fire and the steering fallback loaded the preamble instead. Confirm `~/.kiro/hooks/vcc-brain.json` exists and is enabled in Kiro's hooks panel, or rerun the install command.
 - Helper failure: Kiro shows the hook's error output to the user as a warning. Repair Helper's global installation and start a new session.
 - Missing memory or load failures: see [Troubleshooting](../troubleshooting.md).

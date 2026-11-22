@@ -5,6 +5,7 @@ import { checkGlobalIgnore, hasTrackedPrivateFiles } from "../../git.ts";
 import { renderTable } from "../../output.ts";
 import type { CliContext } from "../../utils.ts";
 import {
+  BRAIN_INSTRUCTIONS_FILENAME,
   CORE_FILES,
   PRIVATE_LEGACY_ROOT,
   PRIVATE_ROOT,
@@ -54,8 +55,8 @@ export const projectStatus = Effect.fn("projectStatus")(function* (context: CliC
       "",
       "✗ Project Brain Missing",
       "",
-      "For Users: Run `/operator:project-init` in your harness to initialize.",
-      "For Agents: Run `operator-helper project init` and follow the guide in its output.",
+      "For Users: Run `/vcc-brain:project-init` in your harness to initialize.",
+      "For Agents: Run `vcc-brain-helper project init` and follow the guide in its output.",
     );
   }
 
@@ -126,7 +127,7 @@ const inspectPartition = Effect.fn("inspectPartition")(function* (
   const lines = [`✓ ${label} Found`];
   const rows: string[][] = [];
   for (const [file, name] of [
-    ["operator.md", "Operator Instructions"],
+    [BRAIN_INSTRUCTIONS_FILENAME, "VCC Brain Instructions"],
     ["index/index.md", "Project Index"],
     ["catalog.md", "Partition Catalog"],
   ] as const) {

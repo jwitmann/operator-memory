@@ -1,10 +1,10 @@
 import { join } from "node:path";
-import { appendReceipt } from "@jwitmann/operator-core/context/receipts";
+import { appendReceipt } from "@jwitmann/vcc-brain-core/context/receipts";
 import {
   fingerprintPreamble,
   isCacheCold,
   REFRESH_FLOOR_TOKENS,
-} from "@jwitmann/operator-core/preamble-refresh";
+} from "@jwitmann/vcc-brain-core/preamble-refresh";
 import type { PreambleRefreshConfig } from "./config.ts";
 import {
   reportReceiptFailureOnce,

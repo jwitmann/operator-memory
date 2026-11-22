@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import type { OpencodeClient } from "@opencode-ai/sdk/v2";
 
-const PACKAGE_NAME = "@jwitmann/operator-opencode";
+const PACKAGE_NAME = "@jwitmann/vcc-brain-opencode";
 const INSTALL_TIMEOUT = 60_000;
 
 type PackageJson = {
@@ -75,10 +75,10 @@ export async function resolveUpdate(
   const nodeModulesDirectory = dirname(scopeDirectory);
   const installDirectory = dirname(nodeModulesDirectory);
   if (
-    basename(packageDirectory) !== "operator-opencode"
+    basename(packageDirectory) !== "vcc-brain-opencode"
     || basename(scopeDirectory) !== "@jwitmann"
     || basename(nodeModulesDirectory) !== "node_modules"
-    || basename(installDirectory) !== "operator-opencode@latest"
+    || basename(installDirectory) !== "vcc-brain-opencode@latest"
     || basename(dirname(installDirectory)) !== "@jwitmann"
   ) {
     return { current: null, latest: null };
@@ -208,21 +208,21 @@ async function showUpdateResult(client: OpencodeClient, result: UpdateResult): P
   const toast = (() => {
     if (result.status === "updated") {
       return {
-        title: "Operator Updated",
+        title: "VCC Brain Updated",
         message: `v${result.current} → v${result.latest}. Restart OpenCode to apply.`,
         variant: "success" as const,
       };
     }
     if (result.status === "cache-cleared") {
       return {
-        title: "Operator Update Queued",
-        message: "Restart OpenCode to reinstall Operator.",
+        title: "VCC Brain Update Queued",
+        message: "Restart OpenCode to reinstall VCC Brain.",
         variant: "info" as const,
       };
     }
     return {
-      title: "Operator Update Failed",
-      message: `Could not install v${result.latest}. Run operator-helper install opencode-v1 to install the latest version.`,
+      title: "VCC Brain Update Failed",
+      message: `Could not install v${result.latest}. Run vcc-brain-helper install opencode-v1 to install the latest version.`,
       variant: "error" as const,
     };
   })();

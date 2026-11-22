@@ -2,9 +2,12 @@ import { homedir } from "node:os";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { loadMemorySnapshot, type MemoryStatusSnapshot } from "@jwitmann/operator-core/memory/load";
-import { resolveStateDirectory } from "@jwitmann/operator-core/memory/roots";
-import type { TriggerKind } from "@jwitmann/operator-core/context/triggers";
+import {
+  loadMemorySnapshot,
+  type MemoryStatusSnapshot,
+} from "@jwitmann/vcc-brain-core/memory/load";
+import { resolveStateDirectory } from "@jwitmann/vcc-brain-core/memory/roots";
+import type { TriggerKind } from "@jwitmann/vcc-brain-core/context/triggers";
 import { Plugin } from "@opencode/plugin";
 import { pluginId } from "./id.ts";
 
@@ -35,9 +38,9 @@ import {
   registerSearchTool,
 } from "./tool.ts";
 import {
-  OperatorNotifications,
-  type OperatorStatus,
-  type OperatorToast,
+  VccBrainNotifications,
+  type VccBrainStatus,
+  type VccBrainToast,
   type PartitionStatus,
 } from "./notifications.ts";
 
@@ -48,7 +51,7 @@ import {
 // survives reloads.
 let setupGeneration = 0;
 
-const OperatorPlugin = Plugin.define({
+const VccBrainPlugin = Plugin.define({
   id: pluginId,
   async setup(context) {
     const generation = ++setupGeneration;
@@ -56,8 +59,8 @@ const OperatorPlugin = Plugin.define({
     const cache = new Map<string, ReturnType<typeof loadPreamble>>();
     const recoveryNotices = new Set<string>();
     const refreshNotices = new Set<string>();
-    let status: Promise<OperatorStatus> | null = null;
-    const notifications = await context.rpc.register(OperatorNotifications, {
+    let status: Promise<VccBrainStatus> | null = null;
+    const notifications = await context.rpc.register(VccBrainNotifications, {
       status: async input => {
         const refresh =
           input !== null
@@ -70,13 +73,13 @@ const OperatorPlugin = Plugin.define({
         return status;
       },
     });
-    const showToast = (toast: OperatorToast) => notifications.events.emit("toast", toast);
+    const showToast = (toast: VccBrainToast) => notifications.events.emit("toast", toast);
     // Preamble refresh is opt-in and off by default, like context
     // management. Parsed up front so the preamble hook below can use it.
     const refreshParsed = parsePreambleRefreshConfig(context.options);
     if (!refreshParsed.ok) {
       await showToast({
-        title: "Operator Error",
+        title: "VCC Brain Error",
         message: refreshParsed.error.message,
         variant: "error",
       }).catch(() => undefined);
@@ -87,7 +90,7 @@ const OperatorPlugin = Plugin.define({
     const brainUpdatesParsed = parseBrainUpdatesConfig(context.options);
     if (!brainUpdatesParsed.ok) {
       await showToast({
-        title: "Operator Error",
+        title: "VCC Brain Error",
         message: brainUpdatesParsed.error.message,
         variant: "error",
       }).catch(() => undefined);
@@ -95,14 +98,14 @@ const OperatorPlugin = Plugin.define({
     const brainUpdatesConfig = brainUpdatesParsed.ok
       ? brainUpdatesParsed.value
       : DEFAULT_BRAIN_UPDATES_CONFIG;
-    // Context management is opt-in and off by default; vanilla Operator
+    // Context management is opt-in and off by default; vanilla VCC Brain
     // behavior is unchanged when disabled. Parsed up front so the hook
     // and event registration below can split enforcement from
     // refresh-only tracking.
     const parsed = parseContextManagementConfig(context.options);
     if (!parsed.ok) {
       await showToast({
-        title: "Operator Error",
+        title: "VCC Brain Error",
         message: parsed.error.message,
         variant: "error",
       }).catch(() => undefined);
@@ -120,8 +123,8 @@ const OperatorPlugin = Plugin.define({
     });
     for (const warning of projectOverride.warnings) {
       await showToast({
-        title: "Operator Error",
-        message: `Operator project config (.vcc-brain/config.json): ${warning}`,
+        title: "VCC Brain Error",
+        message: `VCC Brain project config (.vcc-brain/config.json): ${warning}`,
         variant: "error",
       }).catch(() => undefined);
     }
@@ -150,7 +153,7 @@ const OperatorPlugin = Plugin.define({
       if (!result.ok) {
         const cause = result.error.cause instanceof Error ? ` ${result.error.cause.message}` : "";
         await showToast({
-          title: "Operator Error",
+          title: "VCC Brain Error",
           message: `${result.error.message}${cause}`,
           variant: "error",
         }).catch(() => undefined);
@@ -159,8 +162,8 @@ const OperatorPlugin = Plugin.define({
       if (!result.value.loaded && !recoveryNotices.has(event.sessionID)) {
         recoveryNotices.add(event.sessionID);
         await showToast({
-          title: "Operator Error",
-          message: "Operator memory failed to load. The agent is attempting to recover.",
+          title: "VCC Brain Error",
+          message: "VCC Brain memory failed to load. The agent is attempting to recover.",
           variant: "error",
         }).catch(() => undefined);
       }
@@ -174,8 +177,8 @@ const OperatorPlugin = Plugin.define({
             isCurrent,
             reportFailure: () => {
               void showToast({
-                title: "Operator Error",
-                message: "Operator preamble refresh failed. Continuing with the session preamble.",
+                title: "VCC Brain Error",
+                message: "VCC Brain preamble refresh failed. Continuing with the session preamble.",
                 variant: "error",
               }).catch(() => undefined);
             },
@@ -232,11 +235,11 @@ const OperatorPlugin = Plugin.define({
           return;
         }
         await showToast({
-          title: "Operator Error",
+          title: "VCC Brain Error",
           message:
             kind === "event-stream"
-              ? "Operator event stream failed twice; completion triggering stopped for this process."
-              : `Operator context log write failed (${kind}) for session ${sessionID}. Reductions continue but are unaudited for this session.`,
+              ? "VCC Brain event stream failed twice; completion triggering stopped for this process."
+              : `VCC Brain context log write failed (${kind}) for session ${sessionID}. Reductions continue but are unaudited for this session.`,
           variant: "error",
         }).catch(() => undefined);
       };
@@ -299,9 +302,9 @@ const OperatorPlugin = Plugin.define({
   },
 });
 
-export default OperatorPlugin;
+export default VccBrainPlugin;
 
-async function loadStatus(projectDirectory: string): Promise<OperatorStatus> {
+async function loadStatus(projectDirectory: string): Promise<VccBrainStatus> {
   const snapshot = await loadMemorySnapshot(projectDirectory, homedir(), false);
   return {
     detail: installationDetail(import.meta.url),

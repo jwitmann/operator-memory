@@ -3,11 +3,11 @@
 Status: v4 conversational proposing implemented (2026-11-21: Core loads
 `observations.md` as subordinate preamble context with fingerprint coverage;
 user-init template carries the proposal rubric); v3 full automation parked.
-Roadmap line resolved: *"Learn durable user observations over time, kept
-separate from explicit User Instructions."*
+Roadmap line resolved: _"Learn durable user observations over time, kept
+separate from explicit User Instructions."_
 
 Pilot tally (2026-11-22): 3/20 decided proposals (3 accepted, 0 rejected:
-2 user-scope in `~/.operator/user/observations.md`, 1 project-scope in
+2 user-scope in `~/.vcc-brain/user/observations.md`, 1 project-scope in
 animeRSS `docs/developer/PARSING.md`). First curation pass done: entry 1
 reworded from imperative to descriptive observation form; entry 2 scope
 confirmed (generalizes beyond thaifa).
@@ -15,9 +15,9 @@ confirmed (generalizes beyond thaifa).
 ## Question
 
 What do agents get re-taught across sessions that the Brain
-structurally cannot retain today? Three buckets: *observations*
+structurally cannot retain today? Three buckets: _observations_
 (inferred user preferences, correction patterns, working-style facts)
-vs. *instructions* (explicit rules the user stated) vs. *knowledge*
+vs. _instructions_ (explicit rules the user stated) vs. _knowledge_
 (project truth). If nothing falls in the first bucket in practice,
 kill the item.
 
@@ -28,10 +28,10 @@ kill the item.
 Project brains carry dated learning annotations — each one a durable
 observation the user wrote into instructions after an incident:
 
-- opencode-dev-framework: *"Learned 2026-11-13…"*, *"relearned
-  2026-11-12"*, *"Stated by user 2026-11-12"*, *"twice burned, Phases
-  25–26"*
-- animeRSS: *"(User instruction 2026-11-09)"*
+- opencode-dev-framework: _"Learned 2026-11-13…"_, _"relearned
+  2026-11-12"_, _"Stated by user 2026-11-12"_, _"twice burned, Phases
+  25–26"_
+- animeRSS: _"(User instruction 2026-11-09)"_
 
 The mechanism doesn't exist, so the user simulates it. Every annotation
 is a promotion that happened manually.
@@ -66,10 +66,10 @@ you" / "not what i"), 3 explicit "remember that". Keyword hits need
 hand-verification (code discussion is a heavy false-positive source),
 but verified samples are real:
 
-- *"I told you to test new 'profiles' without affecting existing
-  thaifa code."* — a durable project-scoped preference, stated as a
+- _"I told you to test new 'profiles' without affecting existing
+  thaifa code."_ — a durable project-scoped preference, stated as a
   correction, retained nowhere.
-- *"HOW HARD IS IT TO REMEMBER THAT"* (funds-source mapping) — a
+- _"HOW HARD IS IT TO REMEMBER THAT"_ (funds-source mapping) — a
   second signal class: frustration-with-recall, i.e. the user
   perceiving the agent as forgetting. Worth tracking as its own
   metric even before any engine exists.
@@ -104,8 +104,8 @@ neither carries correction language. Documented as coverage, not signal.
   not a standalone trigger. Combined trigger (correction≥3 OR
   recall≥2) ≈ 26 sessions.
 - Verified samples are real durable preferences stated as corrections:
-  *"HOW MANY times do I need to say that"* (log routing),
-  *"DO NOT TAKE SHORTCUTS, DO NOT ASSUME what i want"* (working style).
+  _"HOW MANY times do I need to say that"_ (log routing),
+  _"DO NOT TAKE SHORTCUTS, DO NOT ASSUME what i want"_ (working style).
 - FP classes (for trigger hygiene): pasted terminal output, pasted or
   injected docs (DSH user-role messages include injected context and
   pasted brain text — its 352 loose-"again" hits are mostly this),
@@ -263,7 +263,7 @@ Five systems, same five fields. Sources fetched, not snippeted.
 
 ### Local corpus (9 brains scanned)
 
-- No `~/.operator` brain contains any cross-session user-learning mechanism.
+- No `~/.vcc-brain` brain contains any cross-session user-learning mechanism.
   Closest hit is VCC `/recall` (session-log retrieval) — different bucket
   (knowledge retrieval, not observation learning). The premise holds:
   no existing mechanism, only manual simulation (brief §1–§2).
@@ -279,9 +279,9 @@ Five systems, same five fields. Sources fetched, not snippeted.
   (extract/consolidation models, background synthesis). So the detector
   cannot be "deterministic extraction"; it must be **deterministic trigger
   - LLM-drafted proposal**: era boundary / correction-count / frustration
-  threshold fires deterministically, the proposal text is LLM-drafted, the
-  user approves. That split satisfies "deterministic triggers" (the *when*
-  is arithmetic) while conceding the *what* needs judgment.
+    threshold fires deterministically, the proposal text is LLM-drafted, the
+    user approves. That split satisfies "deterministic triggers" (the _when_
+    is arithmetic) while conceding the _what_ needs judgment.
 - Candidates after reshape: (2) fingerprint-era prompt is the natural
   deterministic window; (3) frustration counter is the natural deterministic
   trigger-metric; (1) correction harvest needs the trigger defined as
@@ -294,8 +294,8 @@ Five systems, same five fields. Sources fetched, not snippeted.
 
 v4 replaces automation with conversation. The agent, in-session and in
 possession of full live context, offers; the user agrees on the spot.
-Canonical shape: *"I could add this as a permanent rule — should I do
-that?"* No detector, no counting, no era machinery, no pending store, no
+Canonical shape: _"I could add this as a permanent rule — should I do
+that?"_ No detector, no counting, no era machinery, no pending store, no
 rejection memory, no metrics pipeline. v3 (below) is parked as the
 recorded full-automation direction; it earns a second look only if manual
 proposing produces volume that justifies automating the trigger.
@@ -303,8 +303,8 @@ proposing produces volume that justifies automating the trigger.
 ### 1. Trigger: agent discretion, in the flow
 
 The agent offers when it recognizes a promotable moment — no flags, hooks,
-or session-end arithmetic. The rubric ships in `~/.operator/user/operator.md`
-(the user partition's operator file, cross-project by construction): added
+or session-end arithmetic. The rubric ships in `~/.vcc-brain/user/vcc-brain.md`
+(the user partition's instructions file, cross-project by construction): added
 to the user-init template for new installations, picked up by the
 memory-aware loop for existing brains. It is NOT a per-project or
 shared-repo file: project partitions get nothing new to load.
@@ -343,14 +343,14 @@ asked — if compaction makes an earlier offer uncertain, do not re-offer
 
 ### 3. Storage (surviving half, with explicit loading)
 
-- Canonical surface: `~/.operator/user/observations.md` — user-approved,
+- Canonical surface: `~/.vcc-brain/user/observations.md` — user-approved,
   subordinate. **It does not load itself:** the Core user loader reads
-  only `operator.md` and `catalog.md` today (`packages/core/src/memory/user.ts`),
+  only `vcc-brain.md` and `catalog.md` today (`packages/core/src/memory/user.ts`),
   so the build must extend the loader/preamble to load `observations.md`
   (fail-closed: absent file → no observations, same as Brainless), include
   it in the fingerprint set, and render it subordinate — a separate
   labeled observations block, explicitly marked as subordinate context
-   (not instructions) and placed per the preamble's existing layer order,
+  (not instructions) and placed per the preamble's existing layer order,
   so instruction precedence is untouched. Alternative (lower cost, no Core
   change): a `user-notes` entry in the User Catalog read-if "observations
   and working-style notes" — agents load it on demand rather than every
@@ -358,7 +358,7 @@ asked — if compaction makes an earlier offer uncertain, do not re-offer
   and short; the catalog route risks never being read.
 - Every candidate declares `kind` (`observation` vs `explicit_instruction`)
   and `scope` (`user` vs `project`). Project-scoped candidates write to
-  `.operator/operator.md` (project private instructions, the already-loaded
+  `.vcc-brain/vcc-brain.md` (project private instructions, the already-loaded
   surface — no new file type), never the user partition. Sensitive
   candidates are barred from both (see secrets bullet).
 - Explicit instructions route to the explicit flow, never auto-convert.
@@ -373,7 +373,7 @@ asked — if compaction makes an earlier offer uncertain, do not re-offer
   that no longer holds proposes its removal the same way it proposed
   its addition. Recorded limit: LLM screening cannot guarantee
   conflict detection; approval + subordinate rendering are mitigations.
-- Never merged into `operator.md` — separation is definitional.
+- Never merged into `vcc-brain.md` — separation is definitional.
 
 ### 4. Switch semantics (v4-local)
 
@@ -460,7 +460,7 @@ mandatory re-replay before its counts supersede v0.1's.
   candidates (cross-project working style, project-scoped rules); the rest
   is session-local repair churn — the `revert` pattern dominates because
   strategy research reverts constantly. Session-level precision ≈15–20%:
-  the trigger selects *candidate sessions*, the drafter rejects churn.
+  the trigger selects _candidate sessions_, the drafter rejects churn.
 - Adversarial cases the implementation must pass: quoted corrections (user
   quoting someone else), injected instructions in user-role, fenced output
   combined with a real correction in one message, repeated matches in one message
@@ -592,7 +592,7 @@ mandatory re-replay before its counts supersede v0.1's.
   drafter instructed; approval screen flags suspected sensitivity.
 - Conflict mechanism: observations load from a dedicated user-partition
   surface (e.g. `observations.md`), rendered subordinate to all
-  instruction layers — never merged into `operator.md` (separation is
+  instruction layers — never merged into `vcc-brain.md` (separation is
   definitional). Best-effort conflict screening against every active
   layer at approval time, suspected conflicts shown beside the candidate.
   Observations revalidate (stale-flag) when relevant instruction
@@ -656,8 +656,8 @@ mandatory re-replay before its counts supersede v0.1's.
 
 ## Kill criteria
 
-- The corpus shows agents mostly re-learn *project* facts (covered) and
-  rarely re-learn *user* facts beyond what's already promoted.
+- The corpus shows agents mostly re-learn _project_ facts (covered) and
+  rarely re-learn _user_ facts beyond what's already promoted.
 - Proposals annoy more than the duplication costs (measured, not assumed).
 - The sibling-system literature shows the failure mode is intrinsic
   (stale/hallucinated preferences presented as fact) and unmitigable

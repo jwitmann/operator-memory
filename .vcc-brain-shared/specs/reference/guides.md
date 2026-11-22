@@ -2,13 +2,13 @@
 
 Last Updated: October 11, 2026
 
-Rules for `.operator-shared/guides/<harness>/` so every guide directly drives an Operator Memory adapter implementation. The Antigravity guides are the reference implementation.
+Rules for `.vcc-brain-shared/guides/<harness>/` so every guide directly drives a VCC Brain adapter implementation. The Antigravity guides are the reference implementation.
 
 ## Purpose and Prerequisites
 
-- Guides exist to enable Operator Memory adapters — not to mirror, summarize, or download vendor documentation. The [adapter contract](./implementation.md), [preamble contract](../preamble.md), and [command contract](../commands.md) define what a harness must provide.
-- Before writing, the author must understand the Operator Memory implementation and its required facilities: complete-preamble injection seam, subagent coverage, lifecycle and compaction behavior, command registration, installation and updates, and failure semantics.
-- Apply a relevance filter: every section must serve an implementation question. Do not record random pages, features with no Operator bearing, or exhaustive API inventories without direction.
+- Guides exist to enable VCC Brain adapters — not to mirror, summarize, or download vendor documentation. The [adapter contract](./implementation.md), [preamble contract](../preamble.md), and [command contract](../commands.md) define what a harness must provide.
+- Before writing, the author must understand the VCC Brain implementation and its required facilities: complete-preamble injection seam, subagent coverage, lifecycle and compaction behavior, command registration, installation and updates, and failure semantics.
+- Apply a relevance filter: every section must serve an implementation question. Do not record random pages, features with no VCC Brain bearing, or exhaustive API inventories without direction.
 - Do not state excessively obvious facts. If a competent implementor would already know it, or it has no bearing on the adapter, omit it.
 
 ## Completeness

@@ -1,4 +1,4 @@
-import { readReceipts } from "@jwitmann/operator-core/context/receipts";
+import { readReceipts } from "@jwitmann/vcc-brain-core/context/receipts";
 import { fs, vol } from "memfs";
 import { beforeEach, expect, test, vi } from "vitest";
 
@@ -26,12 +26,12 @@ const HOME = "/home/user";
 function seedBrain(): void {
   for (const root of [`${PROJECT}/.vcc-brain`, `${PROJECT}/.vcc-brain-shared`]) {
     fs.mkdirSync(`${root}/index`, { recursive: true });
-    fs.writeFileSync(`${root}/operator.md`, `# ops ${root}`);
+    fs.writeFileSync(`${root}/vcc-brain.md`, `# ops ${root}`);
     fs.writeFileSync(`${root}/catalog.md`, `# catalog ${root}`);
     fs.writeFileSync(`${root}/index/index.md`, `# index ${root}`);
   }
   fs.mkdirSync(`${HOME}/.vcc-brain/user`, { recursive: true });
-  fs.writeFileSync(`${HOME}/.vcc-brain/user/operator.md`, "# user ops");
+  fs.writeFileSync(`${HOME}/.vcc-brain/user/vcc-brain.md`, "# user ops");
   fs.writeFileSync(`${HOME}/.vcc-brain/user/catalog.md`, "# user catalog");
 }
 
@@ -273,8 +273,8 @@ test("a failed render toasts once and keeps serving the cached preamble", async 
 
   // Break the render after the baseline: reading a directory as a file
   // throws instead of returning a diagnostic.
-  fs.unlinkSync(`${PROJECT}/.vcc-brain/operator.md`);
-  fs.mkdirSync(`${PROJECT}/.vcc-brain/operator.md`);
+  fs.unlinkSync(`${PROJECT}/.vcc-brain/vcc-brain.md`);
+  fs.mkdirSync(`${PROJECT}/.vcc-brain/vcc-brain.md`);
 
   expect(await invoke()).toBe("cached");
   expect(await invoke()).toBe("cached");

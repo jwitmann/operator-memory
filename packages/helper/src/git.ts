@@ -4,7 +4,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { readOptionalText, writeText } from "./filesystem.ts";
 import { getErrorMessage } from "./utils.ts";
 
-const IGNORE_BLOCK = "# Operator: Ignore private partition\n.vcc-brain/\n.operator/\n";
+const IGNORE_BLOCK = "# VCC Brain: Ignore private partition\n.vcc-brain/\n.operator/\n";
 
 export class GitError extends Data.TaggedError("GitError")<{
   readonly message: string;
@@ -19,7 +19,7 @@ export namespace GitRunner {
   }
 
   export class Service extends Context.Service<Service, Interface>()(
-    "@jwitmann/operator-helper/GitRunner",
+    "@jwitmann/vcc-brain-helper/GitRunner",
   ) {}
 
   export const layer = Layer.effect(

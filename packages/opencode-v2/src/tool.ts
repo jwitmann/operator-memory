@@ -2,9 +2,9 @@ import {
   DEFAULT_RETENTION,
   pruneOmissions,
   readOmission,
-} from "@jwitmann/operator-core/context/store";
-import { InvalidSearchPatternError } from "@jwitmann/operator-core/context/search";
-import { isRecord } from "@jwitmann/operator-core/utils";
+} from "@jwitmann/vcc-brain-core/context/store";
+import { InvalidSearchPatternError } from "@jwitmann/vcc-brain-core/context/search";
+import { isRecord } from "@jwitmann/vcc-brain-core/utils";
 import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
 
@@ -29,14 +29,14 @@ function isOmissionID(contentID: string): boolean {
   return OMISSION_ID_PATTERN.test(contentID);
 }
 
-// Registers operator-read_omitted: recovers a trimmed payload from the
+// Registers vcc-brain-read_omitted: recovers a trimmed payload from the
 // omission store by content ID. The omission notices left in context name
 // these IDs; without this tool they would be dead references. Registered
 // under a flat hyphenated name: OpenCode's namespace() declaration is
 // description-only (the effective name comes from options.namespace, which
 // we never set), so a bare name is what the model has always called —
 // prefixing it makes the four tools collision-proof and identical on every
-// host (colons break OpenAI-protocol gateways, so `operator:` never
+// host (colons break OpenAI-protocol gateways, so `vcc-brain:` never
 // existed as a callable name).
 export async function registerReadOmittedTool(
   context: Context,
@@ -44,12 +44,12 @@ export async function registerReadOmittedTool(
 ): Promise<void> {
   await context.tool.transform(editor => {
     editor.add({
-      name: "operator-read_omitted",
+      name: "vcc-brain-read_omitted",
       // Directly callable: without codemode:false the tool lives only in
       // the execute sandbox (tools.*), never as a native function call.
       options: { codemode: false },
       description:
-        "Read original tool input or output content omitted by Operator trimming or compaction. "
+        "Read original tool input or output content omitted by VCC Brain trimming or compaction. "
         + "This reads the snapshot of previously executed tool I/O; contents should be expected "
         + "to be stale. Only use it when stale content is strictly required and similar "
         + "information cannot be obtained via new tool calls.",
@@ -91,22 +91,22 @@ export async function registerReadOmittedTool(
   });
 }
 
-// Registers operator-prune: enforces the retention policy on the current
+// Registers vcc-brain-prune: enforces the retention policy on the current
 // session's omission store (age, count, and byte caps from
 // DEFAULT_RETENTION unless overridden). Payloads omitted from context stay
-// recoverable through operator-read_omitted only while retained; receipts
+// recoverable through vcc-brain-read_omitted only while retained; receipts
 // keep their content IDs regardless, and pruning never touches receipts.
 // Flat hyphenated name, same as the other tools (see above).
 export async function registerPruneTool(context: Context, deps: ReadOmittedDeps): Promise<void> {
   await context.tool.transform(editor => {
     editor.add({
-      name: "operator-prune",
+      name: "vcc-brain-prune",
       // Directly callable (see above).
       options: { codemode: false },
       description:
         "Prune the current session's omitted tool input and output store "
         + "by age, count, and size. Recover pruned payloads first if they are "
-        + "still needed: pruning deletes the files operator-read_omitted serves.",
+        + "still needed: pruning deletes the files vcc-brain-read_omitted serves.",
       input: {
         type: "object",
         properties: {
@@ -171,7 +171,7 @@ function readNonNegativeNumber(record: object, key: string, fallback: number): n
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : fallback;
 }
 
-// Registers operator-recall: restores the exact original content of compacted
+// Registers vcc-brain-recall: restores the exact original content of compacted
 // history from the per-session snapshot by seq selection, tool-result
 // reference, or checkpoint ordinal. The checkpoint guide names this tool, so
 // a compiled summary's `(seq N)` pointers stay dereferenceable.
@@ -179,11 +179,11 @@ function readNonNegativeNumber(record: object, key: string, fallback: number): n
 export async function registerRecallTool(context: Context, deps: ReadOmittedDeps): Promise<void> {
   await context.tool.transform(editor => {
     editor.add({
-      name: "operator-recall",
+      name: "vcc-brain-recall",
       // Directly callable (see above).
       options: { codemode: false },
       description:
-        "Restore exact original content compacted away by Operator instant-compaction. "
+        "Restore exact original content compacted away by VCC Brain instant-compaction. "
         + 'Takes a reference type and id: type "seq" with a seq selection like "3-7"; '
         + 'type "result" with a tool-result seq like "3"; type "checkpoint" with an '
         + 'ordinal like "1" (1 = oldest). Only works after the first compaction in this session.',
@@ -240,19 +240,19 @@ export async function registerRecallTool(context: Context, deps: ReadOmittedDeps
   });
 }
 
-// Registers operator-search: keyword/regex search over the compacted
+// Registers vcc-brain-search: keyword/regex search over the compacted
 // session history in the per-session snapshot. Hits carry `(seq N)` pointers
-// that operator-recall restores in full.
+// that vcc-brain-recall restores in full.
 // Flat hyphenated name, same as the other tools (see above).
 export async function registerSearchTool(context: Context, deps: ReadOmittedDeps): Promise<void> {
   await context.tool.transform(editor => {
     editor.add({
-      name: "operator-search",
+      name: "vcc-brain-search",
       // Directly callable (see above).
       options: { codemode: false },
       description:
         "Search this session's compacted history by keyword or regex. "
-        + "Returns matching events with (seq N) pointers; use operator-recall to "
+        + "Returns matching events with (seq N) pointers; use vcc-brain-recall to "
         + "restore any hit's full original content. Only works after the first compaction in this session.",
       input: {
         type: "object",

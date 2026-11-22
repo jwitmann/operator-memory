@@ -2,7 +2,7 @@
 
 Last Updated: November 3, 2026
 
-Settings-hook system reference, focused on what the Operator plugin's `hooks/hooks.json` needs.
+Settings-hook system reference, focused on what the VCC Brain plugin's `hooks/hooks.json` needs.
 
 ## Configuration formats
 
@@ -10,7 +10,7 @@ Plugin hooks live in `hooks/hooks.json` (path overridable via the manifest `hook
 
 ```json
 {
-  "description": "Operator preamble injection",
+  "description": "VCC Brain preamble injection",
   "hooks": {
     "SessionStart": [
       {
@@ -18,7 +18,7 @@ Plugin hooks live in `hooks/hooks.json` (path overridable via the manifest `hook
         "hooks": [
           {
             "type": "command",
-            "command": "operator-helper",
+            "command": "vcc-brain-helper",
             "args": ["preamble"],
             "timeout": 30
           }
@@ -35,7 +35,7 @@ Hooks are loaded at session start; configuration changes require a restart or `/
 
 ## Handler types
 
-Five types: `command` (shell), `http` (POST JSON, same output schema), `mcp_tool`, `prompt` (single-turn LLM evaluation), `agent` (experimental subagent). Operator needs only `command`.
+Five types: `command` (shell), `http` (POST JSON, same output schema), `mcp_tool`, `prompt` (single-turn LLM evaluation), `agent` (experimental subagent). VCC Brain needs only `command`.
 
 ### Command handlers: exec form vs shell form
 
@@ -72,7 +72,7 @@ Stdout must contain only the JSON object. `additionalContext`/`systemMessage`/pl
 - Workspace trust gates project-scope hooks and frontmatter hooks in untrusted folders
 - Built-in `sec-default` mod guards org-managed configuration from installed plugins
 
-Document these in the adapter's troubleshooting surface: an Operator install can be silently hook-less under managed policy.
+Document these in the adapter's troubleshooting surface: a VCC Brain install can be silently hook-less under managed policy.
 
 ## Testing
 
@@ -80,7 +80,7 @@ Feed sample stdin JSON directly to the handler script and check exit code and st
 
 ```bash
 echo '{"session_id":"t","cwd":"/proj","hook_event_name":"SessionStart","source":"startup"}' \
-  | operator-helper preamble
+  | vcc-brain-helper preamble
 ```
 
 `claude plugin validate <dir>` statically validates the plugin including its hook configuration, and `claude --debug` shows live hook execution.

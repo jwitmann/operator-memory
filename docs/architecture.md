@@ -1,14 +1,14 @@
-# Operator Architecture
+# VCC Brain Architecture
 
-Operator Memory is durable context for agent-driven development. Agents document project knowledge as Markdown over the course of ordinary work. Every session starts with a small, deterministic orientation and explicit routes into deeper material. Nothing is ranked, guessed, or retrieved by similarity.
+VCC Brain is durable context for agent-driven development. Agents document project knowledge as Markdown over the course of ordinary work. Every session starts with a small, deterministic orientation and explicit routes into deeper material. Nothing is ranked, guessed, or retrieved by similarity.
 
 ### The Brain
 
 The Brain is the knowledge space on disk: instructions, specifications, plans, research, architecture and decisions, standards and lessons, plus the catalogs and indexes that map it. It is ordinary Markdown, split into three partitions by ownership:
 
-- `~/.operator/user/` — User/global partition. Project-agnostic memory: preferences, standards, and reusable skills.
-- `.operator/` — Project private partition. Local project knowledge; Git-ignored by Helper on first setup.
-- `.operator-shared/` — Project shared partition. Knowledge published with the repository; created only when activated.
+- `~/.vcc-brain/user/` — User/global partition. Project-agnostic memory: preferences, standards, and reusable skills.
+- `.vcc-brain/` — Project private partition. Local project knowledge; Git-ignored by Helper on first setup.
+- `.vcc-brain-shared/` — Project shared partition. Knowledge published with the repository; created only when activated.
 
 When instructions conflict, the hierarchy is: Private > User > Shared.
 
@@ -16,10 +16,10 @@ Memory is not a separate database. It is the durable knowledge that continuous d
 
 ### What Loads, And What Doesn't
 
-The preamble is the lightweight entrypoint. At the start of every conversation, Operator loads:
+The preamble is the lightweight entrypoint. At the start of every conversation, VCC Brain loads:
 
-- Operator Guidance — fixed framework rules: the memory-aware workflow, partition placement and authority, catalog and index semantics.
-- Operator Instructions — standing rules from each partition's `operator.md`, merged by authority.
+- VCC Brain Guidance — fixed framework rules: the memory-aware workflow, partition placement and authority, catalog and index semantics.
+- VCC Brain Instructions — standing rules from each partition's `vcc-brain.md`, merged by authority.
 - Partition Catalogs — each partition's `catalog.md`, a compact map of its Brain documents.
 - User Observations — approved notes about how you work, loaded as subordinate context that never overrides instructions, catalogs, or index guidance.
 - The main Project Index — `index/index.md`, the repository's structural map.
@@ -35,9 +35,9 @@ Agents propose new entries rarely — at most one per session, and only for genu
 
 ### Preamble Versions
 
-Operator assigns approximately 80% of machines to preamble v1.1 and 20% to the revised v2.0. Assignment is derived locally from the OS machine identifier and stays consistent across projects, harnesses, and Operator updates. If the identifier is unavailable, Operator uses v1.1. The identifier is never transmitted or included in the preamble.
+VCC Brain assigns approximately 80% of machines to preamble v1.1 and 20% to the revised v2.0. Assignment is derived locally from the OS machine identifier and stays consistent across projects, harnesses, and VCC Brain updates. If the identifier is unavailable, VCC Brain uses v1.1. The identifier is never transmitted or included in the preamble.
 
-Set `OPERATOR_PREAMBLE_BETA=1` in the environment of the harness or Helper process to always use v2.0 for newly rendered preambles. Guidance and tenets carry matching version attributes.
+Set `VCC_BRAIN_PREAMBLE_BETA=1` in the environment of the harness or Helper process to always use v2.0 for newly rendered preambles. Guidance and tenets carry matching version attributes.
 
 ### The Maps
 
@@ -52,7 +52,7 @@ Freeform documents — everything else in a partition — are read through catal
 
 RAG turns memory into fragments ranked against a query. The model receives a bounded top-k slice; everything unselected simply does not appear.
 
-Operator relies on coherent documents and explicit maps instead:
+VCC Brain relies on coherent documents and explicit maps instead:
 
 - Stable orientation loads deterministically.
 - Catalogs route through durable knowledge.
@@ -60,12 +60,12 @@ Operator relies on coherent documents and explicit maps instead:
 - Humans and agents update current knowledge at its source.
 - No embedding model, vector database, reranker, or automatic semantic injection is required.
 
-For the full argument against replay-based memory, see [Operator VS Other Plugins](comparison.md).
+For the full argument against replay-based memory, see [VCC Brain VS Other Plugins](comparison.md).
 
 ### Failure Is Visible
 
-The Brain can go stale — after significant upstream changes or if the agent simply forgets to update. Operator keeps that failure in ordinary files: inspectable, correctable. The Project Index carries a structural stamp recorded at refresh time: adding, removing, or renaming files changes the tree hash, `index lint` reports the drift as a warning, and the preamble nudges when an index was never stamped. Content edits alone never stale the index.
+The Brain can go stale — after significant upstream changes or if the agent simply forgets to update. VCC Brain keeps that failure in ordinary files: inspectable, correctable. The Project Index carries a structural stamp recorded at refresh time: adding, removing, or renaming files changes the tree hash, `index lint` reports the drift as a warning, and the preamble nudges when an index was never stamped. Content edits alone never stale the index.
 
 ### OpenCode
 
-The default OpenCode integration targets V2 through `@jwitmann/operator-opencode-v2`. It injects session-cached context at the outgoing model boundary, exposes server-owned status through RPC to the TUI, and leaves package updates to OpenCode. The separate `@jwitmann/operator-opencode` package supports legacy V1 only.
+The default OpenCode integration targets V2 through `@jwitmann/vcc-brain-opencode-v2`. It injects session-cached context at the outgoing model boundary, exposes server-owned status through RPC to the TUI, and leaves package updates to OpenCode. The separate `@jwitmann/vcc-brain-opencode` package supports legacy V1 only.

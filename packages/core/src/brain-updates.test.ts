@@ -60,6 +60,7 @@ test("counts completed non-operator calls once per call ID", () => {
         toolCall("completed"),
         toolCall("pending"),
         toolCall("internal", { namespace: "operator" }),
+        toolCall("internal-new", { namespace: "vcc-brain" }),
         toolCall("failed"),
         { type: "tool-call", id: 7, name: "read", input: {} },
       ],
@@ -69,6 +70,7 @@ test("counts completed non-operator calls once per call ID", () => {
       content: [
         toolResult("completed"),
         toolResult("internal", { namespace: "operator" }),
+        toolResult("internal-new", { namespace: "vcc-brain" }),
         errorResult("failed"),
         { type: "tool-result", id: "malformed", name: "read", result: { type: "text" } },
       ],

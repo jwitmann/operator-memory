@@ -1,25 +1,25 @@
-# Shared Operator Instructions
+# Shared VCC Brain Instructions
 
 ## Overview
 
-You are working directly on the Operator Memory project. Operator turns agent work into lasting project knowledge. The MVP supports OpenCode and Pi and injects durable project and user context from markdown files agents own and maintain.
+You are working directly on the VCC Brain project. VCC Brain turns agent work into lasting project knowledge. The MVP supports OpenCode and Pi and injects durable project and user context from markdown files agents own and maintain.
 
 The Bun/TypeScript monorepo has six TypeScript adapter/runtime packages plus the JavaScript Codex package:
 
-- `@jwitmann/operator-core` — private, harness-agnostic runtime loading and preamble generation
-- `@jwitmann/operator-helper` — published setup, filesystem, Git, status, guide, and lint CLI
-- `@jwitmann/operator-opencode-v2` — default OpenCode (V2) server, RPC, and TUI plugin adapter
-- `@jwitmann/operator-opencode` — legacy OpenCode V1 plugin and harness adapter
-- `@jwitmann/operator-pi` — published Pi extension adapter
-- `@jwitmann/operator-deepseek` — published DeepSeek Harness Host plugin and bundle adapter
+- `@jwitmann/vcc-brain-core` — private, harness-agnostic runtime loading and preamble generation
+- `@jwitmann/vcc-brain-helper` — published setup, filesystem, Git, status, guide, and lint CLI
+- `@jwitmann/vcc-brain-opencode-v2` — default OpenCode (V2) server, RPC, and TUI plugin adapter
+- `@jwitmann/vcc-brain-opencode` — legacy OpenCode V1 plugin and harness adapter
+- `@jwitmann/vcc-brain-pi` — published Pi extension adapter
+- `@jwitmann/vcc-brain-deepseek` — published DeepSeek Harness Host plugin and bundle adapter
 
 Runtime code uses portable Node APIs. Bun owns workspace management, dependency installation, building, and tests.
 
 ## Core Philosophy
 
 - Keep harness plugins thin so new harnesses stay cheap to add and maintain.
-- Put shared logic in `@jwitmann/operator-core`.
-- Put filesystem and install work in `@jwitmann/operator-helper`, not in plugins.
+- Put shared logic in `@jwitmann/vcc-brain-core`.
+- Put filesystem and install work in `@jwitmann/vcc-brain-helper`, not in plugins.
 - Prefer **agent-driven** flows for complex work such as setup; the harness only injects context and thin UI.
 - Treat harness-only extras (for example the OpenCode TUI status icon) as optional sugar, not core behavior.
 
@@ -65,10 +65,10 @@ Unqualified OpenCode support, development, and reference guidance target V2. V1 
 Follow this workflow in order when implementing a harness adapter:
 
 1. Research the harness. If source code is available, clone it to `reference/<repo-name>` (Git-ignored) and add subindexes for the clone to the Shared Project Index under `index/harnesses/`.
-2. Create guides under `.operator-shared/guides/<harness>/` following the [harness guide standard](./specs/reference/guides.md), based on the official documentation and, when available, the cloned source code. Cite real file paths from a clone as `<reference>/<repo-name>/...`.
-3. Read the adapter contract in `.operator-shared/specs/reference/implementation.md` and the other harnesses' `implementation.md` documents, then determine the implementation pathway for the target harness.
-4. Implement the adapter, recording the binding and any deviations in `.operator-shared/specs/<harness>/implementation.md`.
-5. Use `.operator-shared/specs/reference/release.md` as the checklist for package shape, Helper integration, and documentation.
+2. Create guides under `.vcc-brain-shared/guides/<harness>/` following the [harness guide standard](./specs/reference/guides.md), based on the official documentation and, when available, the cloned source code. Cite real file paths from a clone as `<reference>/<repo-name>/...`.
+3. Read the adapter contract in `.vcc-brain-shared/specs/reference/implementation.md` and the other harnesses' `implementation.md` documents, then determine the implementation pathway for the target harness.
+4. Implement the adapter, recording the binding and any deviations in `.vcc-brain-shared/specs/<harness>/implementation.md`.
+5. Use `.vcc-brain-shared/specs/reference/release.md` as the checklist for package shape, Helper integration, and documentation.
 
 After implementing or changing adapter behavior, update the relevant shared `implementation.md` and guide documents, including their `Last Updated` dates.
 

@@ -1,8 +1,8 @@
 {
-  "name": "operator-memory",
+  "name": "vcc-brain",
   "version": "0.0.0",
   "private": true,
-  "description": "Operator Memory: Durable context for agent-driven development.",
+  "description": "VCC Brain: Durable context for agent-driven development.",
   "license": "BSD-3-Clause",
   "type": "module",
   "workspaces": [
@@ -12,7 +12,7 @@
     "build:helper": "bun run --cwd packages/helper build",
     "build:opencode": "bun run --cwd packages/opencode-v2 build",
     "build:opencode-v2": "bun run --cwd packages/opencode-v2 build",
-    "build:opencode-v2:dev": "OPERATOR_PLUGIN_ID=jwitmann.operator-memory-dev bun run --cwd packages/opencode-v2 build",
+    "build:opencode-v2:dev": "VCC_BRAIN_PLUGIN_ID=jwitmann.vcc-brain-dev bun run --cwd packages/opencode-v2 build",
     "build:pi": "bun run --cwd packages/pi build",
     "build:codex": "bun run --cwd packages/codex build",
     "build:claude-code": "bun run --cwd packages/claude-code build",
@@ -33,7 +33,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jwitmann/operator-memory.git"
+    "url": "git+https://github.com/jwitmann/vcc-brain.git"
   },
   "author": "jwitmann",
   "devDependencies": {

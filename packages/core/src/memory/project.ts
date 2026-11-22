@@ -21,6 +21,7 @@ export {
   PROJECT_SHARED_LEGACY_ROOT,
   PROJECT_SHARED_ROOT,
 } from "./roots.ts";
+import { resolveInstructionsPath } from "./roots.ts";
 
 export type IndexDocument = {
   readonly path: string;
@@ -30,7 +31,7 @@ export type IndexDocument = {
 
 export type ProjectPartitionSnapshot = {
   readonly exists: boolean;
-  readonly operatorInstructions: string | null;
+  readonly brainInstructions: string | null;
   readonly catalog: string | null;
   readonly indexes: ReadonlyArray<IndexDocument>;
 };
@@ -60,14 +61,14 @@ export async function loadProjectPartition(
     return hasNodeErrorCode(directory.error.cause, "ENOENT")
       ? success(
           loadFiles
-            ? { exists: false, operatorInstructions: null, catalog: null, indexes: [] }
+            ? { exists: false, brainInstructions: null, catalog: null, indexes: [] }
             : { exists: false },
         )
       : directory;
   }
 
   if (!loadFiles) {
-    for (const path of [join(root, "operator.md"), join(root, "catalog.md")]) {
+    for (const path of [await resolveInstructionsPath(root), join(root, "catalog.md")]) {
       const file = await checkOptionalReadableFile(path);
       if (!file.ok) {
         return file;
@@ -88,9 +89,9 @@ export async function loadProjectPartition(
     return success({ exists: true });
   }
 
-  const operatorInstructions = await readOptionalContent(join(root, "operator.md"));
-  if (!operatorInstructions.ok) {
-    return operatorInstructions;
+  const brainInstructions = await readOptionalContent(await resolveInstructionsPath(root));
+  if (!brainInstructions.ok) {
+    return brainInstructions;
   }
 
   const catalog = await readOptionalContent(join(root, "catalog.md"));
@@ -105,7 +106,7 @@ export async function loadProjectPartition(
 
   return success({
     exists: true,
-    operatorInstructions: operatorInstructions.value,
+    brainInstructions: brainInstructions.value,
     catalog: catalog.value,
     indexes: indexes.value,
   });

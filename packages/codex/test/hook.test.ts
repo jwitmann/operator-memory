@@ -17,7 +17,7 @@ afterEach(async () => {
 test.each(["startup", "clear", "compact"])(
   "injects complete Helper output for SessionStart source %s",
   async source => {
-    const projectDirectory = await temporaryDirectory("operator-codex-project-");
+    const projectDirectory = await temporaryDirectory("vcc-brain-codex-project-");
     const binDirectory = await helperBin(false);
     const output = runHook(
       { hook_event_name: "SessionStart", source, cwd: projectDirectory },
@@ -30,7 +30,7 @@ test.each(["startup", "clear", "compact"])(
 );
 
 test.each(["resume", "fork"])("skips SessionStart source %s", async source => {
-  const projectDirectory = await temporaryDirectory("operator-codex-project-");
+  const projectDirectory = await temporaryDirectory("vcc-brain-codex-project-");
   const binDirectory = await helperBin(false);
   const output = runHook(
     { hook_event_name: "SessionStart", source, cwd: projectDirectory },
@@ -42,7 +42,7 @@ test.each(["resume", "fork"])("skips SessionStart source %s", async source => {
 });
 
 test("injects complete Helper output for delegated subagents", async () => {
-  const projectDirectory = await temporaryDirectory("operator-codex-project-");
+  const projectDirectory = await temporaryDirectory("vcc-brain-codex-project-");
   const binDirectory = await helperBin(false);
   const output = runHook({ hook_event_name: "SubagentStart", cwd: projectDirectory }, binDirectory);
 
@@ -51,7 +51,7 @@ test("injects complete Helper output for delegated subagents", async () => {
 });
 
 test("returns a blocking user-visible failure when Helper fails", async () => {
-  const projectDirectory = await temporaryDirectory("operator-codex-project-");
+  const projectDirectory = await temporaryDirectory("vcc-brain-codex-project-");
   const binDirectory = await helperBin(true);
   const output = runHook(
     { hook_event_name: "SessionStart", source: "startup", cwd: projectDirectory },
@@ -62,7 +62,7 @@ test("returns a blocking user-visible failure when Helper fails", async () => {
   expect(output.stdout).toBe(
     JSON.stringify({
       continue: false,
-      systemMessage: "Operator could not load memory because operator-helper preamble failed.",
+      systemMessage: "VCC Brain could not load memory because vcc-brain-helper preamble failed.",
     }),
   );
 });
@@ -74,8 +74,8 @@ async function temporaryDirectory(prefix: string): Promise<string> {
 }
 
 async function helperBin(fail: boolean): Promise<string> {
-  const directory = await temporaryDirectory("operator-codex-bin-");
-  const helperPath = join(directory, "operator-helper");
+  const directory = await temporaryDirectory("vcc-brain-codex-bin-");
+  const helperPath = join(directory, "vcc-brain-helper");
   await writeFile(
     helperPath,
     `#!/usr/bin/env node

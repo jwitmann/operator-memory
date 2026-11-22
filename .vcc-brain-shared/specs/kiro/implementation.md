@@ -2,15 +2,15 @@
 
 Last Updated: November 3, 2026
 
-How Operator binds the [reference adapter implementation](../reference/implementation.md) to Kiro IDE and CLI V3. The adapter is distributed through Helper as hook, steering, and skill files; there is no separate Kiro package. Core owns memory loading and rendering through Helper. Command meaning and setup workflows stay in [Commands](../commands.md).
+How VCC Brain binds the [reference adapter implementation](../reference/implementation.md) to Kiro IDE and CLI V3. The adapter is distributed through Helper as hook, steering, and skill files; there is no separate Kiro package. Core owns memory loading and rendering through Helper. Command meaning and setup workflows stay in [Commands](../commands.md).
 
 ## Preamble Resolution
 
-The adapter uses the accepted Helper-subprocess pathway. `operator-helper preamble` renders memory for the active workspace. Successful output is the complete normal preamble or the canonical all-or-nothing diagnostic preamble and is used unchanged. A rendered memory-load diagnostic is not a command execution failure.
+The adapter uses the accepted Helper-subprocess pathway. `vcc-brain-helper preamble` renders memory for the active workspace. Successful output is the complete normal preamble or the canonical all-or-nothing diagnostic preamble and is used unchanged. A rendered memory-load diagnostic is not a command execution failure.
 
 ## Preamble Injection
 
-A global `SessionStart` command hook runs `operator-helper preamble` from the workspace root. Kiro adds successful stdout to the main agent's context. The adapter keeps no render cache and does not install an outgoing model-boundary transform.
+A global `SessionStart` command hook runs `vcc-brain-helper preamble` from the workspace root. Kiro adds successful stdout to the main agent's context. The adapter keeps no render cache and does not install an outgoing model-boundary transform.
 
 Main-agent loading uses lifecycle-hook context injection. Subagents load the preamble through the steering instructions below.
 
@@ -19,14 +19,14 @@ Main-agent loading uses lifecycle-hook context injection. Subagents load the pre
 Always-included steering is required alongside the hook. It supplies this exact prompt, with `inclusion: always` frontmatter:
 
 ```markdown
-# Operator Memory
+# VCC Brain
 
-Operator Memory is installed for Kiro. If you do not see Operator's preamble guidance above wrapped within `<operator-guidance>`, manually run the `operator-helper preamble` command once from the workspace root and follow all instructions from the command output. If the command fails, report to the user and stop. Do not run if the preamble is already available.
+VCC Brain is installed for Kiro. If you do not see VCC Brain's preamble guidance above wrapped within `<vcc-brain-guidance>`, manually run the `vcc-brain-helper preamble` command once from the workspace root and follow all instructions from the command output. If the command fails, report to the user and stop. Do not run if the preamble is already available.
 ```
 
 Built-in subagents inherit steering but do not receive the parent's hook-injected preamble. Kiro has no subagent start hook. Subagents follow the inherited instructions and run Helper themselves; this is agent-driven loading. The same instructions cover a main agent whose preamble is missing.
 
-Operator uses general Kiro mechanisms. It does not install custom agents or require users to select one.
+VCC Brain uses general Kiro mechanisms. It does not install custom agents or require users to select one.
 
 ## Failure Semantics
 
@@ -36,11 +36,11 @@ A non-zero `SessionStart` command shows a warning to the user. Kiro proceeds wit
 
 ## Commands
 
-Three explicitly invoked skills expose the Operator workflows:
+Three explicitly invoked skills expose the VCC Brain workflows:
 
-- `/operator-user-init`
-- `/operator-project-init`
-- `/operator-index`
+- `/vcc-brain-user-init`
+- `/vcc-brain-project-init`
+- `/vcc-brain-index`
 
 Each supplies the reference command instructions: check Helper's version, upgrade when outdated, run the corresponding workflow operation, and handle failures directly. The agent executes Helper in the current conversation. Skill descriptions restrict use to explicit user invocation; hyphenated names are the Kiro-compatible command names.
 
@@ -48,15 +48,15 @@ Helper output remains agent working context. Skills do not duplicate Helper's se
 
 ## Installation and Updates
 
-`operator-helper install kiro` is available from Helper `1.8.0`, requires Helper on `PATH`, and installs one hook, one always-included steering file, and three skill entry files under ordinary `$HOME/.kiro/`.
+`vcc-brain-helper install kiro` is available from Helper `1.8.0`, requires Helper on `PATH`, and installs one hook, one always-included steering file, and three skill entry files under ordinary `$HOME/.kiro/`.
 
 These five files are plugin-owned. Installation and reinstallation overwrite them intentionally; user modifications are at the user's risk. No edit-preservation or disabled-hook-preservation policy is required.
 
-Migration: installation removes the retired plugin-owned `skills/operator-repair/SKILL.md` so existing installations stop exposing the removed command. The marked migration block removes only that entry file, preserves adjacent content, and succeeds when the file is already absent.
+Migration: installation removes the retired plugin-owned `skills/vcc-brain-repair/SKILL.md` so existing installations stop exposing the removed command. The marked migration block removes only that entry file, preserves adjacent content, and succeeds when the file is already absent.
 
 Installation ignores `KIRO_HOME`. CLI binary `2.27.1`, running the V3 engine (`--v3`) with KAS `0.66.22`, ignores that override for global hooks, steering, and skills and discovers them under ordinary `$HOME/.kiro/`. Do not install duplicate copies into both directories.
 
-Helper releases distribute adapter updates. Rerun `operator-helper install kiro` to refresh the files and start a new Kiro session to load them. There is no adapter status UI.
+Helper releases distribute adapter updates. Rerun `vcc-brain-helper install kiro` to refresh the files and start a new Kiro session to load them. There is no adapter status UI.
 
 ## Differences From Reference
 

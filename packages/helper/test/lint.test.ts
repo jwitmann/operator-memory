@@ -19,7 +19,7 @@ const services = Layer.mergeAll(
 let project: string;
 
 beforeEach(() => {
-  project = mkdtempSync(join(tmpdir(), "operator-helper-lint-"));
+  project = mkdtempSync(join(tmpdir(), "vcc-brain-helper-lint-"));
 });
 
 afterEach(() => {

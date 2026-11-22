@@ -1,4 +1,4 @@
-# operator-memory hardening
+# vcc-brain hardening
 
 Project contract, appended after the bundled constitution. Follow
 `AGENTS.md` (gates, hooks, branch conventions) and `CONTRIBUTING.md`;

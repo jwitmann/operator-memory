@@ -21,7 +21,7 @@ afterEach(async () => {
 });
 
 async function makeProject(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "operator-opencode-project-config-"));
+  const dir = await mkdtemp(join(tmpdir(), "vcc-brain-opencode-project-config-"));
   dirs.push(dir);
   return dir;
 }

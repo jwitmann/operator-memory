@@ -1,4 +1,4 @@
-import { readReceipts } from "@jwitmann/operator-core/context/receipts";
+import { readReceipts } from "@jwitmann/vcc-brain-core/context/receipts";
 import { fs, vol } from "memfs";
 import { beforeEach, expect, test, vi } from "vitest";
 

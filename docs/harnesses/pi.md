@@ -2,10 +2,10 @@
 
 ### Install
 
-Requires Node.js 20 or newer (for Operator Helper) and the [Helper](../../README.md#installation) installed.
+Requires Node.js 20 or newer (for VCC Brain Helper) and the [Helper](../../README.md#installation) installed.
 
 ```sh
-operator-helper install pi
+vcc-brain-helper install pi
 ```
 
 Start a new Pi session after installation.
@@ -15,18 +15,18 @@ Start a new Pi session after installation.
 In a new conversation, ask:
 
 ```text
-Is Operator Memory guidance available to you? Give a brief outline of what it says.
+Is VCC Brain guidance available to you? Give a brief outline of what it says.
 ```
 
 The agent should confirm the guidance is loaded and outline the brain, partitions, and memory-aware workflow. If it cannot, injection is not working.
 
-Secondary signal: the footer shows `· Operator Active (vX.Y.Z)`; local builds show `(Local Build)`. `· Operator Unavailable` means memory failed to load. `· Operator Error` means rendering failed — rerun the install command and restart Pi.
+Secondary signal: the footer shows `· VCC Brain Active (vX.Y.Z)`; local builds show `(Local Build)`. `· VCC Brain Unavailable` means memory failed to load. `· VCC Brain Error` means rendering failed — rerun the install command and restart Pi.
 
 ### Commands
 
-- `/operator:user-init`
-- `/operator:project-init`
-- `/operator:index`
+- `/vcc-brain:user-init`
+- `/vcc-brain:project-init`
+- `/vcc-brain:index`
 
 Run each in a new conversation. See [Getting Started](../getting-started.md#appendix-commands) for what each command does.
 
@@ -40,7 +40,7 @@ pi update --extensions
 
 ### Troubleshooting
 
-- No Operator footer: the extension did not load. Rerun `operator-helper install pi` and start a new session.
-- Operator commands appear with a numeric suffix such as `:1`: another extension registered the same name. Use the suffixed name or rename the conflicting extension.
-- Subagents do not receive Operator: only persistent package registrations are inherited by child processes. Install via the command above rather than a temporary `-e` registration.
+- No VCC Brain footer: the extension did not load. Rerun `vcc-brain-helper install pi` and start a new session.
+- VCC Brain commands appear with a numeric suffix such as `:1`: another extension registered the same name. Use the suffixed name or rename the conflicting extension.
+- Subagents do not receive VCC Brain: only persistent package registrations are inherited by child processes. Install via the command above rather than a temporary `-e` registration.
 - Footer `Unavailable` or missing memory: see [Troubleshooting](../troubleshooting.md).

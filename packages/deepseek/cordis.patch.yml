@@ -1,5 +1,5 @@
 - insert:
-    - id: operator-memory
-      name: '@jwitmann/operator-deepseek'
+    - id: vcc-brain
+      name: "@jwitmann/vcc-brain-deepseek"
     - id: tool-recall
-      name: '@jwitmann/operator-deepseek/tool'
+      name: "@jwitmann/vcc-brain-deepseek/tool"

@@ -1,4 +1,4 @@
-import { COMPILER_REV } from "@jwitmann/operator-core/context/compiler";
+import { COMPILER_REV } from "@jwitmann/vcc-brain-core/context/compiler";
 import { expect, test } from "vitest";
 
 import {

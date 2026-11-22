@@ -1,16 +1,16 @@
 window.__ModuleLoader__.load({
-  id: "@jwitmann/operator-deepseek",
+  id: "@jwitmann/vcc-brain-deepseek",
   factory(require) {
     const React = require("react");
 
-    function OperatorIndicator() {
+    function VccBrainIndicator() {
       return React.createElement(
         "span",
-        { className: "operator-memory-indicator" },
+        { className: "vcc-brain-indicator" },
         React.createElement(
           "span",
-          { className: "operator-memory-indicator__label" },
-          "Operator Ready (v__OPERATOR_VERSION__)",
+          { className: "vcc-brain-indicator__label" },
+          "VCC Brain Ready (v__VCC_BRAIN_VERSION__)",
         ),
       );
     }
@@ -20,18 +20,18 @@ window.__ModuleLoader__.load({
       apply(ctx) {
         ctx.effect(() => {
           const style = document.createElement("style");
-          style.textContent = "__OPERATOR_CSS__";
+          style.textContent = "__VCC_BRAIN_CSS__";
           document.head.appendChild(style);
           return () => style.remove();
-        }, "operator-memory: indicator style");
+        }, "vcc-brain: indicator style");
         ctx.slots.inject("conversation.composer.dock", () =>
           ctx.slots.register(
             {
               name: "conversation.composer.dock",
-              id: "operator-memory",
+              id: "vcc-brain",
               order: -1,
             },
-            OperatorIndicator,
+            VccBrainIndicator,
           ),
         );
       },

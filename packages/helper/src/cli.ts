@@ -25,14 +25,14 @@ import type { NpmRegistry } from "./npm-registry.ts";
 import { renderTable } from "./output.ts";
 import type { CliContext, CliResult } from "./utils.ts";
 
-const HELP = `Operator Helper
+const HELP = `VCC Brain Helper
 
 USER COMMANDS
 
 ${renderTable([
-  ["help", "Show help for operator-helper"],
+  ["help", "Show help for vcc-brain-helper"],
   ["version", "Show the installed version and check for updates"],
-  ["upgrade", "Update Operator Helper to the latest release"],
+  ["upgrade", "Update VCC Brain Helper to the latest release"],
   ["install codex", "Install or update the Codex plugin"],
   ["install opencode", "Install or update the OpenCode plugin (V2)"],
   ["install opencode-v1", "Install or update the legacy OpenCode V1 plugin"],
@@ -52,8 +52,8 @@ ${renderTable([
   ["index init", "Show Project Index status and print the setup guide"],
   ["index lint", "Check Project Index structure and frontmatter"],
   ["index stamp", "Stamp Project Index with the current tree hash"],
-  ["memory check", "Check that all Operator memory can be loaded"],
-  ["preamble", "Render the Operator preamble"],
+  ["memory check", "Check that all VCC Brain memory can be loaded"],
+  ["preamble", "Render the VCC Brain preamble"],
 ])}`;
 
 export function runCli(

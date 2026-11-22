@@ -1,15 +1,15 @@
 {
-  "name": "operator-memory",
-  "description": "Operator Memory for Claude Code.",
+  "name": "vcc-brain",
+  "description": "VCC Brain for Claude Code.",
   "owner": {
     "name": "jwitmann"
   },
   "plugins": [
     {
-      "name": "operator",
+      "name": "vcc-brain",
       "source": {
         "source": "npm",
-        "package": "@jwitmann/operator-claude-code"
+        "package": "@jwitmann/vcc-brain-claude-code"
       }
     }
   ]

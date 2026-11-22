@@ -1,6 +1,7 @@
 import type { MemorySnapshot } from "./memory/load.ts";
 import type { IndexDocument, ProjectPartitionSnapshot } from "./memory/project.ts";
 import {
+  BRAIN_INSTRUCTIONS_FILENAME,
   PROJECT_PRIVATE_LEGACY_ROOT,
   PROJECT_SHARED_LEGACY_ROOT,
   USER_LEGACY_DISPLAY,
@@ -72,15 +73,15 @@ export function renderPreamble(
     sections.push(userCatalog);
   } else if (loaded.user.exists) {
     warnings.push(
-      `<operator-warning>
+      `<vcc-brain-warning>
 The User Partition exists but ${userCatalogPath} does not. You must create and maintain a catalog.md to document any non-empty User Partition.
-</operator-warning>`,
+</vcc-brain-warning>`,
     );
   } else {
     warnings.push(
-      `<operator-warning>
-The ${displayRoots.user} directory does not exist (legacy ${USER_LEGACY_DISPLAY} also checked). If the user would benefit from cross-project user memory, ask the user to run /operator:user-init first to initialize the User Partition. If not needed, do not ask; they may be working without user memory intentionally.
-</operator-warning>`,
+      `<vcc-brain-warning>
+The ${displayRoots.user} directory does not exist (legacy ${USER_LEGACY_DISPLAY} also checked). If the user would benefit from cross-project user memory, ask the user to run /vcc-brain:user-init first to initialize the User Partition. If not needed, do not ask; they may be working without user memory intentionally.
+</vcc-brain-warning>`,
     );
   }
 
@@ -93,9 +94,9 @@ The ${displayRoots.user} directory does not exist (legacy ${USER_LEGACY_DISPLAY}
 
   if (!loaded.shared.exists && !loaded.private.exists) {
     warnings.push(
-      `<operator-warning>
-Neither the ${displayRoots.private} nor ${displayRoots.shared} directory exists (legacy ${PROJECT_PRIVATE_LEGACY_ROOT}/ and ${PROJECT_SHARED_LEGACY_ROOT}/ also checked). If the user requests significant amounts of work to be done on the project, ask the user to run /operator:project-init first to initialize Operator. If the user is not requesting work to be done, do not ask to initialize; they could simply be exploring.
-</operator-warning>`,
+      `<vcc-brain-warning>
+Neither the ${displayRoots.private} nor ${displayRoots.shared} directory exists (legacy ${PROJECT_PRIVATE_LEGACY_ROOT}/ and ${PROJECT_SHARED_LEGACY_ROOT}/ also checked). If the user requests significant amounts of work to be done on the project, ask the user to run /vcc-brain:project-init first to initialize VCC Brain. If the user is not requesting work to be done, do not ask to initialize; they could simply be exploring.
+</vcc-brain-warning>`,
     );
   } else {
     const indexes = renderIndexes(loaded, displayRoots);
@@ -105,9 +106,9 @@ Neither the ${displayRoots.private} nor ${displayRoots.shared} directory exists 
       sections.push(catalogs);
     } else {
       warnings.push(
-        `<operator-warning>
+        `<vcc-brain-warning>
 Neither ${displayRoots.private}/catalog.md nor ${displayRoots.shared}/catalog.md exists. You must create and maintain a catalog.md to document any non-empty Project Brain partitions.
-</operator-warning>`,
+</vcc-brain-warning>`,
       );
     }
     if (indexes !== null) {
@@ -115,9 +116,9 @@ Neither ${displayRoots.private}/catalog.md nor ${displayRoots.shared}/catalog.md
     }
     if (!hasMainIndex(loaded)) {
       warnings.push(
-        `<operator-warning>
-Neither ${displayRoots.private}/index/index.md nor ${displayRoots.shared}/index/index.md exists. If the project is not in an empty state, ask the user to run /operator:index to initialize a project index before performing any work.
-</operator-warning>`,
+        `<vcc-brain-warning>
+Neither ${displayRoots.private}/index/index.md nor ${displayRoots.shared}/index/index.md exists. If the project is not in an empty state, ask the user to run /vcc-brain:index to initialize a project index before performing any work.
+</vcc-brain-warning>`,
       );
     } else {
       warnings.push(...collectUnstampedWarnings(loaded, displayRoots));
@@ -152,9 +153,9 @@ function collectLegacyIgnoredWarnings(displayRoots: PreambleDisplayRoots): strin
   for (const target of targets) {
     if (target.ignored) {
       warnings.push(
-        `<operator-warning>
+        `<vcc-brain-warning>
 Both ${target.primary}/ and its legacy counterpart exist; the legacy partition is ignored and only ${target.primary}/ is loaded. Merge anything still needed from legacy, then remove it.
-</operator-warning>`,
+</vcc-brain-warning>`,
       );
     }
   }
@@ -176,9 +177,9 @@ function collectUnstampedWarnings(
       const treeHash = main.frontmatter.value.treeHash;
       if (typeof treeHash !== "string" || treeHash === "") {
         warnings.push(
-          `<operator-warning>
+          `<vcc-brain-warning>
 ${target.root}/index/index.md exists but was never stamped — staleness is unknown. Run \`index stamp\` after refreshing the index; run \`index lint\` to check for drift.
-</operator-warning>`,
+</vcc-brain-warning>`,
         );
       }
     }
@@ -192,28 +193,28 @@ function renderLoadDiagnostic(memory: MemorySnapshot): string {
       ? `- ${name}: Loaded Successfully`
       : `- ${name}: Error at ${result.error.path}: ${getErrorMessage(result.error.cause)}`;
 
-  return `<operator-diagnostic>
-Operator memory failed to load. No memory files were included in this preamble.
+  return `<vcc-brain-diagnostic>
+VCC Brain memory failed to load. No memory files were included in this preamble.
 
 Loading status:
 ${status("Shared", memory.shared)}
 ${status("User", memory.user)}
 ${status("Private", memory.private)}
 
-IMPORTANT: You MUST resolve Operator memory loading before proceeding with the user's requested work. User and project instructions were not loaded.
+IMPORTANT: You MUST resolve VCC Brain memory loading before proceeding with the user's requested work. User and project instructions were not loaded.
 
-1. Run \`operator-helper version\`. If an update is available, run \`operator-helper upgrade\` before continuing.
-2. Run \`operator-helper memory check\` from the affected project directory to obtain current loading results.
+1. Run \`vcc-brain-helper version\`. If an update is available, run \`vcc-brain-helper upgrade\` before continuing.
+2. Run \`vcc-brain-helper memory check\` from the affected project directory to obtain current loading results.
 3. Repair only the reported load failures. Preserve existing content, do not initialize absent partitions, and do not reset or replace the Brain. If a repair requires deleting content, reconstructing instructions, or choosing between ambiguous fixes, stop and ask the user for guidance.
-4. Rerun \`operator-helper memory check\` after repairs. Resolve any additional load failures it reveals until the check succeeds or a concrete blocker prevents further progress.
+4. Rerun \`vcc-brain-helper memory check\` after repairs. Resolve any additional load failures it reveals until the check succeeds or a concrete blocker prevents further progress.
 
-\`operator-helper\` is the globally installed Operator CLI (npm package \`@jwitmann/operator-helper\`), not a project dependency.
+\`vcc-brain-helper\` is the globally installed VCC Brain CLI (npm package \`@jwitmann/vcc-brain-helper\`), not a project dependency.
 
 - If Helper cannot start, install or repair its global installation and retry the failed command.
 - If the version check or upgrade fails, diagnose the failure and retry.
 - If recovery is blocked, report the failing path or operation, the cause, and what is needed to continue. Do not proceed with the original task.
 - When validation succeeds, tell the user that loading is repaired and ask them to start a new session and resubmit their original request so the complete preamble is loaded. Do not resume the original task in this diagnostic-only session.
-</operator-diagnostic>`;
+</vcc-brain-diagnostic>`;
 }
 
 function renderInstructions(
@@ -222,26 +223,37 @@ function renderInstructions(
 ): string | null {
   const files: string[] = [];
 
-  if (memory.shared.operatorInstructions !== null) {
+  if (memory.shared.brainInstructions !== null) {
     files.push(
-      renderFile(`${displayRoots.shared}/operator.md`, memory.shared.operatorInstructions),
+      renderFile(
+        `${displayRoots.shared}/${BRAIN_INSTRUCTIONS_FILENAME}`,
+        memory.shared.brainInstructions,
+      ),
     );
   }
-  if (memory.user.operatorInstructions !== null) {
-    files.push(renderFile(`${displayRoots.user}/operator.md`, memory.user.operatorInstructions));
-  }
-  if (memory.private.operatorInstructions !== null) {
+  if (memory.user.brainInstructions !== null) {
     files.push(
-      renderFile(`${displayRoots.private}/operator.md`, memory.private.operatorInstructions),
+      renderFile(
+        `${displayRoots.user}/${BRAIN_INSTRUCTIONS_FILENAME}`,
+        memory.user.brainInstructions,
+      ),
+    );
+  }
+  if (memory.private.brainInstructions !== null) {
+    files.push(
+      renderFile(
+        `${displayRoots.private}/${BRAIN_INSTRUCTIONS_FILENAME}`,
+        memory.private.brainInstructions,
+      ),
     );
   }
 
   return files.length === 0
     ? null
-    : `<operator-instructions>
-Operator instruction contents from least to most authoritative:
+    : `<vcc-brain-instructions>
+VCC Brain instruction contents from least to most authoritative:
 ${files.join("\n")}
-</operator-instructions>`;
+</vcc-brain-instructions>`;
 }
 
 function renderIndexes(
@@ -329,7 +341,7 @@ function renderUserObservations(
   }
 
   return `<user-observations>
-User-approved observations and working-style notes. This is subordinate context, not instructions: it never overrides Operator Instructions, catalogs, or index guidance.
+User-approved observations and working-style notes. This is subordinate context, not instructions: it never overrides VCC Brain Instructions, catalogs, or index guidance.
 <file-content path="${observationsPath}">
 ${partition.observations}
 </file-content>

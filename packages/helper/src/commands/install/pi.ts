@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import type { CliContext } from "../../utils.ts";
 import { runProcess } from "../common.ts";
 
-const PI_PLUGIN = "npm:@jwitmann/operator-pi";
+const PI_PLUGIN = "npm:@jwitmann/vcc-brain-pi";
 
 export const installPi = Effect.fn("installPi")(function* (context: CliContext) {
   const execution = yield* runProcess("pi", ["install", PI_PLUGIN], context.cwd, null);

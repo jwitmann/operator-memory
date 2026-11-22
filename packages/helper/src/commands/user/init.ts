@@ -6,7 +6,7 @@ import { readTemplate, TemplatePath } from "../../templates.ts";
 import type { CliContext } from "../../utils.ts";
 import { fileErrorMessage, fileFailure } from "../common.ts";
 import { resolveEffectivePartition } from "../project/brain-roots.ts";
-import { USER_FILES, USER_LEGACY_ROOT, USER_ROOT } from "./common.ts";
+import { BRAIN_INSTRUCTIONS_FILENAME, USER_FILES, USER_LEGACY_ROOT, USER_ROOT } from "./common.ts";
 
 export const userInit = Effect.fn("userInit")((context: CliContext) =>
   Effect.gen(function* () {
@@ -24,7 +24,7 @@ export const userInit = Effect.fn("userInit")((context: CliContext) =>
     yield* ensurePrivateDirectory(pathService.dirname(root));
 
     const templates = {
-      "operator.md": readTemplate(TemplatePath.UserOperator),
+      [BRAIN_INSTRUCTIONS_FILENAME]: readTemplate(TemplatePath.UserVccBrain),
       "catalog.md": readTemplate(TemplatePath.UserCatalog),
     } satisfies Record<(typeof USER_FILES)[number], string>;
 

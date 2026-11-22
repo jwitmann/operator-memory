@@ -1,9 +1,9 @@
 ---
-description: "@jwitmann/operator-opencode-v2 source map"
+description: "@jwitmann/vcc-brain-opencode-v2 source map"
 read_if: Working in packages/opencode-v2 or changing OpenCode V2 preamble injection
 ---
 
-# Operator OpenCode V2 Index
+# VCC Brain OpenCode V2 Index
 
 ## Coverage
 
@@ -11,7 +11,7 @@ read_if: Working in packages/opencode-v2 or changing OpenCode V2 preamble inject
 
 ## Architecture
 
-- `@jwitmann/operator-opencode-v2` uses V2's Promise plugin API, injects one immutable rendered preamble per session through the model-boundary context hook, registers Operator commands through command transforms, leaves updates to OpenCode 2, and provides RPC-backed readiness, partition status, refresh, and notification TUI parity.
+- `@jwitmann/vcc-brain-opencode-v2` uses V2's Promise plugin API, injects one immutable rendered preamble per session through the model-boundary context hook, registers VCC Brain commands through command transforms, leaves updates to OpenCode 2, and provides RPC-backed readiness, partition status, refresh, and notification TUI parity.
 
 ## `packages/opencode-v2/` Index
 

@@ -483,7 +483,7 @@ function planOutputOmission(call: CallIndex): PendingOutput | null {
         tokens: countTextTokens(output),
         text: contentID =>
           outputOmissionNotice(
-            "Task output omitted due to a compaction operation. If necessary, reread output via the operator-read_omitted tool.",
+            "Task output omitted due to a compaction operation. If necessary, reread output via the vcc-brain-read_omitted tool.",
             output.length,
             contentID,
           ),

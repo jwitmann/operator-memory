@@ -1,12 +1,15 @@
-import { appendReceipt, type TrimReceipt } from "@jwitmann/operator-core/context/receipts";
+import { appendReceipt, type TrimReceipt } from "@jwitmann/vcc-brain-core/context/receipts";
 import {
   DEFAULT_RETENTION,
   pruneOmissions,
   storeOmissions,
-} from "@jwitmann/operator-core/context/store";
-import { evaluateTrigger, exceedsThresholds } from "@jwitmann/operator-core/context/triggers";
-import { planTrimBatched, type TrimPlan } from "@jwitmann/operator-core/context/trim";
-import { estimateContextTokens, type RequestMessage } from "@jwitmann/operator-core/context/tokens";
+} from "@jwitmann/vcc-brain-core/context/store";
+import { evaluateTrigger, exceedsThresholds } from "@jwitmann/vcc-brain-core/context/triggers";
+import { planTrimBatched, type TrimPlan } from "@jwitmann/vcc-brain-core/context/trim";
+import {
+  estimateContextTokens,
+  type RequestMessage,
+} from "@jwitmann/vcc-brain-core/context/tokens";
 import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
 

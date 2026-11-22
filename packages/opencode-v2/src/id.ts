@@ -1,6 +1,6 @@
-declare const __OPERATOR_PLUGIN_ID__: string | undefined;
+declare const __VCC_BRAIN_PLUGIN_ID__: string | undefined;
 
-// Builds replace __OPERATOR_PLUGIN_ID__ with the plugin ID; tests and other
+// Builds replace __VCC_BRAIN_PLUGIN_ID__ with the plugin ID; tests and other
 // unbundled execution fall back to the canonical ID.
 export const pluginId =
-  typeof __OPERATOR_PLUGIN_ID__ === "string" ? __OPERATOR_PLUGIN_ID__ : "jwitmann.operator-memory";
+  typeof __VCC_BRAIN_PLUGIN_ID__ === "string" ? __VCC_BRAIN_PLUGIN_ID__ : "jwitmann.vcc-brain";

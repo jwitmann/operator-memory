@@ -13,7 +13,7 @@ test("absent options yield the defaults, disabled", () => {
 
 test("parses a full block", () => {
   const result = parseContextManagementConfig({
-    operator: {
+    "vcc-brain": {
       contextManagement: {
         enabled: true,
         ratio: 0.7,
@@ -37,7 +37,7 @@ test("parses a full block", () => {
 
 test("partial blocks inherit defaults", () => {
   const result = parseContextManagementConfig({
-    operator: { contextManagement: { enabled: true, ratio: 0.5 } },
+    "vcc-brain": { contextManagement: { enabled: true, ratio: 0.5 } },
   });
 
   expect(result.ok && result.value).toEqual({
@@ -49,17 +49,17 @@ test("partial blocks inherit defaults", () => {
 
 test("rejects wrong-typed values instead of falling back", () => {
   const ratio = parseContextManagementConfig({
-    operator: { contextManagement: { enabled: true, ratio: "high" } },
+    "vcc-brain": { contextManagement: { enabled: true, ratio: "high" } },
   });
   expect(ratio.ok).toBe(false);
 
   const enabled = parseContextManagementConfig({
-    operator: { contextManagement: { enabled: "yes" } },
+    "vcc-brain": { contextManagement: { enabled: "yes" } },
   });
   expect(enabled.ok).toBe(false);
 });
 
 test("rejects non-object blocks", () => {
-  const block = parseContextManagementConfig({ operator: { contextManagement: [1, 2] } });
+  const block = parseContextManagementConfig({ "vcc-brain": { contextManagement: [1, 2] } });
   expect(block.ok).toBe(false);
 });

@@ -6,7 +6,7 @@ import { createDshRuntime, PENDING_CAUSE_TTL_MS, sessionRuntime } from "../src/r
 function deps(overrides: Partial<PreStepDeps> = {}): PreStepDeps {
   return {
     config: { ...DEFAULT_CONTEXT_MANAGEMENT_CONFIG, enabled: true },
-    stateDirectory: "/tmp/operator-dsh-test-state",
+    stateDirectory: "/tmp/vcc-brain-dsh-test-state",
     compaction: {
       compactIfNeeded: () => {
         throw new Error("no compaction service in this test");

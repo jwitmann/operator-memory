@@ -23,8 +23,8 @@ export const indexInit = Effect.fn("indexInit")((context: CliContext) =>
 ✗ Project Brain Missing
 ${renderTable([["Expected", ".vcc-brain/ and/or .vcc-brain-shared/ (legacy .operator/ and .operator-shared/ also checked)"]])}
 
-For Users: Invoke the Operator Project Setup workflow in your harness to initialize.
-For Agents: Run \`operator-helper project init\` and follow the guide in its output.`,
+For Users: Invoke the VCC Brain Project Setup workflow in your harness to initialize.
+For Agents: Run \`vcc-brain-helper project init\` and follow the guide in its output.`,
       };
     }
 

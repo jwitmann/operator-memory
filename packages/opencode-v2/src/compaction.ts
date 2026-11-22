@@ -1,8 +1,11 @@
-import { buildCompactionPrompt } from "@jwitmann/operator-core/context/compaction";
-import { appendReceipt, type CompactReceipt } from "@jwitmann/operator-core/context/receipts";
-import { estimateContextTokens, type RequestMessage } from "@jwitmann/operator-core/context/tokens";
+import { buildCompactionPrompt } from "@jwitmann/vcc-brain-core/context/compaction";
+import { appendReceipt, type CompactReceipt } from "@jwitmann/vcc-brain-core/context/receipts";
+import {
+  estimateContextTokens,
+  type RequestMessage,
+} from "@jwitmann/vcc-brain-core/context/tokens";
 
-export { DEFAULT_BRAIN_PATHS } from "@jwitmann/operator-core/memory/roots";
+export { DEFAULT_BRAIN_PATHS } from "@jwitmann/vcc-brain-core/memory/roots";
 import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
 

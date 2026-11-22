@@ -1,4 +1,4 @@
-import type { TriggerConfig } from "@jwitmann/operator-core/context/triggers";
+import type { TriggerConfig } from "@jwitmann/vcc-brain-core/context/triggers";
 
 import { failure, type Result, success } from "./utils.ts";
 
@@ -35,7 +35,7 @@ export type PreambleRefreshConfig = {
   readonly enabled: boolean;
 };
 
-export type OperatorDeepseekConfig = {
+export type VccBrainDeepseekConfig = {
   readonly contextManagement: ContextManagementConfig;
   readonly brainUpdates: BrainUpdatesConfig;
   readonly preambleRefresh: PreambleRefreshConfig;
@@ -59,7 +59,7 @@ export const DEFAULT_PREAMBLE_REFRESH_CONFIG: PreambleRefreshConfig = {
   enabled: false,
 };
 
-export const DEFAULT_OPERATOR_DEEPSEEK_CONFIG: OperatorDeepseekConfig = {
+export const DEFAULT_VCC_BRAIN_DEEPSEEK_CONFIG: VccBrainDeepseekConfig = {
   contextManagement: DEFAULT_CONTEXT_MANAGEMENT_CONFIG,
   brainUpdates: DEFAULT_BRAIN_UPDATES_CONFIG,
   preambleRefresh: DEFAULT_PREAMBLE_REFRESH_CONFIG,
@@ -113,7 +113,7 @@ function readBlock(
 // Normalizes raw plugin config (the second `apply` argument) with defaults.
 // Absent blocks fall back to disabled defaults; wrong-typed values fail
 // loudly instead of running with unintended thresholds.
-export function parseOperatorConfig(input: unknown): Result<OperatorDeepseekConfig, ConfigError> {
+export function parseVccBrainConfig(input: unknown): Result<VccBrainDeepseekConfig, ConfigError> {
   const contextBlock = readBlock(input, "contextManagement");
   if (!contextBlock.ok) return contextBlock;
   const brainBlock = readBlock(input, "brainUpdates");
@@ -213,13 +213,13 @@ function parsePreambleRefreshBlock(
 // while valid sibling blocks still merge. A non-object root discards the
 // whole file. Unknown keys are ignored, as in the profile parser.
 export type ProjectConfigOutcome = {
-  readonly config: OperatorDeepseekConfig;
+  readonly config: VccBrainDeepseekConfig;
   readonly warnings: readonly string[];
 };
 
 export function parseProjectConfig(
   raw: unknown,
-  base: OperatorDeepseekConfig,
+  base: VccBrainDeepseekConfig,
 ): ProjectConfigOutcome {
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
     return { config: base, warnings: ["The project config must be an object."] };

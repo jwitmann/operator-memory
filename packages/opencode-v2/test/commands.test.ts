@@ -5,9 +5,9 @@ import { expect, test, vi } from "vitest";
 import { registerCommands } from "../src/commands.ts";
 
 test.each([
-  ["operator:user-init", "user init", "User Setup"],
-  ["operator:project-init", "project init", "Project Setup"],
-  ["operator:index", "index init", "Project Index Setup"],
+  ["vcc-brain:user-init", "user init", "User Setup"],
+  ["vcc-brain:project-init", "project init", "Project Setup"],
+  ["vcc-brain:index", "index init", "Project Index Setup"],
 ] as const)("hands %s to the agent without executing Helper", async (name, operation, guide) => {
   const definitions: CommandDefinition[] = [];
   const prompt = vi.fn();
@@ -34,15 +34,15 @@ test.each([
     expect.objectContaining({
       sessionID: "session-one",
       delivery: "queue",
-      text: expect.stringContaining(`2. Run \`operator-helper ${operation}\``),
+      text: expect.stringContaining(`2. Run \`vcc-brain-helper ${operation}\``),
     }),
   );
   const text = prompt.mock.calls[0]?.[0].text as string;
-  expect(text).toContain("1. Run `operator-helper version`");
-  expect(text).toContain("run `operator-helper upgrade` before continuing");
+  expect(text).toContain("1. Run `vcc-brain-helper version`");
+  expect(text).toContain("run `vcc-brain-helper upgrade` before continuing");
   expect(text).toContain(guide);
-  expect(text).toContain("npm package `@jwitmann/operator-helper` globally");
-  expect(text).not.toContain("<operator-command>");
+  expect(text).toContain("npm package `@jwitmann/vcc-brain-helper` globally");
+  expect(text).not.toContain("<vcc-brain-command>");
 });
 
 test("preserves existing user commands", async () => {
@@ -50,13 +50,13 @@ test("preserves existing user commands", async () => {
   const context = {
     command: {
       list: () =>
-        Promise.resolve({ data: [{ name: "operator:index", description: "User command" }] }),
+        Promise.resolve({ data: [{ name: "vcc-brain:index", description: "User command" }] }),
       transform: async (callback: (editor: CommandEditor) => void) =>
         callback({ add: definition => definitions.push(definition) }),
     },
   } as unknown as Context;
   await registerCommands(context);
 
-  expect(definitions.map(definition => definition.name)).not.toContain("operator:index");
+  expect(definitions.map(definition => definition.name)).not.toContain("vcc-brain:index");
   expect(definitions).toHaveLength(2);
 });

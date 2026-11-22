@@ -1,4 +1,4 @@
 {
-  "description": "Operator Memory preamble injection",
+  "description": "VCC Brain preamble injection",
   "modules": ["./register.js"]
 }

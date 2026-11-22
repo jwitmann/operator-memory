@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import type { CliContext, CliResult } from "../../utils.ts";
 import { type ProcessResult, runProcess } from "../common.ts";
 
-const DEEPSEEK_PLUGIN = "@jwitmann/operator-deepseek";
+const DEEPSEEK_PLUGIN = "@jwitmann/vcc-brain-deepseek";
 const MANUAL_INSTALL_HINT = `To install a profile manually, run:
 
   dsh plugin --profile <profile-name> add ${DEEPSEEK_PLUGIN}

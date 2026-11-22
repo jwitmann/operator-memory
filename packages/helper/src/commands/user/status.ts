@@ -4,11 +4,11 @@ import { listFiles, PathKindError, readOptionalText } from "../../filesystem.ts"
 import { renderTable } from "../../output.ts";
 import type { CliContext } from "../../utils.ts";
 import { resolveEffectivePartition } from "../project/brain-roots.ts";
-import { USER_LEGACY_ROOT, USER_ROOT } from "./common.ts";
+import { BRAIN_INSTRUCTIONS_FILENAME, USER_LEGACY_ROOT, USER_ROOT } from "./common.ts";
 
 const INIT_HINT = [
-  "For Users: Run `/operator:user-init` in your harness to initialize.",
-  "For Agents: Run `operator-helper user init` and follow the guide in its output.",
+  "For Users: Run `/vcc-brain:user-init` in your harness to initialize.",
+  "For Agents: Run `vcc-brain-helper user init` and follow the guide in its output.",
 ];
 
 export const userStatus = Effect.fn("userStatus")(function* (context: CliContext) {
@@ -49,7 +49,7 @@ export const userStatus = Effect.fn("userStatus")(function* (context: CliContext
   const rows: string[][] = [];
   let missingCore = false;
   for (const [file, label] of [
-    ["operator.md", "User Instructions"],
+    [BRAIN_INSTRUCTIONS_FILENAME, "User Instructions"],
     ["catalog.md", "User Catalog"],
   ] as const) {
     const content = yield* readOptionalText(pathService.join(root, file));
@@ -66,7 +66,7 @@ export const userStatus = Effect.fn("userStatus")(function* (context: CliContext
 
   const files = yield* listFiles(root);
   const freeform = files.filter(
-    file => file.relativePath !== "operator.md" && file.relativePath !== "catalog.md",
+    file => file.relativePath !== BRAIN_INSTRUCTIONS_FILENAME && file.relativePath !== "catalog.md",
   );
   rows.push(["Freeform Content", `${freeform.length} files`]);
 

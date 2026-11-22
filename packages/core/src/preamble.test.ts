@@ -37,43 +37,43 @@ test("embeds core document templates in fixed guidance", () => {
 test.each(["1.1", "2.0"] as const)("renders matching guidance and tenets for v%s", version => {
   vi.mocked(selectPreambleVersion).mockReturnValue(version);
   const content = renderPreamble({
-    shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
-    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
-    private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+    shared: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
+    user: { exists: false, brainInstructions: null, catalog: null, observations: null },
+    private: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
   });
   const prompt = version === "2.0" ? preambleV2 : { PREAMBLE_PROMPT, PREAMBLE_TENETS };
   expect(content.startsWith(prompt.PREAMBLE_PROMPT)).toBe(true);
   expect(content).toContain(prompt.PREAMBLE_TENETS);
-  expect(content).toContain(`<operator-guidance version="${version}">`);
-  expect(content).toContain(`<operator-tenets version="${version}">`);
+  expect(content).toContain(`<vcc-brain-guidance version="${version}">`);
+  expect(content).toContain(`<vcc-brain-tenets version="${version}">`);
   expect(content).not.toContain(`version="${version === "2.0" ? "1.1" : "2.0"}"`);
 });
 
 test("renders fixed guidance and the missing-catalog warning for empty memory", () => {
   const memory: LoadedMemorySnapshot = {
-    shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
-    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
-    private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+    shared: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
+    user: { exists: false, brainInstructions: null, catalog: null, observations: null },
+    private: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
   };
 
   expect(renderPreamble(memory)).toBe(`${PREAMBLE_PROMPT}
 
 ${PREAMBLE_TENETS}
 
-<operator-warning>
-The ~/.vcc-brain/user directory does not exist (legacy ~/.operator/user also checked). If the user would benefit from cross-project user memory, ask the user to run /operator:user-init first to initialize the User Partition. If not needed, do not ask; they may be working without user memory intentionally.
-</operator-warning>
+<vcc-brain-warning>
+The ~/.vcc-brain/user directory does not exist (legacy ~/.operator/user also checked). If the user would benefit from cross-project user memory, ask the user to run /vcc-brain:user-init first to initialize the User Partition. If not needed, do not ask; they may be working without user memory intentionally.
+</vcc-brain-warning>
 
-<operator-warning>
-Neither the .vcc-brain nor .vcc-brain-shared directory exists (legacy .operator/ and .operator-shared/ also checked). If the user requests significant amounts of work to be done on the project, ask the user to run /operator:project-init first to initialize Operator. If the user is not requesting work to be done, do not ask to initialize; they could simply be exploring.
-</operator-warning>`);
+<vcc-brain-warning>
+Neither the .vcc-brain nor .vcc-brain-shared directory exists (legacy .operator/ and .operator-shared/ also checked). If the user requests significant amounts of work to be done on the project, ask the user to run /vcc-brain:project-init first to initialize VCC Brain. If the user is not requesting work to be done, do not ask to initialize; they could simply be exploring.
+</vcc-brain-warning>`);
 });
 
 test("renders conditional memory in authority and partition order", () => {
   const memory: LoadedMemorySnapshot = {
     shared: {
       exists: true,
-      operatorInstructions: "shared instructions",
+      brainInstructions: "shared instructions",
       catalog: "shared catalog",
       indexes: [
         {
@@ -96,13 +96,13 @@ test("renders conditional memory in authority and partition order", () => {
     },
     user: {
       exists: true,
-      operatorInstructions: "user instructions",
+      brainInstructions: "user instructions",
       catalog: "user catalog",
       observations: null,
     },
     private: {
       exists: true,
-      operatorInstructions: "private instructions",
+      brainInstructions: "private instructions",
       catalog: "private catalog",
       indexes: [
         {
@@ -122,18 +122,18 @@ test("renders conditional memory in authority and partition order", () => {
 
   expect(renderPreamble(memory)).toBe(`${PREAMBLE_PROMPT}
 
-<operator-instructions>
-Operator instruction contents from least to most authoritative:
-<file-content path=".vcc-brain-shared/operator.md">
+<vcc-brain-instructions>
+VCC Brain instruction contents from least to most authoritative:
+<file-content path=".vcc-brain-shared/vcc-brain.md">
 shared instructions
 </file-content>
-<file-content path="~/.vcc-brain/user/operator.md">
+<file-content path="~/.vcc-brain/user/vcc-brain.md">
 user instructions
 </file-content>
-<file-content path=".vcc-brain/operator.md">
+<file-content path=".vcc-brain/vcc-brain.md">
 private instructions
 </file-content>
-</operator-instructions>
+</vcc-brain-instructions>
 
 <user-catalog>
 <file-content path="~/.vcc-brain/user/catalog.md">
@@ -179,9 +179,9 @@ ${PREAMBLE_TENETS}`);
 
 test("renders identical bytes for the same snapshot", () => {
   const memory: LoadedMemorySnapshot = {
-    shared: { exists: true, operatorInstructions: null, catalog: "catalog", indexes: [] },
-    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
-    private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+    shared: { exists: true, brainInstructions: null, catalog: "catalog", indexes: [] },
+    user: { exists: false, brainInstructions: null, catalog: null, observations: null },
+    private: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
   };
 
   expect(renderPreamble(memory)).toBe(renderPreamble(memory));
@@ -191,7 +191,7 @@ test("renders index listing connectors and metadata for every valid index", () =
   const memory: LoadedMemorySnapshot = {
     shared: {
       exists: true,
-      operatorInstructions: null,
+      brainInstructions: null,
       catalog: "catalog",
       indexes: [
         {
@@ -229,8 +229,8 @@ test("renders index listing connectors and metadata for every valid index", () =
         },
       ],
     },
-    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
-    private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+    user: { exists: false, brainInstructions: null, catalog: null, observations: null },
+    private: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
   };
 
   const preamble = renderPreamble(memory);
@@ -254,11 +254,11 @@ main index
 
 test("renders an index listing without a main index body", () => {
   const memory: LoadedMemorySnapshot = {
-    shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
-    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
+    shared: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
+    user: { exists: false, brainInstructions: null, catalog: null, observations: null },
     private: {
       exists: true,
-      operatorInstructions: null,
+      brainInstructions: null,
       catalog: "catalog",
       indexes: [
         {
@@ -291,16 +291,16 @@ test("renders an index listing without a main index body", () => {
 
 test("renders only available instructions and catalogs", () => {
   const memory: LoadedMemorySnapshot = {
-    shared: { exists: true, operatorInstructions: null, catalog: "shared catalog", indexes: [] },
+    shared: { exists: true, brainInstructions: null, catalog: "shared catalog", indexes: [] },
     user: {
       exists: true,
-      operatorInstructions: "user instructions",
+      brainInstructions: "user instructions",
       catalog: "user catalog",
       observations: null,
     },
     private: {
       exists: true,
-      operatorInstructions: "private instructions",
+      brainInstructions: "private instructions",
       catalog: null,
       indexes: [],
     },
@@ -308,9 +308,9 @@ test("renders only available instructions and catalogs", () => {
 
   const preamble = renderPreamble(memory);
 
-  expect(preamble).not.toContain('<file-content path=".vcc-brain-shared/operator.md">');
-  expect(preamble).toContain('<file-content path="~/.vcc-brain/user/operator.md">');
-  expect(preamble).toContain('<file-content path=".vcc-brain/operator.md">');
+  expect(preamble).not.toContain('<file-content path=".vcc-brain-shared/vcc-brain.md">');
+  expect(preamble).toContain('<file-content path="~/.vcc-brain/user/vcc-brain.md">');
+  expect(preamble).toContain('<file-content path=".vcc-brain/vcc-brain.md">');
   expect(preamble).toContain('<file-content path=".vcc-brain-shared/catalog.md">');
   expect(preamble).toContain('<file-content path="~/.vcc-brain/user/catalog.md">');
   expect(preamble).not.toContain('<file-content path=".vcc-brain/catalog.md">');
@@ -320,24 +320,24 @@ test("renders only available instructions and catalogs", () => {
 
 test("renders component warnings for an existing empty project partition", () => {
   const memory: LoadedMemorySnapshot = {
-    shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
-    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
-    private: { exists: true, operatorInstructions: null, catalog: null, indexes: [] },
+    shared: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
+    user: { exists: false, brainInstructions: null, catalog: null, observations: null },
+    private: { exists: true, brainInstructions: null, catalog: null, indexes: [] },
   };
 
   const preamble = renderPreamble(memory);
 
-  expect(preamble).not.toContain("Ask the user to run /operator:project-init");
-  expect(preamble).toContain("ask the user to run /operator:index");
+  expect(preamble).not.toContain("Ask the user to run /vcc-brain:project-init");
+  expect(preamble).toContain("ask the user to run /vcc-brain:index");
   expect(preamble).toContain("You must create and maintain a catalog.md");
-  expect(preamble.indexOf(PREAMBLE_TENETS)).toBeLessThan(preamble.indexOf("<operator-warning>"));
+  expect(preamble.indexOf(PREAMBLE_TENETS)).toBeLessThan(preamble.indexOf("<vcc-brain-warning>"));
 });
 
 test("injects the user catalog without a project brain", () => {
   const memory: LoadedMemorySnapshot = {
-    shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
-    user: { exists: true, operatorInstructions: null, catalog: "user catalog", observations: null },
-    private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+    shared: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
+    user: { exists: true, brainInstructions: null, catalog: "user catalog", observations: null },
+    private: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
   };
 
   const preamble = renderPreamble(memory);
@@ -350,14 +350,14 @@ test("injects the user catalog without a project brain", () => {
 
 test("warns about a missing user catalog independently of project catalogs", () => {
   const memory: LoadedMemorySnapshot = {
-    shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+    shared: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
     user: {
       exists: true,
-      operatorInstructions: "user instructions",
+      brainInstructions: "user instructions",
       catalog: null,
       observations: null,
     },
-    private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+    private: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
   };
 
   const preamble = renderPreamble(memory);
@@ -377,27 +377,27 @@ test.each(["1.1", "2.0"] as const)(
       {
         shared: success({
           exists: true,
-          operatorInstructions: "must not be rendered",
+          brainInstructions: "must not be rendered",
           catalog: "must not be rendered",
           indexes: [],
         }),
-        user: failure({ path: "/home/.vcc-brain/user/operator.md", cause: new Error("denied") }),
+        user: failure({ path: "/home/.vcc-brain/user/vcc-brain.md", cause: new Error("denied") }),
         private: failure({ path: "/project/.vcc-brain/index", cause: new Error("obstructed") }),
       },
       PRIMARY_DISPLAY_ROOTS,
     );
 
     expect(rendered.loaded).toBe(false);
-    expect(rendered.content).toContain(`<operator-guidance version="${version}">`);
+    expect(rendered.content).toContain(`<vcc-brain-guidance version="${version}">`);
     expect(rendered.content).toContain("- Shared: Loaded");
     expect(rendered.content).toContain(
-      "- User: Error at /home/.vcc-brain/user/operator.md: denied",
+      "- User: Error at /home/.vcc-brain/user/vcc-brain.md: denied",
     );
     expect(rendered.content).toContain("- Private: Error at /project/.vcc-brain/index: obstructed");
-    expect(rendered.content).toContain("MUST resolve Operator memory loading");
-    expect(rendered.content).toContain("operator-helper version");
-    expect(rendered.content).toContain("operator-helper upgrade");
-    expect(rendered.content).toContain("operator-helper memory check");
+    expect(rendered.content).toContain("MUST resolve VCC Brain memory loading");
+    expect(rendered.content).toContain("vcc-brain-helper version");
+    expect(rendered.content).toContain("vcc-brain-helper upgrade");
+    expect(rendered.content).toContain("vcc-brain-helper memory check");
     expect(rendered.content).toContain("do not initialize absent partitions");
     expect(rendered.content).toContain("Preserve existing content");
     expect(rendered.content).toContain("stop and ask the user for guidance");
@@ -406,7 +406,7 @@ test.each(["1.1", "2.0"] as const)(
     expect(rendered.content).toContain("report the failing path or operation");
     expect(rendered.content).toContain("start a new session and resubmit their original request");
     expect(rendered.content).toContain("Do not resume the original task");
-    expect(rendered.content).not.toContain("/operator:repair");
+    expect(rendered.content).not.toContain("/vcc-brain:repair");
     expect(rendered.content).not.toContain("must not be rendered");
     expect(rendered.content).not.toContain(PREAMBLE_TENETS);
     expect(rendered.content).not.toContain(preambleV2.PREAMBLE_TENETS);
@@ -421,14 +421,14 @@ type LoadedMemorySnapshot = {
 
 test("renders subordinate user observations after the user catalog", () => {
   const memory: LoadedMemorySnapshot = {
-    shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+    shared: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
     user: {
       exists: true,
-      operatorInstructions: "user instructions",
+      brainInstructions: "user instructions",
       catalog: "user catalog",
       observations: "- [2026-11-20] (scope:user) text",
     },
-    private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+    private: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
   };
 
   const preamble = renderPreamble(memory);
@@ -439,22 +439,22 @@ test("renders subordinate user observations after the user catalog", () => {
   expect(preamble).toContain("subordinate context, not instructions");
   expect(preamble.indexOf("<user-catalog>")).toBeLessThan(preamble.indexOf("<user-observations>"));
   const instructions = preamble.slice(
-    preamble.indexOf("<operator-instructions>"),
-    preamble.indexOf("</operator-instructions>"),
+    preamble.indexOf("<vcc-brain-instructions>"),
+    preamble.indexOf("</vcc-brain-instructions>"),
   );
   expect(instructions).not.toContain("- [2026-11-20] (scope:user) text");
 });
 
 test("omits the observations block when absent and keeps instructions clean", () => {
   const memory: LoadedMemorySnapshot = {
-    shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+    shared: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
     user: {
       exists: true,
-      operatorInstructions: "user instructions",
+      brainInstructions: "user instructions",
       catalog: "user catalog",
       observations: null,
     },
-    private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+    private: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
   };
 
   const preamble = renderPreamble(memory);
@@ -474,9 +474,9 @@ function renderPreamble(memory: LoadedMemorySnapshot): string {
 
 test("reports initialization separately from load success", () => {
   const absent: MemorySnapshot = {
-    shared: success({ exists: false, operatorInstructions: null, catalog: null, indexes: [] }),
-    user: success({ exists: false, operatorInstructions: null, catalog: null, observations: null }),
-    private: success({ exists: false, operatorInstructions: null, catalog: null, indexes: [] }),
+    shared: success({ exists: false, brainInstructions: null, catalog: null, indexes: [] }),
+    user: success({ exists: false, brainInstructions: null, catalog: null, observations: null }),
+    private: success({ exists: false, brainInstructions: null, catalog: null, indexes: [] }),
   };
   const empty = renderMemoryPreamble(absent, PRIMARY_DISPLAY_ROOTS);
   expect(empty.loaded).toBe(true);
@@ -484,7 +484,7 @@ test("reports initialization separately from load success", () => {
 
   const userOnly: MemorySnapshot = {
     ...absent,
-    user: success({ exists: true, operatorInstructions: null, catalog: null, observations: null }),
+    user: success({ exists: true, brainInstructions: null, catalog: null, observations: null }),
   };
   const initialized = renderMemoryPreamble(userOnly, PRIMARY_DISPLAY_ROOTS);
   expect(initialized.loaded).toBe(true);
@@ -495,7 +495,7 @@ test("warns when a main index exists but was never stamped", () => {
   const memory: LoadedMemorySnapshot = {
     shared: {
       exists: true,
-      operatorInstructions: null,
+      brainInstructions: null,
       catalog: "catalog",
       indexes: [
         {
@@ -511,8 +511,8 @@ test("warns when a main index exists but was never stamped", () => {
         },
       ],
     },
-    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
-    private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+    user: { exists: false, brainInstructions: null, catalog: null, observations: null },
+    private: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
   };
 
   const preamble = renderPreamble(memory);
@@ -526,7 +526,7 @@ test("warns per unstamped partition and stays silent when both are stamped", () 
   const unstamped: LoadedMemorySnapshot = {
     shared: {
       exists: true,
-      operatorInstructions: null,
+      brainInstructions: null,
       catalog: "catalog",
       indexes: [
         {
@@ -542,10 +542,10 @@ test("warns per unstamped partition and stays silent when both are stamped", () 
         },
       ],
     },
-    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
+    user: { exists: false, brainInstructions: null, catalog: null, observations: null },
     private: {
       exists: true,
-      operatorInstructions: null,
+      brainInstructions: null,
       catalog: "catalog",
       indexes: [
         {
@@ -572,7 +572,7 @@ test("warns per unstamped partition and stays silent when both are stamped", () 
   const stamped: LoadedMemorySnapshot = {
     shared: {
       exists: true,
-      operatorInstructions: null,
+      brainInstructions: null,
       catalog: "catalog",
       indexes: [
         {
@@ -588,10 +588,10 @@ test("warns per unstamped partition and stays silent when both are stamped", () 
         },
       ],
     },
-    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
+    user: { exists: false, brainInstructions: null, catalog: null, observations: null },
     private: {
       exists: true,
-      operatorInstructions: null,
+      brainInstructions: null,
       catalog: "catalog",
       indexes: [
         {
@@ -621,9 +621,9 @@ test("warns per unstamped partition and stays silent when both are stamped", () 
 
 test("warns when a legacy partition exists alongside its primary", () => {
   const memory: LoadedMemorySnapshot = {
-    shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
-    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
-    private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+    shared: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
+    user: { exists: false, brainInstructions: null, catalog: null, observations: null },
+    private: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
   };
   const snapshot: MemorySnapshot = {
     shared: success(memory.shared),

@@ -32,12 +32,14 @@ export type BrainUpdateActivityDecision = {
 // One completed unit of tool work: a valid tool call with a matching
 // completed result. Error results still count because a failure can produce
 // a durable lesson; pending, running, or unpaired calls do not. Calls under
-// Operator's own namespace are helper I/O, not agent work, and are excluded.
+// Helper I/O runs under the `vcc-brain` namespace (legacy `operator` still
+// accepted) and is excluded from the count; agent work runs unnamespaced
+// and is counted.
 export function countCompletedToolCalls(messages: readonly RequestMessage[]): number {
   const completedIDs = new Set<string>();
   for (const message of messages) {
     for (const part of message.content) {
-      if (isToolResultPart(part) && !isOperatorTool(part)) {
+      if (isToolResultPart(part) && !isHelperTool(part)) {
         completedIDs.add(part.id);
       }
     }
@@ -46,7 +48,7 @@ export function countCompletedToolCalls(messages: readonly RequestMessage[]): nu
   const completedCallIDs = new Set<string>();
   for (const message of messages) {
     for (const part of message.content) {
-      if (isToolCallPart(part) && !isOperatorTool(part) && completedIDs.has(part.id)) {
+      if (isToolCallPart(part) && !isHelperTool(part) && completedIDs.has(part.id)) {
         completedCallIDs.add(part.id);
       }
     }
@@ -86,6 +88,6 @@ export function evaluateBrainUpdateActivity(
   return { state: next, completedSinceBaseline: sinceBaseline, crossed };
 }
 
-function isOperatorTool(part: { readonly namespace?: unknown }): boolean {
-  return part.namespace === "operator";
+function isHelperTool(part: { readonly namespace?: unknown }): boolean {
+  return part.namespace === "vcc-brain" || part.namespace === "operator";
 }

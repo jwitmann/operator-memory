@@ -14,10 +14,10 @@ Kiro delegates work to built-in subagents such as `general-task-execution` and `
 
 ## Injection Consequence
 
-Subagent preamble loading must be agent-driven: inherited steering instructs the subagent to run `operator-helper preamble` itself when Operator's preamble guidance is absent.
+Subagent preamble loading must be agent-driven: inherited steering instructs the subagent to run `vcc-brain-helper preamble` itself when VCC Brain's preamble guidance is absent.
 
 ## Custom Agent Profiles
 
-Custom agent profiles (`.kiro/agents/`, `~/.kiro/agents/`) support profile-local hooks, but profile hooks did not run under delegation in testing, and official pages conflict on IDE support and resource inheritance. Custom-agent configuration is outside Operator's integration scope; Operator uses general mechanisms and requires no custom agents.
+Custom agent profiles (`.kiro/agents/`, `~/.kiro/agents/`) support profile-local hooks, but profile hooks did not run under delegation in testing, and official pages conflict on IDE support and resource inheritance. Custom-agent configuration is outside VCC Brain's integration scope; VCC Brain uses general mechanisms and requires no custom agents.
 
 Detailed verification and peripheral agent-profile research live in [injection verification](./injection.md), not the adapter workflow.

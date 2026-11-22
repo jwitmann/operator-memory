@@ -1,9 +1,9 @@
 ---
-description: "@jwitmann/operator-pi source map"
+description: "@jwitmann/vcc-brain-pi source map"
 read_if: Working in packages/pi or changing Pi extension behavior
 ---
 
-# Operator Pi Index
+# VCC Brain Pi Index
 
 ## Coverage
 
@@ -11,7 +11,7 @@ read_if: Working in packages/pi or changing Pi extension behavior
 
 ## Architecture
 
-- `@jwitmann/operator-pi` is the published Pi extension adapter. Pi owns extension discovery and supplies its runtime peer packages; the adapter bundle owns Operator core.
+- `@jwitmann/vcc-brain-pi` is the published Pi extension adapter. Pi owns extension discovery and supplies its runtime peer packages; the adapter bundle owns VCC Brain core.
 
 ## `packages/pi/` Index
 
@@ -21,7 +21,7 @@ read_if: Working in packages/pi or changing Pi extension behavior
 ### `packages/pi/src/`
 
 - `index.ts` - Factory-local preamble injection, recovery and fatal handling, and Pi footer lifecycle.
-- `commands.ts` - Native Operator command registration and agent instruction delivery.
+- `commands.ts` - Native VCC Brain command registration and agent instruction delivery.
 
 ### `packages/pi/test/`
 

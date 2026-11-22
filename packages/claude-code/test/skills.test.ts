@@ -15,7 +15,7 @@ test("does not ship the retired repair skill", async () => {
 });
 
 test.each(skills)(
-  "registers /operator:$name for explicit invocation",
+  "registers /vcc-brain:$name for explicit invocation",
   async ({ name, command }) => {
     const instructions = await readFile(
       resolve(import.meta.dirname, `../skills/${name}/SKILL.md`),
@@ -25,11 +25,11 @@ test.each(skills)(
     expect(instructions).toContain(`name: ${name}\n`);
     expect(instructions).toContain("disable-model-invocation: true");
     expect(instructions).not.toContain("allowed-tools:");
-    expect(instructions).toContain("1. Run `operator-helper version`");
-    expect(instructions).toContain("run `operator-helper upgrade` before continuing");
-    expect(instructions).toContain(`2. Run \`operator-helper ${command}\``);
-    expect(instructions).toContain("npm package `@jwitmann/operator-helper` globally");
-    expect(instructions).not.toContain("$operator-");
+    expect(instructions).toContain("1. Run `vcc-brain-helper version`");
+    expect(instructions).toContain("run `vcc-brain-helper upgrade` before continuing");
+    expect(instructions).toContain(`2. Run \`vcc-brain-helper ${command}\``);
+    expect(instructions).toContain("npm package `@jwitmann/vcc-brain-helper` globally");
+    expect(instructions).not.toContain("$vcc-brain-");
     expect(instructions).not.toContain("!`");
   },
 );

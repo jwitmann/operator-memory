@@ -1,12 +1,12 @@
 {
-  "name": "@jwitmann/operator-opencode-v2",
+  "name": "@jwitmann/vcc-brain-opencode-v2",
   "version": "2.5.0",
-  "description": "Operator Memory adapter for OpenCode V2.",
+  "description": "VCC Brain adapter for OpenCode V2.",
   "license": "BSD-3-Clause",
   "author": "jwitmann",
-  "homepage": "https://github.com/jwitmann/operator-memory#readme",
+  "homepage": "https://github.com/jwitmann/vcc-brain#readme",
   "bugs": {
-    "url": "https://github.com/jwitmann/operator-memory/issues"
+    "url": "https://github.com/jwitmann/vcc-brain/issues"
   },
   "type": "module",
   "main": "dist/index.js",
@@ -27,7 +27,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jwitmann/operator-memory.git",
+    "url": "git+https://github.com/jwitmann/vcc-brain.git",
     "directory": "packages/opencode-v2"
   },
   "engines": {
@@ -58,7 +58,7 @@
     }
   },
   "devDependencies": {
-    "@jwitmann/operator-core": "workspace:*",
+    "@jwitmann/vcc-brain-core": "workspace:*",
     "@opencode/plugin": "2.0.14",
     "@opentui/core": "0.5.10",
     "@opentui/solid": "0.5.10",

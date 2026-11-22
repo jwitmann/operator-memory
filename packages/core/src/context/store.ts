@@ -164,7 +164,7 @@ export async function listOmissions(
 // omission runs ~50 KB, so 200 payloads stay near 10 MiB with 32 MiB of
 // headroom for large-output sessions; a month keeps recovery useful without
 // growing forever. The adapter enforces the count cap on every store and
-// exposes the full policy through the operator-prune tool.
+// exposes the full policy through the vcc-brain-prune tool.
 export const DEFAULT_RETENTION = {
   maxAgeMs: 30 * 24 * 60 * 60 * 1000,
   maxPayloads: 200,

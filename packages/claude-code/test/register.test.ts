@@ -12,7 +12,7 @@ async function harness() {
 
   const run = vi.fn<ModApi["process"]["run"]>().mockResolvedValue({
     exitCode: 0,
-    stdout: "<operator>memory</operator>\n\n",
+    stdout: "<vcc-brain>memory</vcc-brain>\n\n",
     stderr: "",
   });
   const $: ModApi = {
@@ -34,9 +34,9 @@ describe("preamble injection", () => {
 
     expect(result.sections).toEqual([
       section,
-      { id: "operator:preamble", text: "<operator>memory</operator>\n\n", scope: "session" },
+      { id: "vcc-brain:preamble", text: "<vcc-brain>memory</vcc-brain>\n\n", scope: "session" },
     ]);
-    expect(run).toHaveBeenCalledExactlyOnceWith(["operator-helper", "preamble"], {
+    expect(run).toHaveBeenCalledExactlyOnceWith(["vcc-brain-helper", "preamble"], {
       cwd: "/project",
     });
   });
@@ -55,7 +55,7 @@ describe("preamble injection", () => {
     expect(second).toEqual(first);
     expect(next).toHaveBeenCalledWith({
       ...event,
-      prompt: "<operator>memory</operator>\n\nTask",
+      prompt: "<vcc-brain>memory</vcc-brain>\n\nTask",
     });
     expect(event.prompt).toBe("Task");
   });
@@ -68,12 +68,12 @@ describe("preamble injection", () => {
     await hook("prompt.compose")($, {}, async () => ({ sections: [] }));
 
     expect(run).toHaveBeenCalledTimes(1);
-    expect(next).toHaveBeenCalledWith({ prompt: "<operator>memory</operator>\n\nTask" });
+    expect(next).toHaveBeenCalledWith({ prompt: "<vcc-brain>memory</vcc-brain>\n\nTask" });
   });
 
   it("passes canonical diagnostic output through unchanged", async () => {
     const { $, run, hook } = await harness();
-    const diagnostic = "<operator-diagnostic>Repair memory</operator-diagnostic>\n";
+    const diagnostic = "<vcc-brain-diagnostic>Repair memory</vcc-brain-diagnostic>\n";
     run.mockResolvedValue({ exitCode: 0, stdout: diagnostic, stderr: "" });
 
     const result = await hook("prompt.compose")($, {}, async () => ({ sections: [] }));
@@ -113,7 +113,7 @@ describe("runtime launch", () => {
     const event = { cwd: "/project" };
 
     expect(await hook("session.start")($, event, next)).toEqual({ cwd: "/project" });
-    expect(run).toHaveBeenCalledExactlyOnceWith(["operator-helper", "version"], undefined);
+    expect(run).toHaveBeenCalledExactlyOnceWith(["vcc-brain-helper", "version"], undefined);
     expect(next).toHaveBeenCalledWith(event);
     expect($.session.cwd).not.toHaveBeenCalled();
   });

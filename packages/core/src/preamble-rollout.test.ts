@@ -11,7 +11,7 @@ vi.mock("node:os", () => ({ platform: vi.fn() }));
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.stubEnv("OPERATOR_PREAMBLE_BETA", undefined);
+  vi.stubEnv("VCC_BRAIN_PREAMBLE_BETA", undefined);
   vi.mocked(platform).mockReturnValue("linux");
 });
 
@@ -33,7 +33,7 @@ test.each([
 });
 
 test("the beta override bypasses machine identification", () => {
-  vi.stubEnv("OPERATOR_PREAMBLE_BETA", "1");
+  vi.stubEnv("VCC_BRAIN_PREAMBLE_BETA", "1");
   expect(selectPreambleVersion()).toBe("2.0");
   expect(platform).not.toHaveBeenCalled();
   expect(readFileSync).not.toHaveBeenCalled();
@@ -41,7 +41,7 @@ test("the beta override bypasses machine identification", () => {
 });
 
 test.each(["", "0", "true", "01", " 1"])("does not treat %s as a beta override", value => {
-  vi.stubEnv("OPERATOR_PREAMBLE_BETA", value);
+  vi.stubEnv("VCC_BRAIN_PREAMBLE_BETA", value);
   vi.mocked(readFileSync).mockReturnValue("0000000000000000000000000000002d");
   expect(selectPreambleVersion()).toBe("1.1");
   expect(readFileSync).toHaveBeenCalled();

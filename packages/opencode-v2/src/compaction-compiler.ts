@@ -30,8 +30,8 @@ import {
   type CompileNode,
   type CompilerConfig,
   type CompileStats,
-} from "@jwitmann/operator-core/context/compiler";
-import { isRecord } from "@jwitmann/operator-core/utils";
+} from "@jwitmann/vcc-brain-core/context/compiler";
+import { isRecord } from "@jwitmann/vcc-brain-core/utils";
 
 // Engine defaults: verbatim from the probe's DEFAULT_PLUGIN_CONFIG (itself
 // from dsh-compaction-vcc@0.7.4 `src/index.js`). No OpenCode noise XML is
@@ -78,7 +78,7 @@ export function resolveVccCompilerConfig(): CompilerConfig {
     framing: {
       ...DEFAULT_CHECKPOINT_FRAMING,
       recallGuide:
-        'RECALL: append-only log — nothing is lost. `operator-recall` restores original content: type "seq", id "3-7"; "result", id "3"; "checkpoint", id "1" (`[checkpoint N]` = dropped). `operator-search` finds by keyword.',
+        'RECALL: append-only log — nothing is lost. `vcc-brain-recall` restores original content: type "seq", id "3-7"; "result", id "3"; "checkpoint", id "1" (`[checkpoint N]` = dropped). `vcc-brain-search` finds by keyword.',
     },
     checkpointOrdinals: null,
     debug: false,

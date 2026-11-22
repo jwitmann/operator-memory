@@ -24,7 +24,7 @@ const services = Layer.merge(NodeFileSystem.layer, NodePath.layer);
 let directory: string;
 
 beforeEach(() => {
-  directory = mkdtempSync(join(tmpdir(), "operator-helper-filesystem-"));
+  directory = mkdtempSync(join(tmpdir(), "vcc-brain-helper-filesystem-"));
 });
 
 afterEach(() => {

@@ -39,9 +39,9 @@ Kiro supports the AGENTS.md standard: files at the workspace root, in subdirecto
 
 ## Subagents
 
-- Built-in subagents inherit steering from the main agent. No documented general lifecycle hook injects a dynamically rendered preamble into them, so Operator must retain always-included steering.
-- Steering can instruct an agent to run `operator-helper preamble` when its complete output is absent. This is agent-driven loading and depends on tool access; inherited steering alone is not the rendered preamble.
-- Custom-agent configuration is outside Operator's integration scope; peripheral findings live in [injection verification](./injection.md).
+- Built-in subagents inherit steering from the main agent. No documented general lifecycle hook injects a dynamically rendered preamble into them, so VCC Brain must retain always-included steering.
+- Steering can instruct an agent to run `vcc-brain-helper preamble` when its complete output is absent. This is agent-driven loading and depends on tool access; inherited steering alone is not the rendered preamble.
+- Custom-agent configuration is outside VCC Brain's integration scope; peripheral findings live in [injection verification](./injection.md).
 
 ## Team distribution
 

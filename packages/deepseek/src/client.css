@@ -1,4 +1,4 @@
-.operator-memory-indicator {
+.vcc-brain-indicator {
   display: inline-flex;
   align-items: center;
   box-sizing: border-box;
@@ -16,12 +16,12 @@
   user-select: none;
 }
 
-.operator-memory-indicator:hover {
+.vcc-brain-indicator:hover {
   background: var(--dsw-alias-interactive-bg-hover);
   color: var(--dsw-alias-label-secondary);
 }
 
-.operator-memory-indicator__label {
+.vcc-brain-indicator__label {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

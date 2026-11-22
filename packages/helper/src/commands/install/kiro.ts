@@ -8,14 +8,14 @@ import { type CliContext, type CliResult, getErrorMessage } from "../../utils.ts
 import { runProcess } from "../common.ts";
 
 export const installKiro = Effect.fn("installKiro")(function* (context: CliContext) {
-  const helper = yield* runProcess("operator-helper", ["help"], context.cwd, null);
+  const helper = yield* runProcess("vcc-brain-helper", ["help"], context.cwd, null);
   if (!helper.ok) {
-    return { exitCode: 1, output: `✗ Operator Helper must be available on PATH: ${helper.error}` };
+    return { exitCode: 1, output: `✗ VCC Brain Helper must be available on PATH: ${helper.error}` };
   }
   if (helper.exitCode !== 0) {
     return {
       exitCode: helper.exitCode,
-      output: helper.output || "Operator Helper must be available on PATH",
+      output: helper.output || "VCC Brain Helper must be available on PATH",
     };
   }
   return yield* writeKiroFiles(join(context.home, ".kiro"));
@@ -24,8 +24,10 @@ export const installKiro = Effect.fn("installKiro")(function* (context: CliConte
 function writeKiroFiles(kiroHome: string): Effect.Effect<CliResult> {
   return Effect.promise(async () => {
     try {
-      // Migration: remove the retired Operator-owned repair skill from existing installations.
+      // Migration: remove the retired repair skill from existing installations,
+      // covering both its pre-rename and current paths.
       await rm(join(kiroHome, "skills", "operator-repair", "SKILL.md"), { force: true });
+      await rm(join(kiroHome, "skills", "vcc-brain-repair", "SKILL.md"), { force: true });
 
       for (const file of KIRO_FILES) {
         const path = join(kiroHome, file.path);

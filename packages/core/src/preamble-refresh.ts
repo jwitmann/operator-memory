@@ -2,7 +2,7 @@ import type { Dirent } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 
-import { resolveBrainRoots } from "./memory/roots.ts";
+import { resolveBrainRoots, resolveInstructionsPath } from "./memory/roots.ts";
 
 import { failure, hasNodeErrorCode, type Result, success } from "./utils.ts";
 
@@ -24,7 +24,7 @@ export type FingerprintError = {
 // pay for its own prefix rewrite.
 export const REFRESH_FLOOR_TOKENS = 4000;
 
-// Every disk file the preamble renders: per-partition operator.md
+// Every disk file the preamble renders: per-partition vcc-brain.md
 // instructions and catalog.md maps (shared, user, private), plus the user
 // observations.md subordinate surface, plus every index/*.md at any depth (shared and private listings use paths plus
 // frontmatter; only the main index.md inlines full content). Static
@@ -42,8 +42,8 @@ export async function fingerprintPreamble(
   const userRoot = roots.userRoot;
 
   for (const root of [sharedRoot, privateRoot]) {
-    for (const file of ["operator.md", "catalog.md"]) {
-      const entry = await fingerprintFile(join(root, file));
+    for (const file of [await resolveInstructionsPath(root), join(root, "catalog.md")]) {
+      const entry = await fingerprintFile(file);
       if (!entry.ok) {
         return entry;
       }
@@ -51,8 +51,12 @@ export async function fingerprintPreamble(
     }
   }
 
-  for (const file of ["operator.md", "catalog.md", "observations.md"]) {
-    const entry = await fingerprintFile(join(userRoot, file));
+  for (const file of [
+    await resolveInstructionsPath(userRoot),
+    join(userRoot, "catalog.md"),
+    join(userRoot, "observations.md"),
+  ]) {
+    const entry = await fingerprintFile(file);
     if (!entry.ok) {
       return entry;
     }

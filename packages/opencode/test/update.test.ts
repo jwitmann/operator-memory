@@ -30,8 +30,8 @@ test("compares stable semantic versions", () => {
 });
 
 test("resolves update information only for the latest OpenCode wrapper", async () => {
-  const latest = await installation("operator-opencode@latest", "1.2.3");
-  const pinned = await installation("operator-opencode@1.2.3", "1.2.3");
+  const latest = await installation("vcc-brain-opencode@latest", "1.2.3");
+  const pinned = await installation("vcc-brain-opencode@1.2.3", "1.2.3");
   let fetches = 0;
   const latestVersion = async () => {
     fetches += 1;
@@ -50,7 +50,7 @@ test("resolves update information only for the latest OpenCode wrapper", async (
 });
 
 test("installs a newer version in the latest wrapper", async () => {
-  const current = await installation("operator-opencode@latest", "1.2.3");
+  const current = await installation("vcc-brain-opencode@latest", "1.2.3");
   const installs: Array<{ directory: string; version: string }> = [];
 
   const result = await checkAutoUpdate(
@@ -66,7 +66,7 @@ test("installs a newer version in the latest wrapper", async () => {
 });
 
 test("does not install when the cached version is current", async () => {
-  const current = await installation("operator-opencode@latest", "1.2.3");
+  const current = await installation("vcc-brain-opencode@latest", "1.2.3");
   let installed = false;
 
   const result = await checkAutoUpdate({ current: current.install, latest: "1.2.3" }, async () => {
@@ -79,7 +79,7 @@ test("does not install when the cached version is current", async () => {
 });
 
 test("clears the install cache after npm fails", async () => {
-  const current = await installation("operator-opencode@latest", "1.2.3");
+  const current = await installation("vcc-brain-opencode@latest", "1.2.3");
 
   await expect(clearInstallCache(current.installDirectory)).resolves.toBe("cache-cleared");
   await expect(access(current.installDirectory)).rejects.toThrow();
@@ -96,15 +96,20 @@ async function installation(
     version: string;
   };
 }> {
-  const root = await mkdtemp(join(tmpdir(), "operator-update-"));
+  const root = await mkdtemp(join(tmpdir(), "vcc-brain-update-"));
   temporaryDirectories.push(root);
   const installDirectory = join(root, "packages", "@jwitmann", wrapper);
-  const packageDirectory = join(installDirectory, "node_modules", "@jwitmann", "operator-opencode");
+  const packageDirectory = join(
+    installDirectory,
+    "node_modules",
+    "@jwitmann",
+    "vcc-brain-opencode",
+  );
   const modulePath = join(packageDirectory, "dist", "index.js");
   await mkdir(join(packageDirectory, "dist"), { recursive: true });
   await writeFile(
     join(packageDirectory, "package.json"),
-    JSON.stringify({ name: "@jwitmann/operator-opencode", version }),
+    JSON.stringify({ name: "@jwitmann/vcc-brain-opencode", version }),
   );
   await writeFile(modulePath, "");
   return {

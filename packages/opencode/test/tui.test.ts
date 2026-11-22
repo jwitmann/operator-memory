@@ -3,9 +3,9 @@ import { beforeEach, expect, test, vi } from "vitest";
 
 const { loadMemorySnapshot } = vi.hoisted(() => ({ loadMemorySnapshot: vi.fn() }));
 
-vi.mock("@jwitmann/operator-core/memory/load", () => ({ loadMemorySnapshot }));
+vi.mock("@jwitmann/vcc-brain-core/memory/load", () => ({ loadMemorySnapshot }));
 
-import OperatorTuiPlugin, { readyLabel } from "../src/tui.tsx";
+import VccBrainTuiPlugin, { readyLabel } from "../src/tui.tsx";
 
 beforeEach(() => {
   loadMemorySnapshot.mockReset();
@@ -20,35 +20,35 @@ test("registers the home and sidebar status slots", async () => {
   const registered: TuiSlotPlugin[] = [];
   const api = createApi(registered, () => undefined);
 
-  await OperatorTuiPlugin.tui(api, undefined, createMeta());
+  await VccBrainTuiPlugin.tui(api, undefined, createMeta());
 
   expect(registered).toHaveLength(1);
   expect(Object.keys(registered[0]?.slots ?? {})).toEqual(["home_bottom", "sidebar_content"]);
 });
 
 test("labels local plugin installations", () => {
-  expect(readyLabel({ source: "npm", spec: "@jwitmann/operator-opencode@latest" })).toBe(
-    "Operator Ready",
+  expect(readyLabel({ source: "npm", spec: "@jwitmann/vcc-brain-opencode@latest" })).toBe(
+    "VCC Brain Ready",
   );
   expect(
-    readyLabel({ source: "npm", spec: "@jwitmann/operator-opencode@latest", version: "1.2.3" }),
-  ).toBe("Operator Ready (v1.2.3)");
+    readyLabel({ source: "npm", spec: "@jwitmann/vcc-brain-opencode@latest", version: "1.2.3" }),
+  ).toBe("VCC Brain Ready (v1.2.3)");
   expect(
     readyLabel({
       source: "npm",
-      spec: "@jwitmann/operator-opencode@file:///project/packages/opencode",
+      spec: "@jwitmann/vcc-brain-opencode@file:///project/packages/opencode",
       version: "1.2.3",
     }),
-  ).toBe("Operator Ready (Local Build)");
+  ).toBe("VCC Brain Ready (Local Build)");
   expect(readyLabel({ source: "file", spec: "file:///project/dist/tui.js" })).toBe(
-    "Operator Ready (Local Build)",
+    "VCC Brain Ready (Local Build)",
   );
 });
 
 test("refreshes status after a top-level session transitions to idle", async () => {
   const handlers: Array<(event: SessionStatusEvent) => void> = [];
   const api = createApi([], handler => handlers.push(handler));
-  await OperatorTuiPlugin.tui(api, undefined, createMeta());
+  await VccBrainTuiPlugin.tui(api, undefined, createMeta());
 
   handlers[0]?.({
     type: "session.status",

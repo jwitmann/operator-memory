@@ -15,11 +15,11 @@ afterEach(async () => {
 });
 
 test("returns an immutable preamble for each session", async () => {
-  const projectDirectory = await temporaryDirectory("operator-v2-project-");
-  const homeDirectory = await temporaryDirectory("operator-v2-home-");
+  const projectDirectory = await temporaryDirectory("vcc-brain-v2-project-");
+  const homeDirectory = await temporaryDirectory("vcc-brain-v2-home-");
   const privateRoot = join(projectDirectory, ".vcc-brain");
   await mkdir(privateRoot);
-  await writeFile(join(privateRoot, "operator.md"), "original instructions");
+  await writeFile(join(privateRoot, "vcc-brain.md"), "original instructions");
 
   const cache = new Map<string, ReturnType<typeof loadPreamble>>();
   const first = await loadPreamble({
@@ -32,7 +32,7 @@ test("returns an immutable preamble for each session", async () => {
   if (!first.ok) return;
   expect(first.value.content).toContain("original instructions");
 
-  await writeFile(join(privateRoot, "operator.md"), "changed instructions");
+  await writeFile(join(privateRoot, "vcc-brain.md"), "changed instructions");
   const repeated = await loadPreamble({
     sessionID: "session-one",
     projectDirectory,

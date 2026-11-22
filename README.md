@@ -1,16 +1,16 @@
 <p>
-  <img src="docs/assets/banner.jpeg" alt="Operator Memory, the self-improving context engine for coding agents">
+  <img src="docs/assets/banner.jpeg" alt="VCC Brain, the self-improving context engine for coding agents">
 </p>
 
 ---
 
-### Operator Memory: The self-improving context engine for coding agents
+### VCC Brain: The self-improving context engine for coding agents
 
-Operator Memory gives your agent a brain for documenting all their work. As the agent works, it automatically documents within this brain — specs, decisions, standards, research, lessons. Every new session starts knowing everything the last one learned.
+VCC Brain gives your agent a brain for documenting all their work. As the agent works, it automatically documents within this brain — specs, decisions, standards, research, lessons. Every new session starts knowing everything the last one learned.
 
 #### Origin
 
-Originally forked from [aerovato/operator-memory](https://github.com/aerovato/operator-memory); continued here as an independent line with deterministic context management (VCC compaction, lossless trim, recall/search recovery), cache-aware preamble refresh, and the DeepSeek Harness adapter.
+Originally forked from [aerovato/vcc-brain](https://github.com/aerovato/vcc-brain); continued here as an independent line with deterministic context management (VCC compaction, lossless trim, recall/search recovery), cache-aware preamble refresh, and the DeepSeek Harness adapter.
 
 #### Features
 
@@ -25,47 +25,47 @@ Originally forked from [aerovato/operator-memory](https://github.com/aerovato/op
 
 ### Installation
 
-Operator is managed via the Operator Helper, which also provides setup and agent instructions. Install the Helper with npm:
+VCC Brain is managed via the VCC Brain Helper, which also provides setup and agent instructions. Install the Helper with npm:
 
 ```sh
-npm install --global @jwitmann/operator-helper
+npm install --global @jwitmann/vcc-brain-helper
 ```
 
 Or Bun:
 
 ```sh
-bun add --global --minimum-release-age 0 @jwitmann/operator-helper@latest
+bun add --global --minimum-release-age 0 @jwitmann/vcc-brain-helper@latest
 ```
 
-Then install the Operator adapter for your harness. Click each link for harness-specific information.
+Then install the VCC Brain adapter for your harness. Click each link for harness-specific information.
 
-| Harness | Status | Install |
-| --- | --- | --- |
-| [Claude Code (CLI + Desktop)](docs/harnesses/claude-code.md) | 🟢 Fully Supported | `operator-helper install claude-code` |
-| [Codex (CLI + Desktop)](docs/harnesses/codex.md) | 🟢 Fully Supported | `operator-helper install codex` |
-| [OpenCode](docs/harnesses/opencode-v2.md) | 🟢 Fully Supported (V2) | `operator-helper install opencode` |
-| [OpenCode V1 (legacy)](docs/harnesses/opencode.md) | 🟡 Supported, Legacy | `operator-helper install opencode-v1` |
-| [Pi](docs/harnesses/pi.md) | 🟢 Fully Supported | `operator-helper install pi` |
-| [DeepSeek Harness](docs/harnesses/deepseek.md) | 🟢 Fully Supported | `operator-helper install deepseek` |
-| [Kiro](docs/harnesses/kiro.md) | 🟡 Supported | `operator-helper install kiro` |
+| Harness                                                      | Status                  | Install                                |
+| ------------------------------------------------------------ | ----------------------- | -------------------------------------- |
+| [Claude Code (CLI + Desktop)](docs/harnesses/claude-code.md) | 🟢 Fully Supported      | `vcc-brain-helper install claude-code` |
+| [Codex (CLI + Desktop)](docs/harnesses/codex.md)             | 🟢 Fully Supported      | `vcc-brain-helper install codex`       |
+| [OpenCode](docs/harnesses/opencode-v2.md)                    | 🟢 Fully Supported (V2) | `vcc-brain-helper install opencode`    |
+| [OpenCode V1 (legacy)](docs/harnesses/opencode.md)           | 🟡 Supported, Legacy    | `vcc-brain-helper install opencode-v1` |
+| [Pi](docs/harnesses/pi.md)                                   | 🟢 Fully Supported      | `vcc-brain-helper install pi`          |
+| [DeepSeek Harness](docs/harnesses/deepseek.md)               | 🟢 Fully Supported      | `vcc-brain-helper install deepseek`    |
+| [Kiro](docs/harnesses/kiro.md)                               | 🟡 Supported            | `vcc-brain-helper install kiro`        |
 
 Setup is a conversation with your agent. Run each command in a new conversation.
 
-1. First time only: `/operator:user-init` — set up your global user partition.
-2. In each new project: `/operator:project-init` — scaffold Operator, migrate existing documents, and index the repo.
+1. First time only: `/vcc-brain:user-init` — set up your global user partition.
+2. In each new project: `/vcc-brain:project-init` — scaffold VCC Brain, migrate existing documents, and index the repo.
 3. Start a new conversation and do normal work.
 
 #### For the best long-session results
 
-Long sessions must compact, and a plain summarizer rewrites your rules in the process. Pair Operator with deterministic compaction:
+Long sessions must compact, and a plain summarizer rewrites your rules in the process. Pair VCC Brain with deterministic compaction:
 
-- On DeepSeek Harness, install the VCC engine alongside the Operator plugin — without it, compaction falls back to the host's LLM summarizer:
+- On DeepSeek Harness, install the VCC engine alongside the VCC Brain plugin — without it, compaction falls back to the host's LLM summarizer:
 
 ```sh
 dsh plugin --profile <profile-name> add dsh-compaction-vcc
 ```
 
-- On OpenCode, install the VCC engine alongside the Operator plugin — without it, compaction falls back to the in-tree reference port plus the host's LLM summarizer, which works but is not the same (no `vccRev`/`vccConfigHash` stamping, no tunables, debug-rev header):
+- On OpenCode, install the VCC engine alongside the VCC Brain plugin — without it, compaction falls back to the in-tree reference port plus the host's LLM summarizer, which works but is not the same (no `vccRev`/`vccConfigHash` stamping, no tunables, debug-rev header):
 
 ```sh
 opencode plugin add opencode-vcc-compaction
@@ -73,17 +73,17 @@ opencode plugin add opencode-vcc-compaction
 
 When starting cold on an existing project, expect a sparse brain at first; ask the agent to write the first specifications for the modules you work on. Once those documents exist, later sessions maintain them as part of ordinary work.
 
-<p align="center"><big><strong>New to Operator? Read the <a href="docs/getting-started.md">Getting Started guide</a>.</strong></big></p>
+<p align="center"><big><strong>New to VCC Brain? Read the <a href="docs/getting-started.md">Getting Started guide</a>.</strong></big></p>
 
-### How Operator Works
+### How VCC Brain Works
 
 Agents excel in a single session but forget everything the moment it ends. Future sessions waste tokens re-gathering an incomplete context: re-exploring the codebase, re-learning the architecture, re-teaching decisions and corrections.
 
-Operator gives the agent a durable workspace of Markdown, kept in three places:
+VCC Brain gives the agent a durable workspace of Markdown, kept in three places:
 
-- `.operator/` — private project knowledge, stays on your machine
-- `.operator-shared/` — project knowledge published with the repository
-- `~/.operator/user/` — your personal rules and knowledge, used across projects
+- `.vcc-brain/` — private project knowledge, stays on your machine
+- `.vcc-brain-shared/` — project knowledge published with the repository
+- `~/.vcc-brain/user/` — your personal rules and knowledge, used across projects
 
 Every session runs the same loop:
 
@@ -114,7 +114,7 @@ Sometimes agents hesitate to create, consolidate, or split documents. In that ca
 
 ### Roadmap
 
-**Operator Memory is under active development.** More features are on the way. Each will come with an explicit on/off switch in case you prefer the vanilla Operator experience.
+**VCC Brain is under active development.** More features are on the way. Each will come with an explicit on/off switch in case you prefer the vanilla VCC Brain experience.
 
 - **Observation Engine** — Learn durable user observations over time, kept separate from explicit User Instructions.
 
@@ -124,11 +124,11 @@ Snippet capture, RAG retrieval, and context compression all fail the same way.
 
 - [Read the comparison.](docs/comparison.md)
 - [Read the blog post.](https://liao.gg/blog/agents-dont-need-memory)
-- [Looking for benchmarks?](https://github.com/jwitmann/operator-memory/issues/48#issuecomment-5979061413)
+- [Looking for benchmarks?](https://github.com/jwitmann/vcc-brain/issues/48#issuecomment-5979061413)
 
 ### Learn More
 
-- [Getting Started](docs/getting-started.md) - onboarding and usage guide: how Operator works, setup, daily use, directing the agent, and reviewing the Brain. Includes the command reference.
+- [Getting Started](docs/getting-started.md) - onboarding and usage guide: how VCC Brain works, setup, daily use, directing the agent, and reviewing the Brain. Includes the command reference.
 - [Architecture](docs/architecture.md) - how partitions, catalogs, indexes, and deterministic context loading work.
 - [Harness docs](docs/harnesses/) - per-harness installation, verification, commands, updates, and troubleshooting.
 - [Troubleshooting](docs/troubleshooting.md) - validation, repair, and update recovery.

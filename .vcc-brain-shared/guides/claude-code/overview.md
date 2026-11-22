@@ -2,7 +2,7 @@
 
 Last Updated: November 3, 2026
 
-Implementation reference for porting Operator Memory to Claude Code. Primary sources: the official `anthropics/claude-code` repository (cloned locally under `<reference>/claude-code-docs/`) and the live documentation at `code.claude.com/docs`, retrieved October 2, 2026.
+Implementation reference for porting VCC Brain to Claude Code. Primary sources: the official `anthropics/claude-code` repository (cloned locally under `<reference>/claude-code-docs/`) and the live documentation at `code.claude.com/docs`, retrieved October 2, 2026.
 
 ## Scope
 
@@ -22,9 +22,9 @@ Implementation reference for porting Operator Memory to Claude Code. Primary sou
 
 - [`injection.md`](./injection.md) - Preamble injection surfaces: SessionStart, SubagentStart, UserPromptSubmit, instruction files, and the mod prompt events; the 10k context cap and pathway recommendation.
 - [`hooks.md`](./hooks.md) - Settings-hook system: configuration formats, handler types, matchers, input/output contract, exit codes, environment, and policy restrictions.
-- [`commands.md`](./commands.md) - Slash commands and skills for the three Operator command intents.
+- [`commands.md`](./commands.md) - Slash commands and skills for the three VCC Brain command intents.
 - [`plugins.md`](./plugins.md) - Packaging, manifest, marketplaces, installation scopes, CLI, updates, and development workflow.
-- [`mods.md`](./mods.md) - The in-process mod API: event middleware, prompt and command events, API surface, and its fit as Operator's transform pathway.
+- [`mods.md`](./mods.md) - The in-process mod API: event middleware, prompt and command events, API surface, and its fit as VCC Brain's transform pathway.
 
 ## Facility Summary
 
@@ -32,7 +32,7 @@ Claude Code exposes everything the adapter contract requires:
 
 - `SessionStart` hooks (command type) inject context per session, re-firing on resume, clear, compact, and fork via matcher — a persisted-context pathway
 - `SubagentStart` hooks inject the same context per subagent with copy-once dedupe
-- Plugin commands surface as `/<plugin>:<command>`, matching `/operator:*` naming directly
+- Plugin commands surface as `/<plugin>:<command>`, matching `/vcc-brain:*` naming directly
 - Plugins distribute through GitHub/git/npm/local marketplaces with a `claude plugin` CLI for scripted installation
 - Mods offer an in-process alternative: `prompt.context`, `prompt.section`, and `turn.step` events are a model-boundary transform pathway
 

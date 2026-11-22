@@ -6,7 +6,7 @@ The native application API injects conversation steps through command hooks, not
 
 #### Resolution and Message Placement
 
-Operator's [Helper-subprocess pathway](../../specs/reference/implementation.md#preamble-resolution) obtains one complete `operator-helper preamble` output for the resolved project root. Output is either the normal preamble or canonical all-or-nothing diagnostic. Preserve it unchanged; do not reconstruct partitions, truncate the Brain, or inject substitutes.
+VCC Brain's [Helper-subprocess pathway](../../specs/reference/implementation.md#preamble-resolution) obtains one complete `vcc-brain-helper preamble` output for the resolved project root. Output is either the normal preamble or canonical all-or-nothing diagnostic. Preserve it unchanged; do not reconstruct partitions, truncate the Brain, or inject substitutes.
 
 Encode the output inside a native hook response:
 
@@ -64,4 +64,4 @@ Use the event's actual project root, not plugin cwd or the first multi-root entr
 
 - [Hooks](https://antigravity.google/docs/hooks), [Rules](https://antigravity.google/docs/rules), [Subagents](https://antigravity.google/docs/subagents).
 - [Pinned CLI release notes](https://github.com/google-antigravity/antigravity-cli/blob/800852ea61796e9fe53077a2f945e74daacb4be6/CHANGELOG.md), including compaction-budget changes in `1.2.8`.
-- Operator [adapter pathways](../../specs/reference/implementation.md#preamble-injection) and [preamble contract](../../specs/preamble.md).
+- VCC Brain [adapter pathways](../../specs/reference/implementation.md#preamble-injection) and [preamble contract](../../specs/preamble.md).

@@ -1,16 +1,16 @@
 {
-  "name": "@jwitmann/operator-helper",
+  "name": "@jwitmann/vcc-brain-helper",
   "version": "1.12.0",
-  "description": "Installation and setup CLI for Operator Memory",
+  "description": "Installation and setup CLI for VCC Brain",
   "license": "BSD-3-Clause",
   "author": "jwitmann",
-  "homepage": "https://github.com/jwitmann/operator-memory#readme",
+  "homepage": "https://github.com/jwitmann/vcc-brain#readme",
   "bugs": {
-    "url": "https://github.com/jwitmann/operator-memory/issues"
+    "url": "https://github.com/jwitmann/vcc-brain/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jwitmann/operator-memory.git",
+    "url": "git+https://github.com/jwitmann/vcc-brain.git",
     "directory": "packages/helper"
   },
   "dependencies": {
@@ -21,7 +21,7 @@
     "yaml": "^2.9.0"
   },
   "bin": {
-    "operator-helper": "dist/index.js"
+    "vcc-brain-helper": "dist/index.js"
   },
   "engines": {
     "node": ">=20"
@@ -44,7 +44,7 @@
     "prepack": "bun run build"
   },
   "devDependencies": {
-    "@jwitmann/operator-core": "workspace:*"
+    "@jwitmann/vcc-brain-core": "workspace:*"
   },
   "type": "module"
 }

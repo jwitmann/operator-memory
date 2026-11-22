@@ -8,13 +8,13 @@ export const version = Effect.fn("version")(function* (context: CliContext) {
     Effect.catch(error => Effect.succeed({ status: "failed" as const, message: error.message })),
   );
   if (latest.status === "failed") {
-    return { exitCode: 1, output: `Operator Helper ${context.version}\n${latest.message}` };
+    return { exitCode: 1, output: `VCC Brain Helper ${context.version}\n${latest.message}` };
   }
   if (latest.status === "available") {
     return {
       exitCode: 0,
-      output: `Operator Helper ${context.version}\nUpdate available: ${latest.latest}. Run \`operator-helper upgrade\`.`,
+      output: `VCC Brain Helper ${context.version}\nUpdate available: ${latest.latest}. Run \`vcc-brain-helper upgrade\`.`,
     };
   }
-  return { exitCode: 0, output: `Operator Helper ${context.version} is up to date.` };
+  return { exitCode: 0, output: `VCC Brain Helper ${context.version} is up to date.` };
 });

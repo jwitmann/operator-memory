@@ -9,10 +9,10 @@ const core = vi.hoisted(() => ({
   renderPreamble: vi.fn(),
 }));
 
-vi.mock("@jwitmann/operator-core/memory/load", () => ({
+vi.mock("@jwitmann/vcc-brain-core/memory/load", () => ({
   loadMemorySnapshot: core.loadMemorySnapshot,
 }));
-vi.mock("@jwitmann/operator-core/preamble", () => ({
+vi.mock("@jwitmann/vcc-brain-core/preamble", () => ({
   renderPreamble: core.renderPreamble,
 }));
 
@@ -27,7 +27,7 @@ beforeEach(() => {
 
 describe("DeepSeek adapter package", () => {
   test("exports a function Host plugin", () => {
-    expect(name).toBe("operator-memory");
+    expect(name).toBe("vcc-brain");
     expect(inject).toEqual(["systemPrompt"]);
     expect(apply).toBeTypeOf("function");
   });
@@ -35,13 +35,13 @@ describe("DeepSeek adapter package", () => {
   test("mounts the Host plugin through its bundle patch", async () => {
     const patch = await readFile(resolve(packageDirectory, "cordis.patch.yml"), "utf8");
 
-    expect(patch).toContain("id: operator-memory");
-    expect(patch).toContain("name: '@jwitmann/operator-deepseek'");
+    expect(patch).toContain("id: vcc-brain");
+    expect(patch).toContain("@jwitmann/vcc-brain-deepseek");
     expect(patch).toContain("id: tool-recall");
-    expect(patch).toContain("name: '@jwitmann/operator-deepseek/tool'");
+    expect(patch).toContain("@jwitmann/vcc-brain-deepseek/tool");
   });
 
-  test("contributes a static Operator indicator beside the composer readings", async () => {
+  test("contributes a static VCC Brain indicator beside the composer readings", async () => {
     const manifest = JSON.parse(
       await readFile(resolve(packageDirectory, "package.json"), "utf8"),
     ) as {
@@ -74,8 +74,8 @@ describe("DeepSeek adapter package", () => {
     let plugin: ClientPlugin | undefined;
     const css = await readFile(resolve(packageDirectory, "src/client.css"), "utf8");
     const source = (await readFile(resolve(packageDirectory, "src/client.js"), "utf8"))
-      .replace("__OPERATOR_VERSION__", manifest.version)
-      .replace('"__OPERATOR_CSS__"', JSON.stringify(css));
+      .replace("__VCC_BRAIN_VERSION__", manifest.version)
+      .replace('"__VCC_BRAIN_CSS__"', JSON.stringify(css));
     const style = { textContent: "", remove: vi.fn() };
     const appendChild = vi.fn();
     runInNewContext(source, {
@@ -89,7 +89,7 @@ describe("DeepSeek adapter package", () => {
             id: string;
             factory: (require: (id: string) => unknown) => ClientPlugin;
           }) => {
-            expect(id).toBe("@jwitmann/operator-deepseek");
+            expect(id).toBe("@jwitmann/vcc-brain-deepseek");
             plugin = factory(id => {
               expect(id).toBe("react");
               return {
@@ -110,27 +110,27 @@ describe("DeepSeek adapter package", () => {
     const effect = vi.fn((callback: () => () => void) => callback());
     expect(plugin?.inject).toEqual(["slots"]);
     plugin?.apply({ effect, slots: { inject: injectSlot, register } });
-    expect(effect).toHaveBeenCalledWith(expect.any(Function), "operator-memory: indicator style");
+    expect(effect).toHaveBeenCalledWith(expect.any(Function), "vcc-brain: indicator style");
     expect(style.textContent).toBe(css);
     expect(appendChild).toHaveBeenCalledWith(style);
     expect(css).toContain("border: none");
-    expect(css).toContain(".operator-memory-indicator:hover");
+    expect(css).toContain(".vcc-brain-indicator:hover");
     expect(css).toContain("background: var(--dsw-alias-interactive-bg-hover)");
     expect(css).toContain("color: var(--dsw-alias-label-secondary)");
     expect(css).toContain("user-select: none");
     expect(injectSlot).toHaveBeenCalledWith("conversation.composer.dock", expect.any(Function));
     expect(register).toHaveBeenCalledWith(
-      { name: "conversation.composer.dock", id: "operator-memory", order: -1 },
+      { name: "conversation.composer.dock", id: "vcc-brain", order: -1 },
       expect.any(Function),
     );
     const indicator = (register.mock.calls[0][1] as () => Element)();
     expect(indicator.type).toBe("span");
-    expect(indicator.props.className).toBe("operator-memory-indicator");
+    expect(indicator.props.className).toBe("vcc-brain-indicator");
     expect(indicator.children).toEqual([
       {
         type: "span",
-        props: { className: "operator-memory-indicator__label" },
-        children: [`Operator Ready (v${manifest.version})`],
+        props: { className: "vcc-brain-indicator__label" },
+        children: [`VCC Brain Ready (v${manifest.version})`],
       },
     ]);
     (effect.mock.results[0].value as () => void)();
@@ -153,7 +153,7 @@ describe("DeepSeek adapter package", () => {
     deferred.resolve({});
     const [first, second] = await Promise.all([firstPending, secondPending]);
     expect(first.sections[0]).toEqual({
-      name: "operator:memory",
+      name: "vcc-brain:memory",
       text: "operator preamble",
       interpolate: false,
     });
@@ -215,7 +215,7 @@ describe("DeepSeek adapter package", () => {
     core.renderPreamble.mockReturnValue({ loaded: true, content: "recovered" });
     const recovered = await runtime.assemble(agent);
     expect(recovered.sections[0]).toEqual({
-      name: "operator:memory",
+      name: "vcc-brain:memory",
       text: "recovered",
       interpolate: false,
     });

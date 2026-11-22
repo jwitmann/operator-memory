@@ -1,13 +1,13 @@
-# Operator Memory for Pi
+# VCC Brain for Pi
 
-Operator Memory gives Pi durable project and user context maintained by agents as readable Markdown.
+VCC Brain gives Pi durable project and user context maintained by agents as readable Markdown.
 
 ## Install
 
 ```sh
-operator-helper install pi
+vcc-brain-helper install pi
 ```
 
-The extension injects one immutable rendered Operator preamble into every model call for each session and registers `/operator:user-init`, `/operator:project-init`, and `/operator:index`.
+The extension injects one immutable rendered VCC Brain preamble into every model call for each session and registers `/vcc-brain:user-init`, `/vcc-brain:project-init`, and `/vcc-brain:index`.
 
-Pi displays Operator status in its footer. Pi checks installed packages for updates and prompts you to run `pi update --extensions` when an update is available.
+Pi displays VCC Brain status in its footer. Pi checks installed packages for updates and prompts you to run `pi update --extensions` when an update is available.

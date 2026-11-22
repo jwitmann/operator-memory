@@ -1,20 +1,20 @@
-import { CATALOG_TEMPLATE } from "@jwitmann/operator-core/templates/catalog";
-import { PROJECT_INDEX_TEMPLATE } from "@jwitmann/operator-core/templates/project-index";
-import { PROJECT_SUBINDEX_TEMPLATE } from "@jwitmann/operator-core/templates/project-subindex";
+import { CATALOG_TEMPLATE } from "@jwitmann/vcc-brain-core/templates/catalog";
+import { PROJECT_INDEX_TEMPLATE } from "@jwitmann/vcc-brain-core/templates/project-index";
+import { PROJECT_SUBINDEX_TEMPLATE } from "@jwitmann/vcc-brain-core/templates/project-subindex";
 
 import { PROJECT_CONFIG_TEMPLATE } from "./templates/project/config.ts";
 import { PROJECT_INDEX_SETUP_TEMPLATE } from "./templates/project/index-setup.ts";
-import { PROJECT_OPERATOR_TEMPLATE } from "./templates/project/operator.ts";
+import { PROJECT_VCC_BRAIN_TEMPLATE } from "./templates/project/vcc-brain.ts";
 import { PROJECT_SETUP_TEMPLATE } from "./templates/project/setup.ts";
 import { PROJECT_SHARED_README_TEMPLATE } from "./templates/project/shared-readme.ts";
-import { USER_OPERATOR_TEMPLATE } from "./templates/user/operator.ts";
+import { USER_VCC_BRAIN_TEMPLATE } from "./templates/user/vcc-brain.ts";
 import { USER_SETUP_TEMPLATE } from "./templates/user/setup.ts";
 
 export enum TemplatePath {
-  UserOperator = "user/operator.md",
+  UserVccBrain = "user/vcc-brain.md",
   UserCatalog = "user/catalog.md",
   UserSetup = "user/setup.md",
-  ProjectOperator = "project/operator.md",
+  ProjectVccBrain = "project/vcc-brain.md",
   ProjectConfig = "project/config.json",
   ProjectIndex = "project/index.md",
   ProjectSubindex = "project/subindex.md",
@@ -25,10 +25,10 @@ export enum TemplatePath {
 }
 
 const TEMPLATES = {
-  [TemplatePath.UserOperator]: USER_OPERATOR_TEMPLATE,
+  [TemplatePath.UserVccBrain]: USER_VCC_BRAIN_TEMPLATE,
   [TemplatePath.UserCatalog]: CATALOG_TEMPLATE,
   [TemplatePath.UserSetup]: USER_SETUP_TEMPLATE,
-  [TemplatePath.ProjectOperator]: PROJECT_OPERATOR_TEMPLATE,
+  [TemplatePath.ProjectVccBrain]: PROJECT_VCC_BRAIN_TEMPLATE,
   [TemplatePath.ProjectConfig]: PROJECT_CONFIG_TEMPLATE,
   [TemplatePath.ProjectIndex]: PROJECT_INDEX_TEMPLATE,
   [TemplatePath.ProjectSubindex]: PROJECT_SUBINDEX_TEMPLATE,

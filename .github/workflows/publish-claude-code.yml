@@ -54,7 +54,7 @@ jobs:
         working-directory: packages/claude-code
         run: |
           version=$(node -p 'require("./package.json").version')
-          published=$(npm view "@jwitmann/operator-claude-code@$version" version 2>/dev/null || true)
+          published=$(npm view "@jwitmann/vcc-brain-claude-code@$version" version 2>/dev/null || true)
           test "$published" = "$version" && echo "published=true" >> "$GITHUB_OUTPUT" || echo "published=false" >> "$GITHUB_OUTPUT"
 
       - name: Publish Claude Code plugin

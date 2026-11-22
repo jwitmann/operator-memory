@@ -7,7 +7,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { NpmRegistry } from "./npm-registry.ts";
 import type { CliContext } from "./utils.ts";
 
-const HELPER_PACKAGE = "@jwitmann/operator-helper";
+const HELPER_PACKAGE = "@jwitmann/vcc-brain-helper";
 const UPDATE_TIMEOUT = "60 seconds";
 
 type InstallationChannel = "bun" | "npm" | "unknown";
@@ -68,7 +68,7 @@ export const upgradeHelper = Effect.fn("upgradeHelper")(function* (context: CliC
     : "process failed or timed out";
   return {
     status: "failed",
-    message: `Operator Helper update failed: ${detail}.`,
+    message: `VCC Brain Helper update failed: ${detail}.`,
   } satisfies UpdateResult;
 });
 

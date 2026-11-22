@@ -1,6 +1,6 @@
 ---
 description: DeepSeek Harness profile, bundle, plugin installation, CLI, Web UI, and SDK source map
-read_if: Packaging, installing, updating, composing, previewing, or testing a DeepSeek Harness Operator plugin
+read_if: Packaging, installing, updating, composing, previewing, or testing a DeepSeek Harness VCC Brain plugin
 ---
 
 # DeepSeek Harness Distribution

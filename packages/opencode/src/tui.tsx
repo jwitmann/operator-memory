@@ -1,7 +1,7 @@
 import { homedir } from "node:os";
 
-import type { MemoryStatusSnapshot } from "@jwitmann/operator-core/memory/load";
-import { loadMemorySnapshot } from "@jwitmann/operator-core/memory/load";
+import type { MemoryStatusSnapshot } from "@jwitmann/vcc-brain-core/memory/load";
+import { loadMemorySnapshot } from "@jwitmann/vcc-brain-core/memory/load";
 import type {
   TuiPlugin,
   TuiPluginApi,
@@ -13,7 +13,7 @@ import { createStore } from "solid-js/store";
 
 type PartitionStatus = MemoryStatusSnapshot[keyof MemoryStatusSnapshot];
 
-const PACKAGE_NAME = "@jwitmann/operator-opencode";
+const PACKAGE_NAME = "@jwitmann/vcc-brain-opencode";
 
 const tui: TuiPlugin = async (api, _options, meta) => {
   const [snapshots, setSnapshots] = createStore<Record<string, MemoryStatusSnapshot>>({});
@@ -88,13 +88,13 @@ const tui: TuiPlugin = async (api, _options, meta) => {
         return (
           <box gap={0}>
             <text fg={api.theme.current.text}>
-              <b>Operator Status</b>
+              <b>VCC Brain Status</b>
             </text>
             <StatusRow api={api} label="User" status={snapshots[directory()]?.user} />
             <StatusRow api={api} label="Private" status={snapshots[directory()]?.private} />
             <StatusRow api={api} label="Shared" status={snapshots[directory()]?.shared} />
             <Show when={hasError()}>
-              <text fg={api.theme.current.warning}>Run /operator:repair to repair</text>
+              <text fg={api.theme.current.warning}>Run /vcc-brain:repair to repair</text>
             </Show>
           </box>
         );
@@ -105,12 +105,12 @@ const tui: TuiPlugin = async (api, _options, meta) => {
 
 export function readyLabel(meta: Pick<TuiPluginMeta, "source" | "spec" | "version">): string {
   if (meta.source === "file" || meta.spec.startsWith(`${PACKAGE_NAME}@file:`)) {
-    return "Operator Ready (Local Build)";
+    return "VCC Brain Ready (Local Build)";
   }
   if (meta.version !== undefined && meta.version.length > 0) {
-    return `Operator Ready (v${meta.version})`;
+    return `VCC Brain Ready (v${meta.version})`;
   }
-  return "Operator Ready";
+  return "VCC Brain Ready";
 }
 
 function StatusRow(props: {
@@ -138,9 +138,9 @@ function StatusRow(props: {
   );
 }
 
-const OperatorTuiPlugin: TuiPluginModule = {
+const VccBrainTuiPlugin: TuiPluginModule = {
   id: PACKAGE_NAME,
   tui,
 };
 
-export default OperatorTuiPlugin;
+export default VccBrainTuiPlugin;

@@ -1,12 +1,12 @@
 {
-  "name": "@jwitmann/operator-codex",
+  "name": "@jwitmann/vcc-brain-codex",
   "version": "0.4.1",
-  "description": "Operator Memory adapter for Codex.",
+  "description": "VCC Brain adapter for Codex.",
   "license": "BSD-3-Clause",
   "author": "jwitmann",
-  "homepage": "https://github.com/jwitmann/operator-memory#readme",
+  "homepage": "https://github.com/jwitmann/vcc-brain#readme",
   "bugs": {
-    "url": "https://github.com/jwitmann/operator-memory/issues"
+    "url": "https://github.com/jwitmann/vcc-brain/issues"
   },
   "files": [
     ".codex-plugin",
@@ -22,7 +22,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jwitmann/operator-memory.git",
+    "url": "git+https://github.com/jwitmann/vcc-brain.git",
     "directory": "packages/codex"
   },
   "engines": {

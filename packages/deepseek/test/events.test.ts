@@ -6,7 +6,7 @@ import { countSessionCompletedCalls, createDshRuntime, sessionRuntime } from "..
 function deps(overrides: Partial<EventsDeps> = {}): EventsDeps {
   return {
     config: { ...DEFAULT_CONTEXT_MANAGEMENT_CONFIG, enabled: false },
-    stateDirectory: "/tmp/operator-dsh-test-state",
+    stateDirectory: "/tmp/vcc-brain-dsh-test-state",
     tokenMeter: {
       measure: () => {
         throw new Error("no meter in this test");
@@ -63,7 +63,7 @@ describe("session-event tool counter", () => {
 
     await dispatchSessionEvent(
       session,
-      { type: "tool/call", data: { callId: "c2", name: "operator-recall" } },
+      { type: "tool/call", data: { callId: "c2", name: "vcc-brain-recall" } },
       d,
       runtime,
     );
@@ -120,7 +120,7 @@ describe("session-event tool counter", () => {
     const { readFile } = await import("node:fs/promises");
     const { join } = await import("node:path");
     const log = await readFile(
-      join("/tmp/operator-dsh-test-state", "context-log", `${session.id}.log`),
+      join("/tmp/vcc-brain-dsh-test-state", "context-log", `${session.id}.log`),
       "utf8",
     );
     const receipt = JSON.parse(log.trim().split("\n").pop() as string) as {
@@ -164,7 +164,7 @@ describe("session-event tool counter", () => {
       const { readFile } = await import("node:fs/promises");
       const { join } = await import("node:path");
       const log = await readFile(
-        join("/tmp/operator-dsh-test-state", "context-log", `${session.id}.log`),
+        join("/tmp/vcc-brain-dsh-test-state", "context-log", `${session.id}.log`),
         "utf8",
       );
       const receipt = JSON.parse(log.trim().split("\n").pop() as string) as { engine: string };
@@ -192,7 +192,7 @@ describe("session-event tool counter", () => {
     const { readFile } = await import("node:fs/promises");
     const { join } = await import("node:path");
     const log = await readFile(
-      join("/tmp/operator-dsh-test-state", "context-log", `${session.id}.log`),
+      join("/tmp/vcc-brain-dsh-test-state", "context-log", `${session.id}.log`),
       "utf8",
     );
     const receipt = JSON.parse(log.trim().split("\n").pop() as string) as { engine: string };

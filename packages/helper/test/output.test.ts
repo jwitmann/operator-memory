@@ -6,7 +6,7 @@ test("renders borderless plaintext tables", () => {
   expect(
     renderTable([
       ["Name", "Status"],
-      ["Operator", "Ready"],
+      ["VCC Brain", "Ready"],
     ]),
-  ).toBe("Name      Status\nOperator  Ready");
+  ).toBe("Name       Status\nVCC Brain  Ready");
 });

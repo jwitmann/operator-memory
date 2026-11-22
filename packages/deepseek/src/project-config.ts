@@ -1,8 +1,8 @@
 import { readFile, stat } from "node:fs/promises";
 
-import { projectConfigPaths } from "@jwitmann/operator-core/memory/roots";
+import { projectConfigPaths } from "@jwitmann/vcc-brain-core/memory/roots";
 
-import { parseProjectConfig, type OperatorDeepseekConfig } from "./config.ts";
+import { parseProjectConfig, type VccBrainDeepseekConfig } from "./config.ts";
 
 // Optional per-project override: `<project>/.vcc-brain/config.json` (legacy
 // `<project>/.operator/config.json` also checked — see projectConfigPaths),
@@ -19,7 +19,7 @@ import { parseProjectConfig, type OperatorDeepseekConfig } from "./config.ts";
 
 type CacheEntry = {
   readonly stamp: string;
-  readonly config: OperatorDeepseekConfig;
+  readonly config: VccBrainDeepseekConfig;
 };
 
 const cache = new Map<string, CacheEntry>();
@@ -44,9 +44,9 @@ async function findConfigFile(
 
 export async function resolveProjectConfig(
   projectDirectory: string,
-  profile: OperatorDeepseekConfig,
+  profile: VccBrainDeepseekConfig,
   warn: (message: string) => void,
-): Promise<OperatorDeepseekConfig> {
+): Promise<VccBrainDeepseekConfig> {
   const found = await findConfigFile(projectDirectory);
   if (found === null) {
     cache.delete(projectDirectory);
@@ -83,7 +83,7 @@ export async function resolveProjectConfig(
 
 function warnOnce(warn: (message: string) => void, path: string, detail: string): void {
   try {
-    warn(`operator-memory: ignoring invalid project config at ${path}: ${detail}`.slice(0, 500));
+    warn(`vcc-brain: ignoring invalid project config at ${path}: ${detail}`.slice(0, 500));
   } catch {
     // Logging must never break the hot path.
   }
@@ -93,7 +93,7 @@ function warnOnce(warn: (message: string) => void, path: string, detail: string)
 // config for this directory, or the profile config when never resolved.
 export function cachedProjectConfig(
   projectDirectory: string,
-  profile: OperatorDeepseekConfig,
-): OperatorDeepseekConfig {
+  profile: VccBrainDeepseekConfig,
+): VccBrainDeepseekConfig {
   return cache.get(projectDirectory)?.config ?? profile;
 }

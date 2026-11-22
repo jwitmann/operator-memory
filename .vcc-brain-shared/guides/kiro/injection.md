@@ -38,7 +38,7 @@ Consequence: functional installation targets are `$HOME/.kiro/hooks/`, `$HOME/.k
 
 ## Custom Agent Profiles
 
-Reference findings, not an Operator integration position; Operator does not install custom agents or require their use.
+Reference findings, not a VCC Brain integration position; VCC Brain does not install custom agents or require their use.
 
 - The [configuration reference](https://kiro.dev/docs/custom-agents/configuration-reference.md#hooks-field) documents profile-local `hooks.agentSpawn` and `userPromptSubmit` arrays, and [current examples](https://kiro.dev/docs/custom-agents/examples.md) embed a modern `hooks` array using `SessionStart` and `UserPromptSubmit`. Both forms injected output when the tested Markdown profiles ran as main agents; neither ran when those same profiles were delegated.
 - Official pages conflict on profile-hook IDE support, legacy migration, and custom-agent resource inheritance.

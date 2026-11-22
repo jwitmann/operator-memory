@@ -33,7 +33,7 @@ const gitLayer = makeGitRunnerLayer(arguments_ => {
 const services = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, gitLayer);
 
 beforeEach(() => {
-  directory = mkdtempSync(join(tmpdir(), "operator-helper-git-"));
+  directory = mkdtempSync(join(tmpdir(), "vcc-brain-helper-git-"));
   configuredIgnore = null;
   tracked = "";
   trackedError = null;
@@ -67,7 +67,7 @@ test("configures and preserves the fallback global ignore", async () => {
 
   expect(await run(ensureGlobalIgnore(directory, xdg))).toBe("configured");
   expect(readFileSync(ignore, "utf8")).toBe(
-    "node_modules/\n# Operator: Ignore private partition\n.vcc-brain/\n.operator/\n",
+    "node_modules/\n# VCC Brain: Ignore private partition\n.vcc-brain/\n.operator/\n",
   );
   expect(await run(ensureGlobalIgnore(directory, xdg))).toBe("present");
   expect(readFileSync(ignore, "utf8").match(/\.vcc-brain\//g)).toHaveLength(1);
@@ -76,12 +76,12 @@ test("configures and preserves the fallback global ignore", async () => {
 test("uses the default home configuration path", async () => {
   expect(await run(ensureGlobalIgnore(directory, null))).toBe("configured");
   expect(readFileSync(join(directory, ".config", "git", "ignore"), "utf8")).toBe(
-    "# Operator: Ignore private partition\n.vcc-brain/\n.operator/\n",
+    "# VCC Brain: Ignore private partition\n.vcc-brain/\n.operator/\n",
   );
 });
 
 test("reports tracked private files and Git failures", async () => {
-  tracked = ".operator/operator.md\n";
+  tracked = ".operator/vcc-brain.md\n";
   expect(await run(hasTrackedPrivateFiles(directory))).toBe(true);
 
   tracked = "";

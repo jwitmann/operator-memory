@@ -13,6 +13,7 @@ import type { CliContext } from "../../utils.ts";
 import { fileErrorMessage, fileFailure } from "../common.ts";
 import { resolveEffectivePartition } from "./brain-roots.ts";
 import {
+  BRAIN_INSTRUCTIONS_FILENAME,
   CORE_FILES,
   PRIVATE_LEGACY_ROOT,
   PRIVATE_ROOT,
@@ -44,7 +45,7 @@ export const projectInit = Effect.fn("projectInit")((context: CliContext) =>
     yield* ensureDirectory(privateRoot);
 
     const templates = {
-      "operator.md": readTemplate(TemplatePath.ProjectOperator),
+      [BRAIN_INSTRUCTIONS_FILENAME]: readTemplate(TemplatePath.ProjectVccBrain),
       "index/index.md": readTemplate(TemplatePath.ProjectIndex),
       "catalog.md": readTemplate(TemplatePath.ProjectCatalog),
     } satisfies Record<(typeof CORE_FILES)[number], string>;

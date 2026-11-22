@@ -16,7 +16,7 @@ const { emitToast, loadMemorySnapshot, loadPreamble } = vi.hoisted(() => ({
   ),
 }));
 
-vi.mock("@jwitmann/operator-core/memory/load", () => ({ loadMemorySnapshot }));
+vi.mock("@jwitmann/vcc-brain-core/memory/load", () => ({ loadMemorySnapshot }));
 vi.mock("../src/preamble.ts", () => ({ loadPreamble }));
 vi.mock("node:fs/promises", async () => {
   const { fs: memoryFileSystem } = await import("memfs");
@@ -32,7 +32,7 @@ vi.mock("node:fs/promises", async () => {
   };
 });
 
-import OperatorPlugin from "../src/index.ts";
+import VccBrainPlugin from "../src/index.ts";
 
 beforeEach(() => {
   vol.reset();
@@ -58,13 +58,13 @@ test("registers commands and injects the preamble through the context hook", asy
     session: { hook: sessionHook },
   } as unknown as Context;
 
-  await OperatorPlugin.setup(context);
+  await VccBrainPlugin.setup(context);
 
   expect(commandTransform).toHaveBeenCalledOnce();
   expect(addCommand.mock.calls.map(([command]) => command.name)).toEqual([
-    "operator:user-init",
-    "operator:project-init",
-    "operator:index",
+    "vcc-brain:user-init",
+    "vcc-brain:project-init",
+    "vcc-brain:index",
   ]);
   expect(sessionHook).toHaveBeenCalledWith("context", expect.any(Function));
   const hook = sessionHook.mock.calls[0]?.[1];
@@ -98,7 +98,7 @@ test("emits one recovery toast for a failed session", async () => {
     session: { hook: sessionHook },
   } as unknown as Context;
 
-  await OperatorPlugin.setup(context);
+  await VccBrainPlugin.setup(context);
   const hook = sessionHook.mock.calls[0]?.[1];
   await hook({ sessionID: "failed-session", system: [] });
   await hook({ sessionID: "failed-session", system: [] });
@@ -106,7 +106,7 @@ test("emits one recovery toast for a failed session", async () => {
   expect(emitToast).toHaveBeenCalledTimes(1);
   expect(emitToast).toHaveBeenCalledWith(
     "toast",
-    expect.objectContaining({ title: "Operator Error", variant: "error" }),
+    expect.objectContaining({ title: "VCC Brain Error", variant: "error" }),
   );
 });
 
@@ -119,7 +119,7 @@ function enabledContext(contextManagement: Record<string, unknown>) {
   const toolTransform = vi.fn(async callback => callback({ namespace: vi.fn(), add: vi.fn() }));
   const context = {
     location: { directory: "/project" },
-    options: { operator: { contextManagement } },
+    options: { "vcc-brain": { contextManagement } },
     command: {
       list: () => Promise.resolve({ data: [], location: { directory: "/project" } }),
       transform: vi.fn(),
@@ -136,7 +136,7 @@ function enabledContext(contextManagement: Record<string, unknown>) {
 test("registers context management hooks and tools when enabled", async () => {
   const { context, sessionHook, subscribe, toolTransform } = enabledContext({ enabled: true });
 
-  await OperatorPlugin.setup(context);
+  await VccBrainPlugin.setup(context);
 
   expect(sessionHook.mock.calls.map(([name]) => name)).toEqual([
     "context",
@@ -159,7 +159,7 @@ test("stays inert when disabled", async () => {
     session: { hook: sessionHook },
   } as unknown as Context;
 
-  await OperatorPlugin.setup(context);
+  await VccBrainPlugin.setup(context);
 
   expect(sessionHook).toHaveBeenCalledOnce();
   expect(sessionHook).toHaveBeenCalledWith("context", expect.any(Function));
@@ -169,7 +169,7 @@ test("toasts on invalid context management options", async () => {
   const sessionHook = vi.fn();
   const context = {
     location: { directory: "/project" },
-    options: { operator: { contextManagement: { enabled: "yes" } } },
+    options: { "vcc-brain": { contextManagement: { enabled: "yes" } } },
     command: {
       list: () => Promise.resolve({ data: [], location: { directory: "/project" } }),
       transform: vi.fn(),
@@ -179,12 +179,12 @@ test("toasts on invalid context management options", async () => {
   } as unknown as Context;
   emitToast.mockClear();
 
-  await OperatorPlugin.setup(context);
+  await VccBrainPlugin.setup(context);
 
   expect(sessionHook).toHaveBeenCalledOnce();
   expect(emitToast).toHaveBeenCalledWith(
     "toast",
-    expect.objectContaining({ title: "Operator Error", variant: "error" }),
+    expect.objectContaining({ title: "VCC Brain Error", variant: "error" }),
   );
 });
 
@@ -225,7 +225,7 @@ test("trims only when the Brain is initialized", async () => {
       hardCapTokens: 2000,
       keepRecentTurns: 0,
     });
-    await OperatorPlugin.setup(context);
+    await VccBrainPlugin.setup(context);
     const [preambleHook, trimHook] = sessionHook.mock.calls.map(([, hook]) => hook) as [
       (event: unknown) => Promise<void>,
       (event: unknown) => Promise<void>,
@@ -257,13 +257,13 @@ test("teardown marks the old setup stale and the new setup still enforces", asyn
   });
 
   const first = enabledContext({ enabled: true });
-  const cleanup = (await OperatorPlugin.setup(first.context)) as unknown as
+  const cleanup = (await VccBrainPlugin.setup(first.context)) as unknown as
     | (() => void)
     | undefined;
   expect(typeof cleanup).toBe("function");
 
   const second = enabledContext({ enabled: true });
-  await OperatorPlugin.setup(second.context);
+  await VccBrainPlugin.setup(second.context);
 
   // Old preamble hook is stale: it must not inject a second preamble.
   const oldPreamble = first.sessionHook.mock.calls[0]?.[1] as (event: {
@@ -294,7 +294,7 @@ test("registers step tracking without enforcement hooks when only refresh is on"
   const subscribe = vi.fn(() => emptyStream());
   const context = {
     location: { directory: "/project" },
-    options: { operator: { preambleRefresh: { enabled: true } } },
+    options: { "vcc-brain": { preambleRefresh: { enabled: true } } },
     command: {
       list: () => Promise.resolve({ data: [], location: "/project" }),
       transform: vi.fn(),
@@ -305,7 +305,7 @@ test("registers step tracking without enforcement hooks when only refresh is on"
     model: { list: vi.fn(async () => ({ data: [] })) },
   } as unknown as Context;
 
-  await OperatorPlugin.setup(context);
+  await VccBrainPlugin.setup(context);
 
   // Preamble hook only; no trim, compaction, completion, or tool wiring.
   expect(sessionHook.mock.calls.map(([name]) => name)).toEqual(["context"]);
@@ -324,7 +324,7 @@ test("refreshes the preamble end to end when the Brain changes cold", async () =
   const sessionHook = vi.fn();
   const context = {
     location: { directory: "/project" },
-    options: { operator: { preambleRefresh: { enabled: true } } },
+    options: { "vcc-brain": { preambleRefresh: { enabled: true } } },
     command: {
       list: () => Promise.resolve({ data: [], location: "/project" }),
       transform: vi.fn(),
@@ -334,7 +334,7 @@ test("refreshes the preamble end to end when the Brain changes cold", async () =
     event: { subscribe: vi.fn(() => emptyStream()) },
     model: { list: vi.fn(async () => ({ data: [] })) },
   } as unknown as Context;
-  await OperatorPlugin.setup(context);
+  await VccBrainPlugin.setup(context);
 
   const hook = sessionHook.mock.calls[0]?.[1] as (event: {
     sessionID: string;
@@ -351,7 +351,7 @@ test("refreshes the preamble end to end when the Brain changes cold", async () =
   expect(loadPreamble).toHaveBeenCalledTimes(1);
 
   fs.mkdirSync("/project/.vcc-brain", { recursive: true });
-  fs.writeFileSync("/project/.vcc-brain/operator.md", "# changed");
+  fs.writeFileSync("/project/.vcc-brain/vcc-brain.md", "# changed");
 
   const event = {
     sessionID: "ses-refresh-e2e",
@@ -363,8 +363,8 @@ test("refreshes the preamble end to end when the Brain changes cold", async () =
   // Initial load, cached re-load, then the refresh re-render.
   expect(loadPreamble).toHaveBeenCalledTimes(3);
   expect(event.system).toEqual([{ type: "text", text: "operator preamble" }]);
-  const { readReceipts } = await import("@jwitmann/operator-core/context/receipts");
-  const { resolveStateDirectory } = await import("@jwitmann/operator-core/memory/roots");
+  const { readReceipts } = await import("@jwitmann/vcc-brain-core/context/receipts");
+  const { resolveStateDirectory } = await import("@jwitmann/vcc-brain-core/memory/roots");
   const { join } = await import("node:path");
   const { homedir } = await import("node:os");
   const receipts = await readReceipts(

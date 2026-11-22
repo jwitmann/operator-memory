@@ -1,5 +1,5 @@
 {
-  "name": "operator-local",
+  "name": "vcc-brain-local",
   "plugins": [
     {
       "name": "jwitmann",

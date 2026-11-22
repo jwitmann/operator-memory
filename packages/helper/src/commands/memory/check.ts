@@ -1,4 +1,4 @@
-import { loadMemorySnapshot, type MemorySnapshot } from "@jwitmann/operator-core/memory/load";
+import { loadMemorySnapshot, type MemorySnapshot } from "@jwitmann/vcc-brain-core/memory/load";
 import { Effect } from "effect";
 
 import { type CliContext, getErrorMessage } from "../../utils.ts";

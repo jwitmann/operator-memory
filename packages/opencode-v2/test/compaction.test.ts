@@ -1,4 +1,4 @@
-import { readReceipts } from "@jwitmann/operator-core/context/receipts";
+import { readReceipts } from "@jwitmann/vcc-brain-core/context/receipts";
 import { vol } from "memfs";
 import { beforeEach, expect, test, vi } from "vitest";
 
@@ -144,7 +144,7 @@ test("shapes the request and leaves messages intact", async () => {
   expect(event.system).toHaveLength(2);
   const instructions = event.system[1]?.text ?? "";
   expect(instructions).toContain("~/.vcc-brain/user");
-  expect(instructions).toContain("operator-read_omitted");
+  expect(instructions).toContain("vcc-brain-read_omitted");
   expect(event.messages).toHaveLength(3);
   expect(event.result).toBeNull();
 

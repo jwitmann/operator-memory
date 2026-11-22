@@ -10,7 +10,7 @@ test("compaction prompt references Brain paths without inlining content", () => 
 
   expect(prompt).toContain("~/.operator/user");
   expect(prompt).toContain(".operator-shared");
-  expect(prompt).toContain("operator-read_omitted");
+  expect(prompt).toContain("vcc-brain-read_omitted");
   expect(prompt).toContain("Compaction is lossy; the Brain is not.");
 });
 
@@ -20,7 +20,7 @@ test("compaction prompt accepts an adapter-specific recovery rule", () => {
     recoveryRule: "Recover via the bespoke-widget tool.",
   });
   expect(prompt).toContain("Recover via the bespoke-widget tool.");
-  expect(prompt).not.toContain("operator-read_omitted");
+  expect(prompt).not.toContain("vcc-brain-read_omitted");
 });
 
 test("compaction prompt preserves omission notices verbatim", () => {

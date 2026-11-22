@@ -1,6 +1,6 @@
-import { loadMemorySnapshot } from "@jwitmann/operator-core/memory/load";
-import { resolveBrainRoots } from "@jwitmann/operator-core/memory/roots";
-import { renderPreamble } from "@jwitmann/operator-core/preamble";
+import { loadMemorySnapshot } from "@jwitmann/vcc-brain-core/memory/load";
+import { resolveBrainRoots } from "@jwitmann/vcc-brain-core/memory/roots";
+import { renderPreamble } from "@jwitmann/vcc-brain-core/preamble";
 import { Effect } from "effect";
 
 import type { CliContext } from "../utils.ts";

@@ -1,6 +1,6 @@
-import { loadMemorySnapshot } from "@jwitmann/operator-core/memory/load";
-import { resolveBrainRoots } from "@jwitmann/operator-core/memory/roots";
-import { renderPreamble, type RenderedPreamble } from "@jwitmann/operator-core/preamble";
+import { loadMemorySnapshot } from "@jwitmann/vcc-brain-core/memory/load";
+import { resolveBrainRoots } from "@jwitmann/vcc-brain-core/memory/roots";
+import { renderPreamble, type RenderedPreamble } from "@jwitmann/vcc-brain-core/preamble";
 
 import { failure, type Result, success } from "./utils.ts";
 
@@ -51,7 +51,7 @@ async function readPreamble(
     );
   } catch (cause) {
     return failure({
-      message: "Operator failed to create the session preamble.",
+      message: "VCC Brain failed to create the session preamble.",
       path: null,
       cause,
     });

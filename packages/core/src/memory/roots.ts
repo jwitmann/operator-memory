@@ -15,6 +15,8 @@ export const USER_DISPLAY = `~/${USER_HOME_ROOT}/user`;
 export const USER_LEGACY_DISPLAY = `~/${USER_HOME_LEGACY_ROOT}/user`;
 
 export const PROJECT_CONFIG_FILE = "config.json";
+export const BRAIN_INSTRUCTIONS_FILENAME = "vcc-brain.md";
+const BRAIN_INSTRUCTIONS_LEGACY_FILENAME = "operator.md";
 export const PROJECT_CONFIG_PRIMARY_RELATIVE_PATH = join(PROJECT_PRIVATE_ROOT, PROJECT_CONFIG_FILE);
 export const PROJECT_CONFIG_LEGACY_RELATIVE_PATH = join(
   PROJECT_PRIVATE_LEGACY_ROOT,
@@ -34,6 +36,22 @@ export type ResolvedBrainRoots = {
   readonly sharedLegacyAlsoExists: boolean;
   readonly userLegacyAlsoExists: boolean;
 };
+
+// Inner instructions-file twin of the brain-root policy: vcc-brain.md wins
+// when present, legacy operator.md is read when the new name is absent
+// (unmigrated brains). Any other failure keeps the primary path so the
+// loader surfaces the real error instead of a misleading legacy one.
+export async function resolveInstructionsPath(root: string): Promise<string> {
+  const primary = join(root, BRAIN_INSTRUCTIONS_FILENAME);
+  try {
+    await stat(primary);
+    return primary;
+  } catch (cause) {
+    return hasNodeErrorCode(cause, "ENOENT")
+      ? join(root, BRAIN_INSTRUCTIONS_LEGACY_FILENAME)
+      : primary;
+  }
+}
 
 // Pure precedence policy shared by the async and sync resolvers below:
 // primary wins whenever it exists, legacy is reused only when primary is

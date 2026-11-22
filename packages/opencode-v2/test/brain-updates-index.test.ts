@@ -20,7 +20,7 @@ const { emitToast, loadMemorySnapshot, loadPreamble } = vi.hoisted(() => ({
   ),
 }));
 
-vi.mock("@jwitmann/operator-core/memory/load", () => ({ loadMemorySnapshot }));
+vi.mock("@jwitmann/vcc-brain-core/memory/load", () => ({ loadMemorySnapshot }));
 vi.mock("../src/preamble.ts", () => ({ loadPreamble }));
 vi.mock("node:fs/promises", async () => {
   const { fs: memoryFileSystem } = await import("memfs");
@@ -35,8 +35,8 @@ vi.mock("node:fs/promises", async () => {
   };
 });
 
-import OperatorPlugin from "../src/index.ts";
-import type { RequestMessage } from "@jwitmann/operator-core/context/tokens";
+import VccBrainPlugin from "../src/index.ts";
+import type { RequestMessage } from "@jwitmann/vcc-brain-core/context/tokens";
 
 beforeEach(() => {
   vol.reset();
@@ -52,7 +52,7 @@ function seedBrain(): void {
     `${HOME}/.vcc-brain/user`,
   ]) {
     fs.mkdirSync(`${root}/index`, { recursive: true });
-    fs.writeFileSync(`${root}/operator.md`, `# ops ${root}`);
+    fs.writeFileSync(`${root}/vcc-brain.md`, `# ops ${root}`);
     fs.writeFileSync(`${root}/catalog.md`, `# catalog ${root}`);
     if (!root.endsWith("user")) {
       fs.writeFileSync(`${root}/index/index.md`, `# index ${root}`);
@@ -86,7 +86,7 @@ test("wires the enabled Brain-update threshold through the preamble hook", async
   const sessionHook = vi.fn();
   const context = {
     location: { directory: PROJECT },
-    options: { operator: { brainUpdates: { enabled: true, toolCallThreshold: 25 } } },
+    options: { "vcc-brain": { brainUpdates: { enabled: true, toolCallThreshold: 25 } } },
     command: {
       list: () => Promise.resolve({ data: [], location: { directory: PROJECT } }),
       transform: vi.fn(),
@@ -95,7 +95,7 @@ test("wires the enabled Brain-update threshold through the preamble hook", async
     session: { hook: sessionHook },
   } as unknown as Context;
 
-  await OperatorPlugin.setup(context);
+  await VccBrainPlugin.setup(context);
   const hook = sessionHook.mock.calls[0]?.[1] as (event: {
     sessionID: string;
     system: { type: string; text: string }[];
@@ -116,5 +116,5 @@ test("wires the enabled Brain-update threshold through the preamble hook", async
     messages: completedMessages(25),
   };
   await hook(reminded);
-  expect(reminded.system[0]?.text).toContain("<operator-brain-update-reminder>");
+  expect(reminded.system[0]?.text).toContain("<vcc-brain-brain-update-reminder>");
 });

@@ -1,10 +1,10 @@
-# Operator Memory
+# VCC Brain
 
-> Operator Memory: Durable context for agent-driven development.
+> VCC Brain: Durable context for agent-driven development.
 
-This directory holds project knowledge and instructions used by Operator Memory. Operator Memory turns agent work into lasting project knowledge—instructions, specifications, codebase indexes, and related documents agents own and maintain.
+This directory holds project knowledge and instructions used by VCC Brain. VCC Brain turns agent work into lasting project knowledge—instructions, specifications, codebase indexes, and related documents agents own and maintain.
 
-##### Learn more: <https://github.com/jwitmann/operator-memory>
+##### Learn more: <https://github.com/jwitmann/vcc-brain>
 
 ---
 
@@ -12,29 +12,29 @@ Install now:
 
 ```sh
 # With NPM
-npm install --global @jwitmann/operator-helper
+npm install --global @jwitmann/vcc-brain-helper
 
 # With Bun
-bun add --global --minimum-release-age 0 @jwitmann/operator-helper@latest
+bun add --global --minimum-release-age 0 @jwitmann/vcc-brain-helper@latest
 
 # Install Claude Code plugin
-operator-helper install claude-code
+vcc-brain-helper install claude-code
 
 # Install Codex plugin
-operator-helper install codex
+vcc-brain-helper install codex
 
 # Install OpenCode plugin
-operator-helper install opencode
+vcc-brain-helper install opencode
 
 # Install legacy OpenCode V1 plugin
-operator-helper install opencode-v1
+vcc-brain-helper install opencode-v1
 
 # Install Pi plugin
-operator-helper install pi
+vcc-brain-helper install pi
 
 # Install DeepSeek Harness plugin
-operator-helper install deepseek
+vcc-brain-helper install deepseek
 
 # Install Kiro adapter
-operator-helper install kiro
+vcc-brain-helper install kiro
 ```

@@ -15,7 +15,7 @@ A directory with root `plugin.json` is the minimal portable package. Declare `na
 }
 ```
 
-Optional components are `hooks.json`, `skills/<name>/SKILL.md`, `agents/*.md`, `rules/*.md`, and `mcp_config.json`. Operator's native hook/skill binding needs no MCP server or custom agent requirement.
+Optional components are `hooks.json`, `skills/<name>/SKILL.md`, `agents/*.md`, `rules/*.md`, and `mcp_config.json`. VCC Brain's native hook/skill binding needs no MCP server or custom agent requirement.
 
 Recent CLI also documents alternate `.antigravity-plugin/` and `.gemini-plugin/` manifest directories, explicit manifest skills, per-plugin data, agent-side `bin/` tools, and customization manifests (`skills.json`, `rules.json`, `agents.json`). Their full cross-surface contracts are not established. In particular, agent facilities do not establish `PLUGIN_DATA` or bin-path behavior for shell hooks; see [Runtime](./hooks.md#execution-environment).
 

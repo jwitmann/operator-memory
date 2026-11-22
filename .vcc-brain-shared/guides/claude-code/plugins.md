@@ -2,16 +2,16 @@
 
 Last Updated: November 3, 2026
 
-Packaging, distribution, installation, and updates for the Operator plugin.
+Packaging, distribution, installation, and updates for the VCC Brain plugin.
 
 ## Plugin layout
 
 ```text
-operator/
+vcc-brain/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── commands/           # slash command markdown
-├── skills/             # SKILL.md folders, invocable as /operator:<skill>
+├── skills/             # SKILL.md folders, invocable as /vcc-brain:<skill>
 ├── hooks/
 │   └── hooks.json      # SessionStart/SubagentStart command hooks
 └── README.md
@@ -19,9 +19,9 @@ operator/
 
 ## Manifest
 
-`.claude-plugin/plugin.json`. Fields Operator needs:
+`.claude-plugin/plugin.json`. Fields VCC Brain needs:
 
-- `name` (required) — kebab-case, must match `^[a-z][a-z0-9]*(-[a-z0-9]+)*$`; `operator` is likely too generic for marketplaces — plan a unique name and record it in the binding spec
+- `name` (required) — kebab-case, must match `^[a-z][a-z0-9]*(-[a-z0-9]+)*$`; `operator` was deemed too generic for marketplaces, so `vcc-brain` was chosen — record any future rename in the binding spec
 - `version` — semver, defaults `0.1.0`
 - `description` — 50-200 characters, marketplace display
 - `author`, `homepage`, `repository` (string or `{type, url, directory}`), `license` (SPDX, `BSD-3-Clause`)
@@ -34,7 +34,7 @@ Relative paths must start with `./`. Components are auto-discovered from their c
 
 ## Development workflow
 
-- `claude --plugin-dir <path>` loads a plugin directory for one session without installing — the local preview mechanism for the Operator package
+- `claude --plugin-dir <path>` loads a plugin directory for one session without installing — the local preview mechanism for the VCC Brain package
 - `/reload-plugins` reloads plugins mid-session (warns when it would invalidate the prompt cache; `--force` overrides)
 - `claude plugin validate <dir>` statically validates the manifest and configuration, and for mods lists handled events and API calls. Live-verified behavior: the analyzer resolves call sites wrapped in local helper functions (e.g. `$.fs.write ... (via log)`), so non-inline-but-static calls pass; it accepts `agent.spawn` handlers; the only warning on an otherwise minimal manifest is a missing `author` field
 - `claude --debug` surfaces load failures
@@ -44,24 +44,24 @@ Relative paths must start with `./`. Components are auto-discovered from their c
 
 A marketplace is a repo or JSON file with `.claude-plugin/marketplace.json` listing plugins and sources. Accepted plugin sources include GitHub/git repos (with `#ref` pinning), npm packages, local directories, direct URLs, and `command` sources. Anthropic reserves official marketplace names (`claude-plugins-official`, etc.); third-party marketplaces cannot use them.
 
-For Operator: a `jwitmann/operator` marketplace repository (GitHub) whose `marketplace.json` points at the plugin — the same shape as the Codex local-marketplace flow. npm is also a source type, matching the workspace's npm publishing pipeline; choose per the release spec.
+For VCC Brain: a `jwitmann/vcc-brain` marketplace repository (GitHub) whose `marketplace.json` points at the plugin — the same shape as the Codex local-marketplace flow. npm is also a source type, matching the workspace's npm publishing pipeline; choose per the release spec.
 
 ## Installation
 
 In session: `/plugin install <name>@<marketplace>` (opens review UI), or the `/plugin` Discover tab. From the shell, scriptable:
 
 ```bash
-claude plugin marketplace add jwitmann/operator
-claude plugin install <plugin-name>@jwitmann/operator
+claude plugin marketplace add jwitmann/vcc-brain
+claude plugin install <plugin-name>@jwitmann/vcc-brain
 ```
 
 Scopes: user (`~/.claude/settings.json`, all projects), project (`.claude/settings.json`, committed; collaborators still install once with `--scope project`), local (`.claude/settings.local.json`). Scope precedence: local > project > user. Plugins land under `~/.claude/plugins/`.
 
-For Helper's `operator-helper install claude-code`: run the shell `claude plugin` commands (marketplace add + install, default user scope), then verify with `claude plugin list`. `--yes` accepts `command`-source confirmation prompts in scripts.
+For Helper's `vcc-brain-helper install claude-code`: run the shell `claude plugin` commands (marketplace add + install, default user scope), then verify with `claude plugin list`. `--yes` accepts `command`-source confirmation prompts in scripts.
 
-Live-verified on v2.1.287: a Helper-fabricated marketplace can use `source: "./node_modules/@jwitmann/operator-claude-code"` after npm installs the adapter under that marketplace root. `claude plugin marketplace add` is repeatable for the same local path. Follow install with `claude plugin update operator@operator-memory` to refresh an existing installation. `claude plugin list --json` returns an array with `id`, `enabled`, `version`, and `installPath`; verify the matching `id` is enabled. First and repeated installs passed against a packed adapter served by a temporary npm registry in an isolated home/config environment.
+Live-verified on v2.1.287: a Helper-fabricated marketplace can use `source: "./node_modules/@jwitmann/vcc-brain-claude-code"` after npm installs the adapter under that marketplace root. `claude plugin marketplace add` is repeatable for the same local path. Follow install with `claude plugin update vcc-brain@vcc-brain` to refresh an existing installation. `claude plugin list --json` returns an array with `id`, `enabled`, `version`, and `installPath`; verify the matching `id` is enabled. First and repeated installs passed against a packed adapter served by a temporary npm registry in an isolated home/config environment.
 
-Direct npm installation syntax exists (`claude plugin install <package>@npm`, with `--registry` for a custom registry), but availability is account-gated. Both unsigned isolated and signed-in v2.1.287 probes returned `failureCode: "npm_marketplace_disabled"`. No supported user setting to enable it was found in the reviewed public docs. Ordinary marketplace entries with npm plugin sources work independently of this gate; first install, repeated install, and update passed with Claude owning the fetch and cache. Operator uses this ordinary npm-source pathway through the static repository catalog, not Helper's earlier local-marketplace/cache design. See [installation pathways](./installation.md) for the complete verified source/loading distinction.
+Direct npm installation syntax exists (`claude plugin install <package>@npm`, with `--registry` for a custom registry), but availability is account-gated. Both unsigned isolated and signed-in v2.1.287 probes returned `failureCode: "npm_marketplace_disabled"`. No supported user setting to enable it was found in the reviewed public docs. Ordinary marketplace entries with npm plugin sources work independently of this gate; first install, repeated install, and update passed with Claude owning the fetch and cache. VCC Brain uses this ordinary npm-source pathway through the static repository catalog, not Helper's earlier local-marketplace/cache design. See [installation pathways](./installation.md) for the complete verified source/loading distinction.
 
 ## Updates
 

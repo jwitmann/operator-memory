@@ -27,7 +27,7 @@ New portable packages use `plugin.json` at the plugin root with the Agent Plugin
 
 The older `.codex-plugin/plugin.json` format remains a compatibility fallback. When root `extensions.com.openai` exists, it replaces the compatibility overlay as the source of OpenAI-specific settings such as hooks, apps, and interface; portable defaults still supply skills and MCP paths, and legacy data is separately consulted for MCP environment allowlisting.
 
-Source finding: the installed-plugin loader suppresses hooks for portable `PluginManifestFormat::AgentPlugin` manifests; only the legacy manifest format loads lifecycle hooks (`core-plugins/src/loader.rs`). **Verified on real clients (September 2026): legacy `.codex-plugin/plugin.json` plugin hooks execute correctly on shipped Codex CLI and Codex Desktop.** Use the legacy manifest for the Operator plugin.
+Source finding: the installed-plugin loader suppresses hooks for portable `PluginManifestFormat::AgentPlugin` manifests; only the legacy manifest format loads lifecycle hooks (`core-plugins/src/loader.rs`). **Verified on real clients (September 2026): legacy `.codex-plugin/plugin.json` plugin hooks execute correctly on shipped Codex CLI and Codex Desktop.** Use the legacy manifest for the VCC Brain plugin.
 
 OpenAI's built-in `@plugin-creator` or `$plugin-creator` currently scaffolds the compatibility layout. Manual authoring supports the portable root layout.
 
@@ -71,7 +71,7 @@ Codex CLI supports:
 
 Installed plugin capabilities become available in a new chat or CLI session.
 
-Operator release installation uses a Helper-managed local marketplace whose `jwitmann` plugin entry resolves `@jwitmann/operator-codex@latest` from npm. Helper adds the marketplace, installs `jwitmann@operator-memory`, and verifies installed/enabled state through `codex plugin list --json`. Hook trust remains a native Codex decision.
+VCC Brain release installation uses a Helper-managed local marketplace whose `jwitmann` plugin entry resolves `@jwitmann/vcc-brain-codex@latest` from npm. Helper adds the marketplace, installs `jwitmann@vcc-brain`, and verifies installed/enabled state through `codex plugin list --json`. Hook trust remains a native Codex decision.
 
 ## Enablement
 

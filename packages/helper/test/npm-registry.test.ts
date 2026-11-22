@@ -16,13 +16,13 @@ test("resolves a concrete latest package version", async () => {
   const version = await Effect.runPromise(
     Effect.gen(function* () {
       const registry = yield* NpmRegistry.Service;
-      return yield* registry.latestVersion("@jwitmann/operator-opencode");
+      return yield* registry.latestVersion("@jwitmann/vcc-brain-opencode");
     }).pipe(Effect.provide(NpmRegistry.layer)),
   );
 
   expect(version).toBe("2.3.4");
   expect(fetch).toHaveBeenCalledWith(
-    "https://registry.npmjs.org/%40jwitmann%2Foperator-opencode/latest",
+    "https://registry.npmjs.org/%40jwitmann%2Fvcc-brain-opencode/latest",
     expect.objectContaining({ signal: expect.any(AbortSignal) }),
   );
 });
@@ -33,7 +33,7 @@ test("returns a typed failure for an invalid registry response", async () => {
   const result = await Effect.runPromise(
     Effect.gen(function* () {
       const registry = yield* NpmRegistry.Service;
-      return yield* registry.latestVersion("@jwitmann/operator-helper");
+      return yield* registry.latestVersion("@jwitmann/vcc-brain-helper");
     }).pipe(Effect.result, Effect.provide(NpmRegistry.layer)),
   );
 

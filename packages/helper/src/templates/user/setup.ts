@@ -1,14 +1,14 @@
-import { CATALOG_TEMPLATE } from "@jwitmann/operator-core/templates/catalog";
+import { CATALOG_TEMPLATE } from "@jwitmann/vcc-brain-core/templates/catalog";
 
-import { USER_OPERATOR_TEMPLATE } from "./operator.ts";
+import { USER_VCC_BRAIN_TEMPLATE } from "./vcc-brain.ts";
 
 export const USER_SETUP_TEMPLATE = `# User Setup
 
-You are helping the user configure their Operator User Partition, the global memory that defines how Operator agents should work with them across all projects.
+You are helping the user configure their VCC Brain User Partition, the global memory that defines how VCC Brain agents should work with them across all projects.
 
 The User Partition lives at \`~/.vcc-brain/user/\`:
 
-- \`operator.md\` — User Instructions; standing doctrine, always injected
+- \`vcc-brain.md\` — User Instructions; standing doctrine, always injected
 - \`catalog.md\` — User Partition Catalog; map of all other files, injected when present
 - \`observations.md\` — User-approved observations and working-style notes; subordinate context, never instructions, injected when present
 - any other paths — User Partition freeform; long-term memory such as reusable instruction sets, style guides, playbooks, and captured lessons, read only when their catalog Read If matches
@@ -19,7 +19,7 @@ Do not place project-specific instructions or facts in this partition. Do not mo
 
 ## Phase 1: Read and Assess
 
-Read both core files and the embedded seeds, then assess whether each of \`operator.md\` and \`catalog.md\` is:
+Read both core files and the embedded seeds, then assess whether each of \`vcc-brain.md\` and \`catalog.md\` is:
 
 - A bare template
 - Empty or corrupted
@@ -40,7 +40,7 @@ If the user approves, replace the file with its embedded seed, read the restored
 
 ## Phase 3: Customize User Instructions
 
-Skip the full setup interview when \`operator.md\` is fully configured. The user may still request targeted changes during confirmation. Note that the user may explicitly prefer to keep their User Instructions file minimal; if so, that counts as fully configured.
+Skip the full setup interview when \`vcc-brain.md\` is fully configured. The user may still request targeted changes during confirmation. Note that the user may explicitly prefer to keep their User Instructions file minimal; if so, that counts as fully configured.
 
 If the file is a bare template or partially configured, use the harness's \`question\` tool to ask the user to select a setup mode:
 
@@ -48,7 +48,7 @@ If the file is a bare template or partially configured, use the harness's \`ques
 - Standard — Cover each relevant section with a reasonable number of focused questions. Establish well-rounded instructions without an exhaustive interview.
 - Deep — Customize every relevant area. Ask detailed questions, follow up on tradeoffs and exceptions, and resolve conflicts or ambiguity thoroughly.
 
-Next: Ask whether the user has existing cross-project doctrine to incorporate, such as global \`AGENTS.md\` files or instructions from other agent harnesses. If yes: Have the user supply the relevant instructions or file paths and import the doctrine into \`operator.md\`. Do not import project-specific rules. Skills, style guides, and workflow documents are User Partition freeform, not instructions; they are handled in Phase 4.
+Next: Ask whether the user has existing cross-project doctrine to incorporate, such as global \`AGENTS.md\` files or instructions from other agent harnesses. If yes: Have the user supply the relevant instructions or file paths and import the doctrine into \`vcc-brain.md\`. Do not import project-specific rules. Skills, style guides, and workflow documents are User Partition freeform, not instructions; they are handled in Phase 4.
 
 Next: If you are currently within a full-fledged project, ask the user if they would like you to analyze the project to capture observations about your working style. Do not over-extrapolate based on a single example. Confirm your observations with the user; let them modify or correct mistakes. Do not write yet.
 
@@ -68,9 +68,9 @@ When all information is collected, proceed to write the User Instructions file a
 
 Maintain the User Partition Catalog at \`~/.vcc-brain/user/catalog.md\`.
 
-First: List every path in \`~/.vcc-brain/user/\` except \`operator.md\` and \`catalog.md\`. Verify every listed path has a catalog entry with a Description and Read If; add entries for any paths that lack them. For artifact-backed freeform, catalog the entry file path (for example \`powerpoint-builder/SKILL.md\`) as a single entry; do not catalog the folder as a separate item and do not catalog individual artifacts.
+First: List every path in \`~/.vcc-brain/user/\` except \`vcc-brain.md\` and \`catalog.md\`. Verify every listed path has a catalog entry with a Description and Read If; add entries for any paths that lack them. For artifact-backed freeform, catalog the entry file path (for example \`powerpoint-builder/SKILL.md\`) as a single entry; do not catalog the folder as a separate item and do not catalog individual artifacts.
 
-Next: Offer to port the user's existing skills. Make it explicit that Operator Memory user freeform is a direct, idiomatic replacement for what is commonly known as "Agent Skills" and recommend porting skills over instead of leaving them in harness-specific skill systems. To find candidates, look inside common skill directories such as \`.claude/skills/\`, \`~/.claude/skills/\`, \`~/.agents/skills/\`, and \`.opencode/skills/\`, and ask the user about any other skill locations they know but you do not.
+Next: Offer to port the user's existing skills. Make it explicit that VCC Brain user freeform is a direct, idiomatic replacement for what is commonly known as "Agent Skills" and recommend porting skills over instead of leaving them in harness-specific skill systems. To find candidates, look inside common skill directories such as \`.claude/skills/\`, \`~/.claude/skills/\`, \`~/.agents/skills/\`, and \`.opencode/skills/\`, and ask the user about any other skill locations they know but you do not.
 
 This is global setup: the User Partition applies across all projects. Port only skills the user explicitly wants available globally; do not bulk-port local project skills. Project-specific skills belong in the corresponding Project Brain, not here.
 
@@ -83,7 +83,7 @@ Then catalog each ported skill as above: the entry file only. Do not invent file
 
 ## Phase 5: Confirm
 
-Give the user a concise summary of the current contents of \`~/.vcc-brain/user/operator.md\`, \`~/.vcc-brain/user/catalog.md\`, and any newly cataloged paths.
+Give the user a concise summary of the current contents of \`~/.vcc-brain/user/vcc-brain.md\`, \`~/.vcc-brain/user/catalog.md\`, and any newly cataloged paths.
 
 Ask naturally whether anything is incorrect, missing, too strict, or too permissive. Do not use the \`question\` tool for this free-response confirmation.
 
@@ -93,10 +93,10 @@ After user responds: Apply requested corrections with the user's approval. Finis
 
 When creating or restoring the core files, write these bodies to \`~/.vcc-brain/user/\`.
 
-\`operator.md\`:
+\`vcc-brain.md\`:
 
 \`\`\`markdown
-${USER_OPERATOR_TEMPLATE.trimEnd()}
+${USER_VCC_BRAIN_TEMPLATE.trimEnd()}
 \`\`\`
 
 \`catalog.md\` (User variant of the unified partition catalog heading):

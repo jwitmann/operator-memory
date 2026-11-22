@@ -1,8 +1,8 @@
 {
-  "name": "@jwitmann/operator-core",
+  "name": "@jwitmann/vcc-brain-core",
   "version": "0.0.0",
   "private": true,
-  "description": "Harness-agnostic runtime core for Operator Memory",
+  "description": "Harness-agnostic runtime core for VCC Brain",
   "type": "module",
   "exports": {
     "./brain-updates": "./src/brain-updates.ts",

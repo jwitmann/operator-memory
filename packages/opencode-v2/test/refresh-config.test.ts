@@ -13,7 +13,7 @@ test("absent options yield the defaults, disabled", () => {
 
 test("parses an enabled block", () => {
   const result = parsePreambleRefreshConfig({
-    operator: { preambleRefresh: { enabled: true } },
+    "vcc-brain": { preambleRefresh: { enabled: true } },
   });
 
   expect(result.ok && result.value).toEqual({ enabled: true });
@@ -21,12 +21,12 @@ test("parses an enabled block", () => {
 
 test("rejects wrong-typed values instead of falling back", () => {
   const enabled = parsePreambleRefreshConfig({
-    operator: { preambleRefresh: { enabled: "yes" } },
+    "vcc-brain": { preambleRefresh: { enabled: "yes" } },
   });
   expect(enabled.ok).toBe(false);
 });
 
 test("rejects non-object blocks", () => {
-  const block = parsePreambleRefreshConfig({ operator: { preambleRefresh: [1, 2] } });
+  const block = parsePreambleRefreshConfig({ "vcc-brain": { preambleRefresh: [1, 2] } });
   expect(block.ok).toBe(false);
 });

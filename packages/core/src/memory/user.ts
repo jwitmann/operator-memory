@@ -7,10 +7,11 @@ import {
   readOptionalContent,
   type MemoryLoadError,
 } from "./common.ts";
+import { resolveInstructionsPath } from "./roots.ts";
 
 export type UserPartitionSnapshot = {
   readonly exists: boolean;
-  readonly operatorInstructions: string | null;
+  readonly brainInstructions: string | null;
   readonly catalog: string | null;
   readonly observations: string | null;
 };
@@ -44,7 +45,7 @@ export async function loadUserPartition(
     }
 
     for (const path of [
-      join(root, "operator.md"),
+      await resolveInstructionsPath(root),
       join(root, "catalog.md"),
       join(root, "observations.md"),
     ]) {
@@ -56,9 +57,9 @@ export async function loadUserPartition(
     return success({ exists: true });
   }
 
-  const operatorInstructions = await readOptionalContent(join(root, "operator.md"));
-  if (!operatorInstructions.ok) {
-    return operatorInstructions;
+  const brainInstructions = await readOptionalContent(await resolveInstructionsPath(root));
+  if (!brainInstructions.ok) {
+    return brainInstructions;
   }
   const catalog = await readOptionalContent(join(root, "catalog.md"));
   if (!catalog.ok) {
@@ -68,14 +69,10 @@ export async function loadUserPartition(
   if (!observations.ok) {
     return observations;
   }
-  if (
-    operatorInstructions.value !== null
-    || catalog.value !== null
-    || observations.value !== null
-  ) {
+  if (brainInstructions.value !== null || catalog.value !== null || observations.value !== null) {
     return success({
       exists: true,
-      operatorInstructions: operatorInstructions.value,
+      brainInstructions: brainInstructions.value,
       catalog: catalog.value,
       observations: observations.value,
     });
@@ -84,8 +81,8 @@ export async function loadUserPartition(
   const directory = await readDirectory(root);
   if (!directory.ok) {
     return hasNodeErrorCode(directory.error.cause, "ENOENT")
-      ? success({ exists: false, operatorInstructions: null, catalog: null, observations: null })
+      ? success({ exists: false, brainInstructions: null, catalog: null, observations: null })
       : directory;
   }
-  return success({ exists: true, operatorInstructions: null, catalog: null, observations: null });
+  return success({ exists: true, brainInstructions: null, catalog: null, observations: null });
 }

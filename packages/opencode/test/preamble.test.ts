@@ -15,11 +15,11 @@ afterEach(async () => {
 });
 
 test("returns an immutable preamble for each session", async () => {
-  const projectDirectory = await temporaryDirectory("operator-project-");
-  const homeDirectory = await temporaryDirectory("operator-home-");
+  const projectDirectory = await temporaryDirectory("vcc-brain-project-");
+  const homeDirectory = await temporaryDirectory("vcc-brain-home-");
   const privateRoot = join(projectDirectory, ".operator");
   await mkdir(privateRoot);
-  await writeFile(join(privateRoot, "operator.md"), "original instructions");
+  await writeFile(join(privateRoot, "vcc-brain.md"), "original instructions");
 
   const cache = new Map<string, ReturnType<typeof loadPreamble>>();
   const first = await loadPreamble({
@@ -35,7 +35,7 @@ test("returns an immutable preamble for each session", async () => {
   expect(first.value.loaded).toBe(true);
   expect(first.value.content).toContain("original instructions");
 
-  await writeFile(join(privateRoot, "operator.md"), "changed instructions");
+  await writeFile(join(privateRoot, "vcc-brain.md"), "changed instructions");
   const repeated = await loadPreamble({
     sessionID: "session-one",
     projectDirectory,
@@ -58,8 +58,8 @@ test("returns an immutable preamble for each session", async () => {
 });
 
 test("returns and caches recovery diagnostics", async () => {
-  const projectDirectory = await temporaryDirectory("operator-project-");
-  const homeDirectory = await temporaryDirectory("operator-home-");
+  const projectDirectory = await temporaryDirectory("vcc-brain-project-");
+  const homeDirectory = await temporaryDirectory("vcc-brain-home-");
   const privateRoot = join(projectDirectory, ".operator");
   await writeFile(privateRoot, "filesystem obstruction");
 
@@ -79,7 +79,7 @@ test("returns and caches recovery diagnostics", async () => {
 
   await rm(privateRoot);
   await mkdir(privateRoot);
-  await writeFile(join(privateRoot, "operator.md"), "repaired instructions");
+  await writeFile(join(privateRoot, "vcc-brain.md"), "repaired instructions");
   const cached = await loadPreamble({
     sessionID: "session-one",
     projectDirectory,

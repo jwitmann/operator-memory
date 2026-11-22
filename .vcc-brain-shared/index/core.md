@@ -1,9 +1,9 @@
 ---
-description: "@jwitmann/operator-core source map"
+description: "@jwitmann/vcc-brain-core source map"
 read_if: Working in packages/core or changing memory loading and preamble rendering
 ---
 
-# Operator Core Index
+# VCC Brain Core Index
 
 ## Guidelines
 
@@ -18,7 +18,7 @@ read_if: Working in packages/core or changing memory loading and preamble render
 
 ## Architecture
 
-- `@jwitmann/operator-core` is the private, harness-agnostic runtime package. It reads Operator memory concurrently with portable Node APIs and returns independent typed partition results for harness adapters and preamble rendering.
+- `@jwitmann/vcc-brain-core` is the private, harness-agnostic runtime package. It reads VCC Brain memory concurrently with portable Node APIs and returns independent typed partition results for harness adapters and preamble rendering.
 
 ## `packages/core/` Index
 
@@ -44,7 +44,7 @@ Read-only memory module with no barrel export.
 
 #### `packages/core/src/prompts/`
 
-- `preamble-v1.ts` — v1.1 Operator guidance and tenets; embeds core document templates
+- `preamble-v1.ts` — v1.1 VCC Brain guidance and tenets; embeds core document templates
 - `preamble-v2.ts` — v2.0 revised context-maintenance guidance and tenets; embeds core document templates
 
 #### `packages/core/src/templates/`

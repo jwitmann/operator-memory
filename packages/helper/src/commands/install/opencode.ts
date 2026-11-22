@@ -3,7 +3,7 @@ import { Effect, FileSystem, Path, Result } from "effect";
 import type { CliContext } from "../../utils.ts";
 import { runProcess } from "../common.ts";
 
-const OPENCODE_PLUGIN = "@jwitmann/operator-opencode@latest";
+const OPENCODE_PLUGIN = "@jwitmann/vcc-brain-opencode@latest";
 
 export const installOpenCode = Effect.fn("installOpenCode")(function* (context: CliContext) {
   const fileSystem = yield* FileSystem.FileSystem;
@@ -11,10 +11,13 @@ export const installOpenCode = Effect.fn("installOpenCode")(function* (context: 
 
   const cacheRoot = process.env.XDG_CACHE_HOME || path.join(context.home, ".cache");
   const isCacheRemoved = yield* fileSystem
-    .remove(path.join(cacheRoot, "opencode", "packages", "@jwitmann", "operator-opencode@latest"), {
-      recursive: true,
-      force: true,
-    })
+    .remove(
+      path.join(cacheRoot, "opencode", "packages", "@jwitmann", "vcc-brain-opencode@latest"),
+      {
+        recursive: true,
+        force: true,
+      },
+    )
     .pipe(Effect.result);
   if (Result.isFailure(isCacheRemoved)) {
     return {

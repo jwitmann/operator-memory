@@ -40,9 +40,9 @@ describe("compaction shaping", () => {
     const messages = options.messages as Record<string, unknown>[];
     const guidance = (messages[1] as Record<string, unknown>).content as Record<string, unknown>[];
     const text = guidance[0]?.text as string;
-    expect(text).toContain("operator-recall");
-    expect(text).toContain("operator-search");
-    expect(text).not.toContain("operator-read_omitted");
+    expect(text).toContain("vcc-brain-recall");
+    expect(text).toContain("vcc-brain-search");
+    expect(text).not.toContain("vcc-brain-read_omitted");
     expect(text).not.toContain("omitted-001");
   });
 

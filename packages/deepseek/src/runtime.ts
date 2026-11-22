@@ -2,14 +2,14 @@ import { join } from "node:path";
 import {
   type BrainUpdateActivityState,
   EMPTY_BRAIN_UPDATE_ACTIVITY_STATE,
-} from "@jwitmann/operator-core/brain-updates";
-import { appendReceipt, readReceipts } from "@jwitmann/operator-core/context/receipts";
+} from "@jwitmann/vcc-brain-core/brain-updates";
+import { appendReceipt, readReceipts } from "@jwitmann/vcc-brain-core/context/receipts";
 import {
   dedupDeltaTokens,
   EMPTY_TRIGGER_STATE,
   type TriggerKind,
   type TriggerState,
-} from "@jwitmann/operator-core/context/triggers";
+} from "@jwitmann/vcc-brain-core/context/triggers";
 
 // DSH-native per-session runtime. Unlike the opencode port (which anchors a
 // hand-rolled token estimator on step events), pressure estimates come from
@@ -103,7 +103,7 @@ export function createDshRuntime(): DshRuntime {
   };
 }
 
-const SHARED_RUNTIME_KEY = "__operatorDshRuntime";
+const SHARED_RUNTIME_KEY = "__vccBrainDshRuntime";
 
 function readSharedRuntime(): DshRuntime | null {
   const existing = (globalThis as Record<string, unknown>)[SHARED_RUNTIME_KEY];
@@ -162,7 +162,7 @@ export function sessionRuntime(runtime: DshRuntime, sessionId: string): SessionR
 }
 
 // Counts completed tool work for this session: callIds with both a recorded
-// call and a recorded result, excluding Operator's own namespace. Error
+// call and a recorded result, excluding VCC Brain's own namespace. Error
 // results count: a failure can still produce a durable lesson.
 export function countSessionCompletedCalls(
   session: Pick<SessionRuntime, "pendingCallNames" | "completedCallIds">,
@@ -170,13 +170,16 @@ export function countSessionCompletedCalls(
   let count = 0;
   for (const callId of session.completedCallIds) {
     const name = session.pendingCallNames.get(callId);
-    if (name !== undefined && !isOperatorTool(name)) count += 1;
+    if (name !== undefined && !isVccBrainTool(name)) count += 1;
   }
   return count;
 }
 
-function isOperatorTool(name: string): boolean {
-  return name === "operator" || name.startsWith("operator-");
+function isVccBrainTool(name: string): boolean {
+  // Bare "operator" is the host's own tool and is never renamed. The
+  // `vcc-brain-` prefix is this plugin's tool family; `operator-` is its
+  // pre-rename shape, still present in older sessions.
+  return name === "operator" || name.startsWith("operator-") || name.startsWith("vcc-brain-");
 }
 
 // Failure backoff: a fresh failure suppresses unconditionally; past the

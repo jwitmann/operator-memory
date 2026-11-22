@@ -26,11 +26,10 @@ export async function registerLocalOpenCode(
     throw new TypeError(`Invalid OpenCode plugins configuration: ${configPath}`);
   }
   // A distinct dev ID lets the local build coexist with a disabled published registration.
-  const registered =
-    plugins.at(-2) === "-jwitmann.operator-memory" && plugins.at(-1) === pluginDirectory;
+  const registered = plugins.at(-2) === "-jwitmann.vcc-brain" && plugins.at(-1) === pluginDirectory;
   const updated = registered
     ? text
-    : ["-jwitmann.operator-memory", pluginDirectory].reduce(
+    : ["-jwitmann.vcc-brain", pluginDirectory].reduce(
         (content, entry) =>
           applyEdits(
             content,

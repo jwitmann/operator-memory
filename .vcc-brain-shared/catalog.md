@@ -2,12 +2,12 @@
 
 ## Tree
 
-Repository-wide Operator product knowledge published with the project.
+Repository-wide VCC Brain product knowledge published with the project.
 
 - `README.md`
-  - Description: Contributor-facing introduction to Operator Memory.
-  - Read If: Do not read during normal agent work; written for newcomers without Operator installed.
-- `operator.md`
+  - Description: Contributor-facing introduction to VCC Brain.
+  - Read If: Do not read during normal agent work; written for newcomers without VCC Brain installed.
+- `vcc-brain.md`
   - Description: Repository tooling, engineering, documentation rules, and harness adapter development instructions.
   - Read If: Auto-injected.
 - `catalog.md`
@@ -20,7 +20,7 @@ Repository-wide Operator product knowledge published with the project.
   - Description: Complete adapter contract every harness adapter must satisfy, plus the accepted reference implementation shapes: resolution and injection pathways, failure semantics, commands, status, installation, and runtime shape.
   - Read If: Implementing or reviewing any harness adapter.
 - `reference/guides.md`
-  - Description: Harness guide standard — implementation relevance and completeness requirements, source-over-docs verification, verification-notes placement, privacy boundaries, and maintenance rules for `.operator-shared/guides/<harness>/`.
+  - Description: Harness guide standard — implementation relevance and completeness requirements, source-over-docs verification, verification-notes placement, privacy boundaries, and maintenance rules for `.vcc-brain-shared/guides/<harness>/`.
   - Read If: Writing or reviewing any harness guide.
 - `reference/release.md`
   - Description: Contributor checklist for shipping an adapter package — package shape, Helper integration, documentation, and release automation. Maintainer release duties live in the private partition.
@@ -29,7 +29,7 @@ Repository-wide Operator product knowledge published with the project.
   - Description: Preamble composition, injection order, instruction authority, catalogs and index injection, all-or-nothing diagnostics, and conditional warnings.
   - Read If: Changing preamble composition, authority, warnings, or diagnostics.
 - `commands.md`
-  - Description: Command contract for the three Operator workflows (`user-init`, `project-init`, `index`) and their setup guides.
+  - Description: Command contract for the three VCC Brain workflows (`user-init`, `project-init`, `index`) and their setup guides.
   - Read If: Implementing adapter commands or changing setup workflows.
 - `index-staleness.md`
   - Description: Structural-drift detection for the Project Index — stamp fields, structural hash definition, Helper stamp/lint behavior, preamble warning limits, and non-goals.
@@ -66,7 +66,7 @@ Repository-wide Operator product knowledge published with the project.
   - Read If: Working with Effect v4 or effect-smol TypeScript code.
 - `claude-code/`
   - Description: Claude Code porting guides — injection surfaces, settings hooks, commands/skills, packaging, installation pathways, and the in-process mod API.
-  - Read If: Planning or implementing the Operator Claude Code adapter.
+  - Read If: Planning or implementing the VCC Brain Claude Code adapter.
 - `codex/`
   - Description: Codex host, plugin, hook, skill, and context research plus archived Web-surface notes.
   - Read If: Researching or implementing a Codex integration.
@@ -81,7 +81,7 @@ Repository-wide Operator product knowledge published with the project.
   - Read If: Researching or implementing an OpenCode integration.
 - `pi/`
   - Description: Pi extension authoring, injection semantics, and package installation guides.
-  - Read If: Porting the Operator plugin to Pi or researching Pi extensions or packages.
+  - Read If: Porting the VCC Brain plugin to Pi or researching Pi extensions or packages.
 
 ### `references/`
 

@@ -16,7 +16,7 @@ import { makeGitRunnerLayer } from "./mocks/git-runner.ts";
 let project: string;
 
 beforeEach(() => {
-  project = mkdtempSync(join(tmpdir(), "operator-helper-stamp-"));
+  project = mkdtempSync(join(tmpdir(), "vcc-brain-helper-stamp-"));
 });
 
 afterEach(() => {

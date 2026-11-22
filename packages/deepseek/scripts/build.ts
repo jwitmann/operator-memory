@@ -38,6 +38,6 @@ const css = await readFile(join(packageDirectory, "src", "client.css"), "utf8");
 await writeFile(
   join(outputDirectory, "client.js"),
   client
-    .replace("__OPERATOR_VERSION__", manifest.version)
-    .replace('"__OPERATOR_CSS__"', JSON.stringify(css)),
+    .replace("__VCC_BRAIN_VERSION__", manifest.version)
+    .replace('"__VCC_BRAIN_CSS__"', JSON.stringify(css)),
 );

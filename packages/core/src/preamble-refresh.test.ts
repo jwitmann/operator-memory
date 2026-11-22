@@ -23,7 +23,7 @@ function seedBrain(): void {
     `${HOME}/.operator/user`,
   ]) {
     fs.mkdirSync(`${root}/index`, { recursive: true });
-    fs.writeFileSync(`${root}/operator.md`, `# ${root}`);
+    fs.writeFileSync(`${root}/vcc-brain.md`, `# ${root}`);
     fs.writeFileSync(`${root}/catalog.md`, `# catalog ${root}`);
   }
   fs.writeFileSync(`${PROJECT}/.operator/index/index.md`, "main index");

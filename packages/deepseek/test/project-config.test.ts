@@ -4,13 +4,13 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
-  DEFAULT_OPERATOR_DEEPSEEK_CONFIG,
+  DEFAULT_VCC_BRAIN_DEEPSEEK_CONFIG,
   parseProjectConfig,
-  type OperatorDeepseekConfig,
+  type VccBrainDeepseekConfig,
 } from "../src/config.ts";
 import { cachedProjectConfig, resolveProjectConfig } from "../src/project-config.ts";
 
-const PROFILE: OperatorDeepseekConfig = {
+const PROFILE: VccBrainDeepseekConfig = {
   contextManagement: {
     enabled: true,
     ratio: 0.8,
@@ -30,7 +30,7 @@ afterEach(async () => {
 });
 
 async function makeProject(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "operator-project-config-"));
+  const dir = await mkdtemp(join(tmpdir(), "vcc-brain-project-config-"));
   dirs.push(dir);
   return dir;
 }
@@ -50,13 +50,13 @@ describe("parseProjectConfig", () => {
   it("merges present fields over the base and inherits the rest", () => {
     const outcome = parseProjectConfig(
       { contextManagement: { enabled: true, ratio: 0.5 } },
-      DEFAULT_OPERATOR_DEEPSEEK_CONFIG,
+      DEFAULT_VCC_BRAIN_DEEPSEEK_CONFIG,
     );
     expect(outcome.warnings).toEqual([]);
     expect(outcome.config.contextManagement.enabled).toBe(true);
     expect(outcome.config.contextManagement.ratio).toBe(0.5);
     expect(outcome.config.contextManagement.hardCapTokens).toBe(250000);
-    expect(outcome.config.brainUpdates).toEqual(DEFAULT_OPERATOR_DEEPSEEK_CONFIG.brainUpdates);
+    expect(outcome.config.brainUpdates).toEqual(DEFAULT_VCC_BRAIN_DEEPSEEK_CONFIG.brainUpdates);
   });
 
   it("honors a project-level disable over an enabled profile", () => {
@@ -79,7 +79,7 @@ describe("parseProjectConfig", () => {
   it("ignores unknown keys", () => {
     const outcome = parseProjectConfig(
       { contextManagement: { enabled: true, future: 1 }, unknown: {} },
-      DEFAULT_OPERATOR_DEEPSEEK_CONFIG,
+      DEFAULT_VCC_BRAIN_DEEPSEEK_CONFIG,
     );
     expect(outcome.warnings).toEqual([]);
     expect(outcome.config.contextManagement.enabled).toBe(true);
@@ -107,7 +107,7 @@ describe("resolveProjectConfig", () => {
     expect(warnings).toEqual([]);
     expect(resolved.contextManagement.ratio).toBe(0.5);
     expect(resolved.contextManagement.enabled).toBe(true);
-    expect(cachedProjectConfig(dir, DEFAULT_OPERATOR_DEEPSEEK_CONFIG)).toEqual(resolved);
+    expect(cachedProjectConfig(dir, DEFAULT_VCC_BRAIN_DEEPSEEK_CONFIG)).toEqual(resolved);
   });
 
   it("warns once per content on invalid JSON and falls back to the profile", async () => {

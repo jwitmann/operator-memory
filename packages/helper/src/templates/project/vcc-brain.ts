@@ -1,4 +1,4 @@
-export const PROJECT_OPERATOR_TEMPLATE = `# {Private|Shared} Operator Instructions
+export const PROJECT_VCC_BRAIN_TEMPLATE = `# {Private|Shared} VCC Brain Instructions
 
 ## Overview
 

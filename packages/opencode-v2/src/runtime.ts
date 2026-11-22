@@ -3,17 +3,17 @@ import {
   EMPTY_TRIGGER_STATE,
   type TriggerKind,
   type TriggerState,
-} from "@jwitmann/operator-core/context/triggers";
+} from "@jwitmann/vcc-brain-core/context/triggers";
 import {
   EMPTY_ESTIMATOR,
   type ContextEstimator,
   type StepTokenCounts,
-} from "@jwitmann/operator-core/context/tokens";
+} from "@jwitmann/vcc-brain-core/context/tokens";
 import {
   EMPTY_BRAIN_UPDATE_ACTIVITY_STATE,
   type BrainUpdateActivityState,
-} from "@jwitmann/operator-core/brain-updates";
-import { appendReceipt, readReceipts } from "@jwitmann/operator-core/context/receipts";
+} from "@jwitmann/vcc-brain-core/brain-updates";
+import { appendReceipt, readReceipts } from "@jwitmann/vcc-brain-core/context/receipts";
 import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
 
@@ -181,7 +181,7 @@ export function createContextRuntime(): ContextRuntime {
 // followed by repeat admissions), which resets module-level bindings. A
 // superseded generation never touches it — every handler checks staleness
 // before reading or writing.
-const SHARED_RUNTIME_KEY = "__operatorContextRuntime";
+const SHARED_RUNTIME_KEY = "__vccBrainContextRuntime";
 
 function readSharedRuntime(): ContextRuntime | null {
   const existing = (globalThis as Record<string, unknown>)[SHARED_RUNTIME_KEY];

@@ -1,4 +1,4 @@
-# Operator VS Other Plugins
+# VCC Brain VS Other Plugins
 
 Other memory plugins treat forgetting as the problem and replay as the cure: capture fragments and retrieve them via RAG, or compress one giant session along forever. Neither approach documents anything.
 
@@ -39,14 +39,14 @@ Every plugin on the market makes the same assumption:
 
 No one rewatches a team meeting from three years ago to remember why a decision was made. People write things down.
 
-### Operator Takes the Opposite Approach
+### VCC Brain Takes the Opposite Approach
 
 `AGENTS.md` files were the right instinct: agents need context before they touch a codebase. But a single file is not enough. The agent needs an entire brain — instructions, specs, decisions, research, indexes — and a place in the workflow to write into it.
 
-Operator gives the agent one: a workspace of Markdown documents the agent owns and maintains itself. As the agent works, it documents — specs, decisions, standards, research, lessons — while the full picture is still in context. Afterward it updates what changed. The loop changes from prompt → build → forget to prompt → consult → build → update.
+VCC Brain gives the agent one: a workspace of Markdown documents the agent owns and maintains itself. As the agent works, it documents — specs, decisions, standards, research, lessons — while the full picture is still in context. Afterward it updates what changed. The loop changes from prompt → build → forget to prompt → consult → build → update.
 
 Memory stops being a database you bolt onto the agent and becomes a workspace you can read, edit, commit, and share. Loading is deterministic, failures are visible, and knowledge lives in Git next to the code it describes. What the agent knows is a file you can open. Not 13 rows in a RAG database.
 
 No vector databases. No embeddings. No summarizers, curators, or dreamers. No black-box retrieval.
 
-RAG agents recall. Operator understands.
+RAG agents recall. VCC Brain understands.

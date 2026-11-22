@@ -1,12 +1,12 @@
 {
-  "name": "@jwitmann/operator-pi",
+  "name": "@jwitmann/vcc-brain-pi",
   "version": "1.4.0",
-  "description": "Operator Memory adapter for Pi.",
+  "description": "VCC Brain adapter for Pi.",
   "license": "BSD-3-Clause",
   "author": "jwitmann",
-  "homepage": "https://github.com/jwitmann/operator-memory#readme",
+  "homepage": "https://github.com/jwitmann/vcc-brain#readme",
   "bugs": {
-    "url": "https://github.com/jwitmann/operator-memory/issues"
+    "url": "https://github.com/jwitmann/vcc-brain/issues"
   },
   "type": "module",
   "main": "dist/index.js",
@@ -29,7 +29,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jwitmann/operator-memory.git",
+    "url": "git+https://github.com/jwitmann/vcc-brain.git",
     "directory": "packages/pi"
   },
   "engines": {
@@ -50,6 +50,6 @@
     "typebox": "*"
   },
   "devDependencies": {
-    "@jwitmann/operator-core": "workspace:*"
+    "@jwitmann/vcc-brain-core": "workspace:*"
   }
 }

@@ -1,6 +1,6 @@
 ---
 description: OpenTUI source map for Solid JSX compilation and terminal renderer reference
-read_if: Working on Operator's OpenCode V2 TUI build, JSX reactivity, or renderer integration
+read_if: Working on VCC Brain's OpenCode V2 TUI build, JSX reactivity, or renderer integration
 ---
 
 # OpenTUI Reference

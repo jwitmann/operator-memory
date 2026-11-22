@@ -35,14 +35,14 @@ export type CompactionPromptInput = {
 const DEFAULT_RECOVERY_RULE =
   "Tool input/output omission notices (content IDs) are the only recoverable\n"
   + "  handles for trimmed content. Keep every omission notice verbatim in the\n"
-  + "  summary; the agent recovers payloads through the operator-read_omitted\n"
+  + "  summary; the agent recovers payloads through the vcc-brain-read_omitted\n"
   + "  tool.";
 
 export function buildCompactionPrompt(input: CompactionPromptInput): string {
   const paths = input.brainPaths.map(path => `- ${path}`).join("\n");
 
   return `<compaction-instructions>
-You are compacting the conversation history for an Operator Memory session.
+You are compacting the conversation history for a VCC Brain session.
 Produce a summary that lets the next session continue the work without the
 full history.
 

@@ -2,7 +2,7 @@ import type { Context } from "@opencode/plugin/promise/plugin";
 import { fs, vol } from "memfs";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import type { RequestMessage } from "@jwitmann/operator-core/context/tokens";
+import type { RequestMessage } from "@jwitmann/vcc-brain-core/context/tokens";
 
 const { emitToast, loadPreamble } = vi.hoisted(() => ({
   emitToast: vi.fn(() => Promise.resolve()),
@@ -14,7 +14,7 @@ const { emitToast, loadPreamble } = vi.hoisted(() => ({
   ),
 }));
 
-vi.mock("@jwitmann/operator-core/memory/load", () => ({
+vi.mock("@jwitmann/vcc-brain-core/memory/load", () => ({
   loadMemorySnapshot: vi.fn(),
 }));
 vi.mock("../src/preamble.ts", () => ({ loadPreamble }));
@@ -32,7 +32,7 @@ vi.mock("node:fs/promises", async () => {
   };
 });
 
-import OperatorPlugin from "../src/index.ts";
+import VccBrainPlugin from "../src/index.ts";
 
 const PROJECT = "/project";
 
@@ -79,9 +79,9 @@ test("project file disable wins over opencode.json through setup", async () => {
     JSON.stringify({ brainUpdates: { enabled: false } }),
   );
   const { context, sessionHook } = setupContext({
-    operator: { brainUpdates: { enabled: true, toolCallThreshold: 25 } },
+    "vcc-brain": { brainUpdates: { enabled: true, toolCallThreshold: 25 } },
   });
-  await OperatorPlugin.setup(context);
+  await VccBrainPlugin.setup(context);
 
   expect(sessionHook).toHaveBeenCalledWith("context", expect.any(Function));
   const hook = sessionHook.mock.calls[0]?.[1];
@@ -98,9 +98,9 @@ test("project file disable wins over opencode.json through setup", async () => {
 
 test("opencode.json enable reminds without a project file (control)", async () => {
   const { context, sessionHook } = setupContext({
-    operator: { brainUpdates: { enabled: true, toolCallThreshold: 25 } },
+    "vcc-brain": { brainUpdates: { enabled: true, toolCallThreshold: 25 } },
   });
-  await OperatorPlugin.setup(context);
+  await VccBrainPlugin.setup(context);
 
   const hook = sessionHook.mock.calls[0]?.[1];
   const first = { sessionID: "session-b", system: [], messages: completedMessages(0) };
@@ -108,16 +108,16 @@ test("opencode.json enable reminds without a project file (control)", async () =
   expect(first.system).toEqual([{ type: "text", text: "operator preamble" }]);
   const second = { sessionID: "session-b", system: [], messages: completedMessages(25) };
   await hook(second);
-  expect(second.system[0]?.text).toContain("operator-brain-update-reminder");
+  expect(second.system[0]?.text).toContain("vcc-brain-brain-update-reminder");
 });
 
 test("invalid project JSON toasts and falls back to opencode.json", async () => {
   fs.mkdirSync(`${PROJECT}/.vcc-brain`, { recursive: true });
   fs.writeFileSync(`${PROJECT}/.vcc-brain/config.json`, "{not json");
   const { context } = setupContext({
-    operator: { brainUpdates: { enabled: true, toolCallThreshold: 25 } },
+    "vcc-brain": { brainUpdates: { enabled: true, toolCallThreshold: 25 } },
   });
-  await OperatorPlugin.setup(context);
+  await VccBrainPlugin.setup(context);
 
   expect(emitToast).toHaveBeenCalledWith(
     "toast",

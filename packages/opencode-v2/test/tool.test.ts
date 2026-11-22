@@ -1,4 +1,4 @@
-import { storeOmission } from "@jwitmann/operator-core/context/store";
+import { storeOmission } from "@jwitmann/vcc-brain-core/context/store";
 import { vol } from "memfs";
 import { beforeEach, expect, test, vi } from "vitest";
 
@@ -53,9 +53,9 @@ test("registers under a flat hyphenated name", async () => {
   const { editor, tool } = await addedTool();
 
   expect(editor.namespace).not.toHaveBeenCalled();
-  expect(tool.name).toBe("operator-read_omitted");
+  expect(tool.name).toBe("vcc-brain-read_omitted");
   expect(tool.options).toEqual({ codemode: false });
-  expect(tool.description).toContain("omitted by Operator trimming or compaction");
+  expect(tool.description).toContain("omitted by VCC Brain trimming or compaction");
 });
 
 test("retrieves a stored payload by content ID", async () => {
@@ -112,7 +112,7 @@ test("registers prune under a flat hyphenated name", async () => {
   const { editor, tool } = await addedPruneTool();
 
   expect(editor.namespace).not.toHaveBeenCalled();
-  expect(tool.name).toBe("operator-prune");
+  expect(tool.name).toBe("vcc-brain-prune");
   expect(tool.options).toEqual({ codemode: false });
   expect(tool.description).toContain("Prune the current session's omitted");
 });
@@ -197,7 +197,7 @@ test("recall restores snapshot content by seq selection", async () => {
 
   const result = await tool.execute({ type: "seq", id: "1-2" }, { sessionID: SESSION });
 
-  expect(result.content).toContain("**operator-recall seq 1-2**");
+  expect(result.content).toContain("**vcc-brain-recall seq 1-2**");
   expect(result.content).toContain("please fix the login bug");
   expect(result.content).toContain("[tool-call read]");
 });
@@ -217,7 +217,7 @@ test("recall registers under a flat hyphenated name", async () => {
   const { editor, tool } = await addedRecallTool();
 
   expect(editor.namespace).not.toHaveBeenCalled();
-  expect(tool.name).toBe("operator-recall");
+  expect(tool.name).toBe("vcc-brain-recall");
   expect(tool.options).toEqual({ codemode: false });
 });
 
@@ -225,7 +225,7 @@ test("search registers under a flat hyphenated name", async () => {
   const { editor, tool } = await addedSearchTool();
 
   expect(editor.namespace).not.toHaveBeenCalled();
-  expect(tool.name).toBe("operator-search");
+  expect(tool.name).toBe("vcc-brain-search");
   expect(tool.options).toEqual({ codemode: false });
 });
 
@@ -252,7 +252,7 @@ test("search finds snapshot content with recall pointers", async () => {
 
   const result = await tool.execute({ pattern: "login" }, { sessionID: SESSION });
 
-  expect(result.content).toContain("**operator-search login**");
+  expect(result.content).toContain("**vcc-brain-search login**");
   expect(result.content).toContain("[seq 1");
   expect(result.content).toContain("use recall");
 });

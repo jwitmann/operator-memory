@@ -1,9 +1,9 @@
 ---
-description: "@jwitmann/operator-codex package, preamble hook, Operator skills, tests, and local installation map"
+description: "@jwitmann/vcc-brain-codex package, preamble hook, VCC Brain skills, tests, and local installation map"
 read_if: Working in packages/codex or changing Codex plugin packaging, preamble injection, or commands
 ---
 
-# Operator Codex Index
+# VCC Brain Codex Index
 
 ## Coverage
 
@@ -11,10 +11,10 @@ read_if: Working in packages/codex or changing Codex plugin packaging, preamble 
 
 ## Architecture
 
-- `@jwitmann/operator-codex` is a dependency-free legacy-format Codex plugin because current Codex clients load lifecycle hooks only from that format.
+- `@jwitmann/vcc-brain-codex` is a dependency-free legacy-format Codex plugin because current Codex clients load lifecycle hooks only from that format.
 - One strictly typed, dependency-free launcher compiles to Node-compatible JavaScript and renders current memory through Helper for new or cleared sessions, post-compaction context, and delegated subagents; resume and fork retain prior injected history.
 - Three explicitly invoked plugin skills bind Codex-native interaction to one Helper operation for each setup and indexing workflow.
-- Local preview: `bun run build:codex && bun run preview:codex` registers the repository marketplace via `codex plugin marketplace add` and installs or refreshes `jwitmann@operator-local` through `codex plugin add`.
+- Local preview: `bun run build:codex && bun run preview:codex` registers the repository marketplace via `codex plugin marketplace add` and installs or refreshes `jwitmann@vcc-brain-local` through `codex plugin add`.
 
 ## `packages/codex/` Index
 
@@ -23,6 +23,6 @@ read_if: Working in packages/codex or changing Codex plugin packaging, preamble 
 - `hooks/hooks.json` - Stable `SessionStart` and `SubagentStart` command-hook definitions with unlimited context output.
 - `src/hook.ts` - Typed lifecycle input validation, filtering, Helper preamble execution, unchanged successful output, and user-visible blocking failure output.
 - `scripts/build.ts` - Clean minified Node ESM launcher build.
-- `skills/operator-user-init/`, `skills/operator-project-init/`, `skills/operator-index/` - Explicit-only Operator workflow skills and Codex invocation policy.
+- `skills/vcc-brain-user-init/`, `skills/vcc-brain-project-init/`, `skills/vcc-brain-index/` - Explicit-only VCC Brain workflow skills and Codex invocation policy.
 - `test/hook.test.ts` - Session-source filtering, subagent injection, working-directory forwarding, unchanged output, and failure coverage.
 - `test/skills.test.ts` - Skill naming, single-operation contract, and explicit-invocation policy coverage.

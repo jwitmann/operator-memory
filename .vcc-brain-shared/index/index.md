@@ -1,6 +1,6 @@
 ---
-description: Operator Memory monorepo architecture and package navigation
-read_if: Working anywhere in the committed Operator Memory project
+description: VCC Brain monorepo architecture and package navigation
+read_if: Working anywhere in the committed VCC Brain project
 ---
 
 # Shared Project Index
@@ -15,7 +15,7 @@ read_if: Working anywhere in the committed Operator Memory project
 
 ## Architecture
 
-- Operator Memory is a Bun and TypeScript monorepo for durable context and agent-driven development on coding-agent harnesses.
+- VCC Brain is a Bun and TypeScript monorepo for durable context and agent-driven development on coding-agent harnesses.
 - The read-only core runtime supplies shared models and preamble rendering, the helper CLI owns harness installation plus deterministic setup and validation, and thin harness adapters bind those capabilities. Unqualified OpenCode means V2; V1 remains explicitly legacy without renaming its package or source directory.
 - The workspace, core runtime, preamble renderer, helper CLI, OpenCode integration, Pi integration, Codex plugin packaging, DeepSeek Harness adapter, Claude Code adapter, and Helper-managed Kiro installation are implemented.
 
@@ -28,7 +28,7 @@ read_if: Working anywhere in the committed Operator Memory project
 - [`codex/`](codex.md) - Codex plugin package with local marketplace installation infrastructure.
 - [`deepseek/`](deepseek.md) - Published DeepSeek Harness Host plugin and installable bundle package.
 - [`helper/`](helper.md) - Published harness installation, explicit upgrade, setup, status, guide, Git, and Project Index lint CLI.
-- [`opencode-v2/`](opencode-v2.md) - Default OpenCode adapter: context-hook preamble injection, Operator commands, and RPC-backed TUI status.
+- [`opencode-v2/`](opencode-v2.md) - Default OpenCode adapter: context-hook preamble injection, VCC Brain commands, and RPC-backed TUI status.
 - `opencode/` - Frozen legacy adapter, runtime, and tests; directory-only coverage, no development or releases.
 - [`pi/`](pi.md) - Published Pi extension adapter package.
 
@@ -50,14 +50,14 @@ Indexed by subindexes under `index/harnesses/`; clone the upstream repository to
 ### Repository root
 
 - `README.md` - Product positioning, installation, agent-assisted setup, everyday workflow, command reference, and documentation entrypoint.
-- `CONTRIBUTING.md` - Contributor requirements: use Operator and maintain the shared brain.
+- `CONTRIBUTING.md` - Contributor requirements: use VCC Brain and maintain the shared brain.
 - `docs/getting-started.md` - New-user onboarding and usage guide: mechanisms, setup, daily use, directing the agent, and Brain review.
-- `docs/comparison.md` - Public comparison of Operator against snippet-capture, RAG, CRUD-tool, and compression memory plugins.
+- `docs/comparison.md` - Public comparison of VCC Brain against snippet-capture, RAG, CRUD-tool, and compression memory plugins.
 - `docs/harnesses/` - Per-harness guides (OpenCode 2, OpenCode 1, Pi, Codex, Claude Code, DeepSeek Harness, Kiro): install command, verification, commands, updates, and harness-specific troubleshooting.
 - `docs/architecture.md` - User-facing Brain, partition, catalog, Project Index, deterministic loading, failure, and OpenCode architecture.
 - `docs/troubleshooting.md` - User-facing installation, status, lint, memory-check, repair, Git, Shared, harness update, and support guidance.
-- `docs/assets/banner.jpeg` - Operator Memory README banner.
-- `docs/assets/getting-started.jpeg` - Text-only Operator Memory banner for the onboarding guide.
+- `docs/assets/banner.jpeg` - VCC Brain README banner.
+- `docs/assets/getting-started.jpeg` - Text-only VCC Brain banner for the onboarding guide.
 - `docs/assets/change-the-loop.png` - README agent-loop promo graphic.
 - `LICENSE` - BSD 3-Clause repository license.
 - `.github/workflows/ci.yml` - Frozen-install workspace quality checks.
@@ -67,7 +67,7 @@ Indexed by subindexes under `index/harnesses/`; clone the upstream repository to
 - `scripts/check.sh` - Full-workspace or package-scoped validation runner.
 - `scripts/install-opencode.ts`, `scripts/install-opencode.test.ts` - Self-contained V2 development build and Helper linking, global JSONC-preserving local-directory registration, and installation coverage.
 - `scripts/install-pi.ts` - Persistently registers the built local Pi package through its absolute package-root path.
-- `scripts/preview-codex.ts` - Self-contained local Codex preview: builds and links Helper, builds the plugin package, then registers the repository marketplace and installs or refreshes the local `jwitmann@operator-local` plugin.
+- `scripts/preview-codex.ts` - Self-contained local Codex preview: builds and links Helper, builds the plugin package, then registers the repository marketplace and installs or refreshes the local `jwitmann@vcc-brain-local` plugin.
 - `scripts/preview-claude-code.ts` - Builds and links Helper, builds the Claude Code adapter, and launches Claude with the local package through `--plugin-dir`.
 - `scripts/publish-helper.sh`, `scripts/publish-opencode-v2.sh`, `scripts/publish-pi.sh`, `scripts/publish-codex.sh`, `scripts/publish-claude-code.sh`, `scripts/publish-deepseek.sh` - Preflight-validated package check, build, version, lockfile, commit, tag, and atomic push release automation; accepts semantic bump names, `X.Y.Z`, or `vX.Y.Z`. Claude Code also synchronizes its plugin manifest version.
 - `scripts/resolve-publish-version.sh`, `scripts/resolve-publish-version.test.ts` - Shared semantic bump resolution and focused validation coverage for package releases.

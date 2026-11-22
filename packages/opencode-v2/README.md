@@ -1,14 +1,14 @@
-# Operator Memory for OpenCode
+# VCC Brain for OpenCode
 
-Operator Memory gives current OpenCode (V2) durable project and user context maintained by agents as readable Markdown. Legacy OpenCode V1 is frozen and unpublished: it receives no releases and no V1 package ships under the new scope.
+VCC Brain gives current OpenCode (V2) durable project and user context maintained by agents as readable Markdown. Legacy OpenCode V1 is frozen and unpublished: it receives no releases and no V1 package ships under the new scope.
 
 ### Install
 
 ```sh
-operator-helper install opencode
+vcc-brain-helper install opencode
 ```
 
-The server plugin injects one immutable rendered Operator preamble into every model call for each session and registers `/operator:user-init`, `/operator:project-init`, and `/operator:index`.
+The server plugin injects one immutable rendered VCC Brain preamble into every model call for each session and registers `/vcc-brain:user-init`, `/vcc-brain:project-init`, and `/vcc-brain:index`.
 
 The TUI displays connecting and ready state, package version or local-build identity, User/Private/Shared partition status, repair guidance, completed-turn refresh, and preamble recovery and error notifications.
 

@@ -1,6 +1,6 @@
 ---
 description: Pi agent monorepo (earendil-works/pi) map focused on the coding-agent extension system; other packages lightly indexed
-read_if: Porting the Operator plugin to Pi, researching Pi extensions, skills, commands, or preamble injection points, or navigating reference/pi packages. Guides with verified injection and packaging detail live in `../../../guides/pi/`.
+read_if: Porting the VCC Brain plugin to Pi, researching Pi extensions, skills, commands, or preamble injection points, or navigating reference/pi packages. Guides with verified injection and packaging detail live in `../../../guides/pi/`.
 ---
 
 # Pi Monorepo
@@ -15,9 +15,9 @@ read_if: Porting the Operator plugin to Pi, researching Pi extensions, skills, c
 - Build order encodes layering: `chord` → `tui` → `telemetry` → `ai` → `agent` → `session-backends/sqlite-node` → `protocol` → `client` → `server` → `coding-agent`.
 - Repo `AGENTS.md` (auto-injected when reading files under `reference/pi/`) enforces strict repo rules: erasable-only TypeScript syntax, no inline imports, `npm run check` after code changes, never `npm run build`/`npm test` unless asked, `./test.sh` for non-e2e tests, explicit-path git staging only.
 
-## Operator Port Injection Points
+## VCC Brain Port Injection Points
 
-Pi has no plugin RPC layer; everything is an in-process TypeScript **extension**. Key facts for porting Operator:
+Pi has no plugin RPC layer; everything is an in-process TypeScript **extension**. Key facts for porting VCC Brain:
 
 - Extensions are TS modules loaded via jiti (no compilation). Default-export factory `export default function (pi: ExtensionAPI)`. Async factories are awaited before `session_start`.
 - Discovery: `~/.pi/agent/extensions/*.ts` or `*/index.ts` (global), `.pi/extensions/` (project-local, requires project trust). Distributable as pi packages (`npm:`/`git:` specs in `settings.json` `packages`, `pi install`); package manifest uses a `"pi"` field in `package.json`. Additional paths via `settings.json` `extensions`.
@@ -25,7 +25,7 @@ Pi has no plugin RPC layer; everything is an in-process TypeScript **extension**
   - `context` event (`core/extensions/types.ts`): fired before **each LLM call** with a deep copy of messages; return `{ messages }`. Message-list mutation at the model boundary; must be idempotent per call since it refires on retries and every turn.
   - `before_agent_start`: fired per user prompt before the agent loop; can return a `CustomMessage` to inject and/or replace the `systemPrompt` for that turn (chained across extensions).
   - `pi.sendMessage({ customType, content, display }, { deliverAs, triggerTurn })`: custom messages participate in LLM context; `appendEntry` does not.
-- System prompt itself: `core/system-prompt.ts` `buildSystemPrompt(BuildSystemPromptOptions)`; context files discovered by `core/resource-loader.ts` from `AGENTS.override.md`/`AGENTS.md`/`CLAUDE.md` candidates walking ancestors plus a global file. Operator should not fight this; inject via events instead.
+- System prompt itself: `core/system-prompt.ts` `buildSystemPrompt(BuildSystemPromptOptions)`; context files discovered by `core/resource-loader.ts` from `AGENTS.override.md`/`AGENTS.md`/`CLAUDE.md` candidates walking ancestors plus a global file. VCC Brain should not fight this; inject via events instead.
 - Commands: `pi.registerCommand(name, { description, handler(args, ctx: ExtensionCommandContext) })`; name collisions get numeric suffixes (`/name:1`). Commands bypass skill/template expansion. `ctx.ui.notify`, `ctx.ui.setStatus(key, text)` (footer status — analog of the OpenCode TUI status icon), widgets via `ctx.ui.setWidget`.
 - Mode awareness: `ctx.mode` is `"tui" | "rpc" | "json" | "print"`; guard terminal-only UI. `ctx.hasUI` true in tui/rpc.
 - Long-lived resources must not start in the factory; defer to `session_start`, close in `session_shutdown` (fires on quit, `/reload`, and session replacement).

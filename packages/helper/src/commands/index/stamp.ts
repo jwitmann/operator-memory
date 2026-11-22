@@ -25,7 +25,7 @@ export const indexStamp = Effect.fn("indexStamp")((context: CliContext) =>
     if (mains.length === 0) {
       return {
         exitCode: 1,
-        output: `Project: ${context.cwd}\n\n✗ No main index found. Run \`operator-helper index init\` and follow the guide to build one first.`,
+        output: `Project: ${context.cwd}\n\n✗ No main index found. Run \`vcc-brain-helper index init\` and follow the guide to build one first.`,
       };
     }
     const tree = yield* computeTreeHash(context.cwd);

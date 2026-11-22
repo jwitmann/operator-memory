@@ -7,8 +7,8 @@ an entry — supersede it with a dated note.
 > Import note (2026-11-20): ported from the context-management design repo.
 > Scope strings updated to `jwitmann`. Two deltas since the originals were
 > written: (1) the operator tools were unified to hyphen form —
-> `operator-read_omitted`, `operator-recall`, `operator-search` — so the
-> `operator:read_omitted` colon form below is historical record, not current
+> `vcc-brain-read_omitted`, `vcc-brain-recall`, `vcc-brain-search` — so the
+> `vcc-brain:read_omitted` colon form below is historical record, not current
 > behavior; (2) the supplement-plugin fallback (last section) never
 > triggered — the feature shipped in-tree.
 
@@ -42,7 +42,7 @@ saves. Deferred until measurements justify it.
 ### The Brain replaces compression quality
 
 Magic Compact and DCP fight to keep summaries faithful because the summary is
-all that survives. In Operator, durable knowledge already lives in Brain
+all that survives. In VCC Brain, durable knowledge already lives in Brain
 documents. The compaction prompt therefore references partition paths rather
 than embedding content, and the agent writes decisions down before compaction
 runs. Summaries can afford to be terse.
@@ -68,17 +68,17 @@ lives in Brain documents: decisions are written down before compaction, and
 the compaction prompt references partition paths instead of inlining content.
 Making the Brain optional would reintroduce the summary-fidelity problem that
 DCP and Magic Compact fought — the summary as the only surviving record. The
-feature therefore refuses to enable without Operator Memory rather than
+feature therefore refuses to enable without VCC Brain rather than
 degrading to unprotected compaction.
 
 ### Operational state lives outside the Brain
 
-The Brain's three partitions (`~/.operator/user/`, `.operator/`,
-`.operator-shared/`) are curated knowledge, mapped by catalogs and read
+The Brain's three partitions (`~/.vcc-brain/user/`, `.vcc-brain/`,
+`.vcc-brain-shared/`) are curated knowledge, mapped by catalogs and read
 deliberately. Omission stores and receipt logs are session-scoped machinery:
 ever-appending, keyed by session ID, meaningless as durable knowledge. Placing
 them inside a partition would pollute catalogs and invite agents to treat
-them as knowledge. They therefore live under `~/.operator/state/`, a sibling
+them as knowledge. They therefore live under `~/.vcc-brain/state/`, a sibling
 of the user partition, and never appear in any catalog.
 
 ### One file per omission, not one cache per session
@@ -96,7 +96,7 @@ reads one file, and a corrupt entry costs exactly one payload.
 Upstream provides no implementation guide for the roadmap item — the entry is
 one line ("Custom strategies for compaction, pruning, and context
 management"). But the repository publishes constraints the design must
-satisfy, and each is now verified against operator-memory commit `e394f1c`:
+satisfy, and each is now verified against vcc-brain commit `e394f1c`:
 
 - The README roadmap promises "an explicit on/off switch" for every feature.
   The `enabled` flag, off by default, is an upstream requirement, not a local
@@ -184,11 +184,11 @@ the harness registers, through `tool.hook("execute.after")`, and is inert
 when none exists. The alternative — dropping the trigger — is rejected: it
 is part of the owner's target behavior and works today in harnesses that
 provide a todo tool. The upstream proposal can cite issue 42421 and suggest
-Operator either registers its own todo tool (the ecosystem already does this,
+VCC Brain either registers its own todo tool (the ecosystem already does this,
 e.g. third-party V2 todo plugins) or advocates re-exposing the built-in.
 Upstream recommends no replacement: issue 42421 was closed as not planned
 without an alternative, and the reporter's own workaround is a plain file the
-agent maintains itself — which is also the Operator-consistent answer, since
+agent maintains itself — which is also the VCC Brain-consistent answer, since
 a plan document in the Brain doubles as a task list the agent already owns.
 
 ### Task-complete compaction keys on the host's terminal-run signal
@@ -218,16 +218,16 @@ early drafts of this spec — a prefix embedded in the tool name. That form is
 rejected. V2 provides a first-party namespace mechanism
 (`ToolEditor.namespace` registers a `Tool.Namespace` of name plus
 description; tool options and tool-call parts carry `namespace` separately
-from `name`), and Operator's own convention is colon-namespaced:
-`operator:user-init`, `operator:project-init`, `operator:index`,
-`operator:repair`, plugin ID `jwitmann.operator-memory`. The tool is
+from `name`), and VCC Brain's own convention is colon-namespaced:
+`vcc-brain:user-init`, `vcc-brain:project-init`, `vcc-brain:index`,
+`vcc-brain:repair`, plugin ID `jwitmann.vcc-brain`. The tool is
 therefore `read_omitted` under the `operator` namespace, presented as
-`operator:read_omitted` — consistent with the command surface and with no
+`vcc-brain:read_omitted` — consistent with the command surface and with no
 prefix logic to maintain.
 
 Import note: the colon form above is the decision as originally recorded.
-The tools were later unified to hyphen form (`operator-read_omitted`,
-`operator-recall`, `operator-search`) because the colon form never reached
+The tools were later unified to hyphen form (`vcc-brain-read_omitted`,
+`vcc-brain-recall`, `vcc-brain-search`) because the colon form never reached
 the model surface on OpenCode; see the repo history. Current behavior uses
 the hyphen names.
 
@@ -281,7 +281,7 @@ by inference (not yet upstream-verified behavior):
 The third exit above — short-circuiting host-initiated compactions by
 setting `result`, and the related `keepTailTokens` tail exclusion — is
 rejected. Live verification on OpenCode v2.0.22 (implementation runs
-ses-impl-12 through ses-impl-41, dev plugin `jwitmann.operator-memory-dev`)
+ses-impl-12 through ses-impl-41, dev plugin `jwitmann.vcc-brain-dev`)
 showed the host replaces request-view history with exactly the summary
 produced: the next request after a compaction carries a single user-role
 message. Setting `result` therefore substitutes a content-free note for the
@@ -303,7 +303,7 @@ teardown under `opencode run` (mid-run compactions complete reliably).
 ### Supplement plugin keeps the Brain dependency
 
 If the feature branch does not land, the fallback is a companion plugin
-installed alongside Operator Memory, not a standalone compactor. The
+installed alongside VCC Brain, not a standalone compactor. The
 companion imports the same `packages/core/src/context/` logic through the
 existing explicit subpaths, performs its own per-session Brain check and
 fails closed, and owns the `context` hook, the `compaction` hook, the

@@ -65,7 +65,7 @@ One `workspacePaths` entry identifies an unambiguous mounted root. Multiple entr
 
 CLI stream `init.cwd` exposes the starting directory to the caller, not to plugin hooks. Observed hook input lacks cwd; plugin cwd/`PWD` cannot substitute, and tested `OLDPWD`, `INIT_CWD`, and native root variables are absent. The TUI default project configuration contains ID/name, not a launch-root field. Transcript/artifact directories do not identify the project.
 
-Native multi-folder rules are cumulative: each mounted root's `AGENTS.md` can contribute instructions. That is not an Operator multi-Brain policy. Do not silently select the first root, merge Brains, or render the plugin directory's Brain. Projects can contain multiple repositories, scratch configurations, or worktrees; worktree children require their actual checkout, not another checkout's Private Brain.
+Native multi-folder rules are cumulative: each mounted root's `AGENTS.md` can contribute instructions. That is not a VCC Brain multi-Brain policy. Do not silently select the first root, merge Brains, or render the plugin directory's Brain. Projects can contain multiple repositories, scratch configurations, or worktrees; worktree children require their actual checkout, not another checkout's Private Brain.
 
 #### Failures and User Reporting
 

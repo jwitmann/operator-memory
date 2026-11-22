@@ -26,7 +26,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-REPO_URL="https://github.com/jwitmann/operator-memory"
+REPO_URL="https://github.com/jwitmann/vcc-brain"
 CHANGELOG_NOTE="${5:-}"
 
 section_for() {

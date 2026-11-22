@@ -1,12 +1,12 @@
 {
-  "name": "@jwitmann/operator-deepseek",
+  "name": "@jwitmann/vcc-brain-deepseek",
   "version": "0.5.0",
-  "description": "Operator Memory adapter for DeepSeek Harness.",
+  "description": "VCC Brain adapter for DeepSeek Harness.",
   "license": "BSD-3-Clause",
   "author": "jwitmann",
-  "homepage": "https://github.com/jwitmann/operator-memory#readme",
+  "homepage": "https://github.com/jwitmann/vcc-brain#readme",
   "bugs": {
-    "url": "https://github.com/jwitmann/operator-memory/issues"
+    "url": "https://github.com/jwitmann/vcc-brain/issues"
   },
   "type": "module",
   "main": "dist/index.js",
@@ -40,7 +40,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jwitmann/operator-memory.git",
+    "url": "git+https://github.com/jwitmann/vcc-brain.git",
     "directory": "packages/deepseek"
   },
   "engines": {
@@ -86,7 +86,7 @@
     }
   },
   "devDependencies": {
-    "@jwitmann/operator-core": "workspace:*",
+    "@jwitmann/vcc-brain-core": "workspace:*",
     "@deepseek-ai/cordis": "4.0.4",
     "@deepseek-ai/dsh": "0.2.0-rc.2",
     "@deepseek-ai/dsh-agent": "0.2.0-rc.2",

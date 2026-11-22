@@ -2,7 +2,7 @@
 
 Last Updated: October 2, 2026
 
-Context-injection surfaces relevant to Operator's preamble, ranked by fit. All details from live docs (October 2026) unless noted.
+Context-injection surfaces relevant to VCC Brain's preamble, ranked by fit. All details from live docs (October 2026) unless noted.
 
 ## SessionStart (primary hook pathway)
 
@@ -10,7 +10,7 @@ A `SessionStart` command hook is the canonical injection point. Fires per sessio
 
 - `startup`, `resume` (`--resume`, `--continue`, `/resume`), `clear` (`/clear`), `compact` (auto or manual), `fork`
 
-This matches Operator's persisted-context pathway exactly: render current memory at each event, so later renders reflect mid-session Brain changes. Register matchers explicitly or omit the matcher to fire on every source; `compact` coverage replaces a `PostCompact` hook.
+This matches VCC Brain's persisted-context pathway exactly: render current memory at each event, so later renders reflect mid-session Brain changes. Register matchers explicitly or omit the matcher to fire on every source; `compact` coverage replaces a `PostCompact` hook.
 
 Behavior:
 
@@ -25,7 +25,7 @@ Behavior:
 
 `additionalContext`, `systemMessage`, `initialUserMessage`, and plain stdout are each capped at 10,000 characters. Over the limit, Claude Code replaces the string with a file path plus a 2,000-character preview, and does not ask Claude to read the file. There is no setting to raise it.
 
-This is the central sizing constraint for the Claude Code binding: a full Operator preamble with instructions, catalogs, and indexes can exceed 10k characters. Options, in the order to evaluate:
+This is the central sizing constraint for the Claude Code binding: a full VCC Brain preamble with instructions, catalogs, and indexes can exceed 10k characters. Options, in the order to evaluate:
 
 - Emit the diagnostic preamble or a compact pointer that fits, and have the full Brain loaded through the command surface — measures against "complete preamble" and likely insufficient alone
 - Use the mod `prompt.context`/`prompt.section` events, which have no documented cap (see [`mods.md`](./mods.md))
@@ -37,7 +37,7 @@ Measure the rendered preamble size before choosing; record the decision in the b
 
 Same `additionalContext` mechanism, injected before the subagent's first prompt. Matcher filters on agent type (`general-purpose`, `Explore`, plugin-scoped names like `^my-plugin:reviewer$` — anchor regex matchers because the colon switches to the regex path). For the mod-based binding this is the **fallback** seam only — the primary subagent mechanism is the mod `agent.spawn` prompt rewrite (see [`mods.md`](./mods.md)).
 
-Dedupe behavior aligns with Operator's session-immutability preference: when the hook runs again for the same subagent, Claude Code injects only if the subagent's context does not already hold an earlier copy, preserving the prompt cache; after auto-compaction discards the copy, the next render is injected again.
+Dedupe behavior aligns with VCC Brain's session-immutability preference: when the hook runs again for the same subagent, Claude Code injects only if the subagent's context does not already hold an earlier copy, preserving the prompt cache; after auto-compaction discards the copy, the next render is injected again.
 
 ## UserPromptSubmit
 
@@ -51,7 +51,7 @@ Fires when `CLAUDE.md` or `.claude/rules/*.md` loads. Observability only: hooks 
 
 - `prompt.context` — fires once per conversation, when the engine computes the context blocks the first user message carries; blocks are persisted conversation context. The answer is cached until `$.ui.invalidate("prompt.context")` or a re-read (compaction, `/clear`), which re-fires it — persisted-context cadence with engine-managed reapplication
 - `prompt.section` — fires once per named system-prompt section; answers cached by name for the session; unstable answers spend the prompt cache on every call
-- `prompt.compose` — fires whenever the engine renders a system prompt ("the call the engine makes for every prompt it sends"); resolves to ordered `sections` (`intro`, `tools`, `memory`, ...); hooks may append sections, and the engine places each cache mark. Appending a stable section is the transform pathway: re-sent on every model call, outside history, byte-stable per session. Plugin-added sections are named `<plugin>:<name>`; each section carries a `scope` of `shared` (cross-person cacheable) or `session` — Operator's preamble is per-person/per-project and must use `session`
+- `prompt.compose` — fires whenever the engine renders a system prompt ("the call the engine makes for every prompt it sends"); resolves to ordered `sections` (`intro`, `tools`, `memory`, ...); hooks may append sections, and the engine places each cache mark. Appending a stable section is the transform pathway: re-sent on every model call, outside history, byte-stable per session. Plugin-added sections are named `<plugin>:<name>`; each section carries a `scope` of `shared` (cross-person cacheable) or `session` — VCC Brain's preamble is per-person/per-project and must use `session`
 - No documented size cap on section text. The mods limits table caps hook time (10s own execution, excluding time inside mods API calls such as `$.process.run`, which itself allows 30s default / 10min max), UI `Text` children (10k), and `$.fs` (4 MiB) — nothing for prompt sections. Live-verified: a 36,009-character `session`-scoped section arrived fully intact, quoted verbatim from deep inside, no truncation
 - Model switches re-render through `prompt.compose` with a different `model` field; returning the same cached text keeps the section stable. Cadence across normal turns, `/clear`, and `/compact` is live-verified — compose fired before every model call in every state; a model switch invalidates the cache anyway, so cross-model stability is moot
 - Subagent coverage of `prompt.compose`: **live-disproved (v2.1.287)** — subagent system prompts are assembled from the agent definition, not the session compose pipeline. A foreground `Task` subagent cannot see compose-appended sections; background agents fire no compose at all; `PromptComposeInput` carries no `agentId`. Subagent injection uses the mod `agent.spawn` prompt rewrite (see [`mods.md`](./mods.md)); `SubagentStart` `additionalContext` is the recorded fallback
@@ -59,7 +59,7 @@ Fires when `CLAUDE.md` or `.claude/rules/*.md` loads. Observability only: hooks 
 
 ## Instruction files
 
-`CLAUDE.md` (project and user) is the static instruction channel; the `agents-md` built-in mod can load `AGENTS.md` instead or beside it. Operator must not write its preamble into `CLAUDE.md` — the Brain is dynamic and Operator owns rendering — but should document `CLAUDE.md` interplay (authority ordering with injected preamble) in the binding spec.
+`CLAUDE.md` (project and user) is the static instruction channel; the `agents-md` built-in mod can load `AGENTS.md` instead or beside it. VCC Brain must not write its preamble into `CLAUDE.md` — the Brain is dynamic and VCC Brain owns rendering — but should document `CLAUDE.md` interplay (authority ordering with injected preamble) in the binding spec.
 
 ## Failure semantics
 

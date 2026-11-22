@@ -1,9 +1,9 @@
 ---
-description: "@jwitmann/operator-helper source and template map"
+description: "@jwitmann/vcc-brain-helper source and template map"
 read_if: Working in packages/helper or changing setup, status, guides, Git, or index lint
 ---
 
-# Operator Helper Index
+# VCC Brain Helper Index
 
 ## Guidelines
 
@@ -18,8 +18,8 @@ read_if: Working in packages/helper or changing setup, status, guides, Git, or i
 
 ## Architecture
 
-- `@jwitmann/operator-helper` is the published Node-compatible installer and coordinator for harness adapters, deterministic Operator setup, memory checks, status, guides, Git integration, explicit upgrades, and Project Index linting.
-- Services use a namespace containing `Interface`, `Service`, and `layer`; service identifiers follow `@jwitmann/operator-helper/<service-name>`.
+- `@jwitmann/vcc-brain-helper` is the published Node-compatible installer and coordinator for harness adapters, deterministic VCC Brain setup, memory checks, status, guides, Git integration, explicit upgrades, and Project Index linting.
+- Services use a namespace containing `Interface`, `Service`, and `layer`; service identifiers follow `@jwitmann/vcc-brain-helper/<service-name>`.
 
 ## `packages/helper/` Index
 
@@ -45,13 +45,13 @@ read_if: Working in packages/helper or changing setup, status, guides, Git, or i
 
 #### `packages/helper/src/templates/`
 
-- `user/operator.ts` — User Operator Instructions seed variable
+- `user/vcc-brain.ts` — User VCC Brain Instructions seed variable
 - `user/setup.ts` — User Instructions setup guide variable
-- `project/operator.ts` — Private or Shared Operator Instructions seed variable
+- `project/vcc-brain.ts` — Private or Shared VCC Brain Instructions seed variable
 - `project/setup.ts` — Project Brain setup guide variable
 - `project/index-setup.ts` — Project Index setup and refresh guide variable
 - `project/shared-readme.ts` — Introductory Project Shared README variable
-- `kiro.ts` — Kiro adapter files: `SessionStart` preamble hook, always-included steering fallback, and Operator skills
+- `kiro.ts` — Kiro adapter files: `SessionStart` preamble hook, always-included steering fallback, and VCC Brain skills
 
 ### `packages/helper/test/`
 

@@ -32,4 +32,4 @@ Legacy `POWER.md` powers still work; new powers should use Agent Plugins.
 
 ## Relevance for adapters
 
-Powers are the marketplace-style packaging and distribution layer: a power can bundle skills (slash-command workflows) plus optional MCP tools and Kiro steering extensions under `dev.kiro/`. For a pure filesystem/hook adapter like Operator, powers are an optional future distribution channel rather than a requirement — skills and hooks work as plain files without them.
+Powers are the marketplace-style packaging and distribution layer: a power can bundle skills (slash-command workflows) plus optional MCP tools and Kiro steering extensions under `dev.kiro/`. For a pure filesystem/hook adapter like VCC Brain, powers are an optional future distribution channel rather than a requirement — skills and hooks work as plain files without them.

@@ -30,9 +30,9 @@ test("loads an empty memory snapshot when all optional paths are absent", async 
   const result = unwrap(await loadMemorySnapshot(PROJECT_DIRECTORY, HOME_DIRECTORY, true));
 
   expect(result).toEqual({
-    shared: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
-    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
-    private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+    shared: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
+    user: { exists: false, brainInstructions: null, catalog: null, observations: null },
+    private: { exists: false, brainInstructions: null, catalog: null, indexes: [] },
   });
 
   const status = await loadMemorySnapshot(PROJECT_DIRECTORY, HOME_DIRECTORY, false);
@@ -54,7 +54,7 @@ test("recognizes an existing empty project partition", async () => {
 
 test("loads core documents and recursive indexes in stable path order", async () => {
   await writeDocument(
-    join(PROJECT_DIRECTORY, ".operator-shared", "operator.md"),
+    join(PROJECT_DIRECTORY, ".operator-shared", "vcc-brain.md"),
     "shared instructions",
   );
   await writeDocument(join(PROJECT_DIRECTORY, ".operator-shared", "catalog.md"), "shared catalog");
@@ -71,16 +71,16 @@ test("loads core documents and recursive indexes in stable path order", async ()
     "not an index",
   );
   await writeDocument(
-    join(HOME_DIRECTORY, ".operator", "user", "operator.md"),
+    join(HOME_DIRECTORY, ".operator", "user", "vcc-brain.md"),
     "user instructions",
   );
   await writeDocument(join(HOME_DIRECTORY, ".operator", "user", "catalog.md"), "user catalog");
-  await writeDocument(join(PROJECT_DIRECTORY, ".operator", "operator.md"), "private instructions");
+  await writeDocument(join(PROJECT_DIRECTORY, ".operator", "vcc-brain.md"), "private instructions");
   await writeDocument(join(PROJECT_DIRECTORY, ".operator", "catalog.md"), "private catalog");
 
   const result = unwrap(await loadMemorySnapshot(PROJECT_DIRECTORY, HOME_DIRECTORY, true));
 
-  expect(result.shared.operatorInstructions).toBe("shared instructions");
+  expect(result.shared.brainInstructions).toBe("shared instructions");
   expect(result.shared.catalog).toBe("shared catalog");
   expect(result.shared.indexes.map(index => index.path)).toEqual(["index.md", "packages/core.md"]);
   expect(result.shared.indexes[0]?.frontmatter).toEqual({
@@ -93,9 +93,9 @@ test("loads core documents and recursive indexes in stable path order", async ()
       stampedCommit: null,
     },
   });
-  expect(result.user.operatorInstructions).toBe("user instructions");
+  expect(result.user.brainInstructions).toBe("user instructions");
   expect(result.user.catalog).toBe("user catalog");
-  expect(result.private.operatorInstructions).toBe("private instructions");
+  expect(result.private.brainInstructions).toBe("private instructions");
   expect(result.private.catalog).toBe("private catalog");
 });
 
@@ -183,15 +183,15 @@ test("returns every full partition error", async () => {
   expect(result.private.ok).toBe(false);
   if (!result.shared.ok && !result.user.ok && !result.private.ok) {
     expect(result.shared.error.path).toBe(sharedRoot);
-    expect(result.user.error.path).toBe(join(userRoot, "operator.md"));
+    expect(result.user.error.path).toBe(join(userRoot, "vcc-brain.md"));
     expect(result.private.error.path).toBe(privateRoot);
   }
 });
 
 test("loads independent partition statuses while validating memory structure", async () => {
-  fs.mkdirSync(join(HOME_DIRECTORY, ".operator", "user", "operator.md"), { recursive: true });
+  fs.mkdirSync(join(HOME_DIRECTORY, ".operator", "user", "vcc-brain.md"), { recursive: true });
   await writeDocument(join(PROJECT_DIRECTORY, ".operator", "index"), "not a directory");
-  fs.mkdirSync(join(PROJECT_DIRECTORY, ".operator-shared", "operator.md"), { recursive: true });
+  fs.mkdirSync(join(PROJECT_DIRECTORY, ".operator-shared", "vcc-brain.md"), { recursive: true });
 
   const status = await loadMemorySnapshot(PROJECT_DIRECTORY, HOME_DIRECTORY, false);
 
@@ -199,14 +199,14 @@ test("loads independent partition statuses while validating memory structure", a
   expect(status.private.ok).toBe(false);
   expect(status.shared.ok).toBe(false);
   if (!status.user.ok) {
-    expect(status.user.error.path).toBe(join(HOME_DIRECTORY, ".operator", "user", "operator.md"));
+    expect(status.user.error.path).toBe(join(HOME_DIRECTORY, ".operator", "user", "vcc-brain.md"));
   }
   if (!status.private.ok) {
     expect(status.private.error.path).toBe(join(PROJECT_DIRECTORY, ".operator", "index"));
   }
   if (!status.shared.ok) {
     expect(status.shared.error.path).toBe(
-      join(PROJECT_DIRECTORY, ".operator-shared", "operator.md"),
+      join(PROJECT_DIRECTORY, ".operator-shared", "vcc-brain.md"),
     );
   }
 });
@@ -224,7 +224,7 @@ test("fails the user status when catalog.md is obstructed", async () => {
 
 test("loads user observations alongside instructions and catalog", async () => {
   await writeDocument(
-    join(HOME_DIRECTORY, ".operator", "user", "operator.md"),
+    join(HOME_DIRECTORY, ".operator", "user", "vcc-brain.md"),
     "user instructions",
   );
   await writeDocument(join(HOME_DIRECTORY, ".operator", "user", "catalog.md"), "user catalog");
@@ -241,7 +241,7 @@ test("loads user observations alongside instructions and catalog", async () => {
 
 test("absent observations load as null without failing", async () => {
   await writeDocument(
-    join(HOME_DIRECTORY, ".operator", "user", "operator.md"),
+    join(HOME_DIRECTORY, ".operator", "user", "vcc-brain.md"),
     "user instructions",
   );
 
@@ -285,3 +285,26 @@ function unwrap(snapshot: MemorySnapshot): {
     private: snapshot.private.value,
   };
 }
+
+test("loads legacy operator.md instructions when vcc-brain.md is absent", async () => {
+  await writeDocument(
+    join(PROJECT_DIRECTORY, ".operator", "operator.md"),
+    "legacy private instructions",
+  );
+  await writeDocument(
+    join(HOME_DIRECTORY, ".operator", "user", "operator.md"),
+    "legacy user instructions",
+  );
+
+  const fallback = unwrap(await loadMemorySnapshot(PROJECT_DIRECTORY, HOME_DIRECTORY, true));
+  expect(fallback.private.brainInstructions).toBe("legacy private instructions");
+  expect(fallback.user.brainInstructions).toBe("legacy user instructions");
+
+  await writeDocument(
+    join(PROJECT_DIRECTORY, ".operator", "vcc-brain.md"),
+    "current private instructions",
+  );
+
+  const primary = unwrap(await loadMemorySnapshot(PROJECT_DIRECTORY, HOME_DIRECTORY, true));
+  expect(primary.private.brainInstructions).toBe("current private instructions");
+});

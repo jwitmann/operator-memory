@@ -2,9 +2,12 @@ import {
   fingerprintPreamble,
   isCacheCold,
   REFRESH_FLOOR_TOKENS,
-} from "@jwitmann/operator-core/preamble-refresh";
-import { appendReceipt, type RefreshReceipt } from "@jwitmann/operator-core/context/receipts";
-import { estimateContextTokens, type RequestMessage } from "@jwitmann/operator-core/context/tokens";
+} from "@jwitmann/vcc-brain-core/preamble-refresh";
+import { appendReceipt, type RefreshReceipt } from "@jwitmann/vcc-brain-core/context/receipts";
+import {
+  estimateContextTokens,
+  type RequestMessage,
+} from "@jwitmann/vcc-brain-core/context/tokens";
 import { join } from "node:path";
 
 import { loadPreamble, type LoadPreambleOptions } from "./preamble.ts";

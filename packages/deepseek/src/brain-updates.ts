@@ -1,6 +1,9 @@
-import { evaluateBrainUpdateActivity } from "@jwitmann/operator-core/brain-updates";
-import { appendReceipt, type BrainReminderReceipt } from "@jwitmann/operator-core/context/receipts";
-import { fingerprintPreamble } from "@jwitmann/operator-core/preamble-refresh";
+import { evaluateBrainUpdateActivity } from "@jwitmann/vcc-brain-core/brain-updates";
+import {
+  appendReceipt,
+  type BrainReminderReceipt,
+} from "@jwitmann/vcc-brain-core/context/receipts";
+import { fingerprintPreamble } from "@jwitmann/vcc-brain-core/preamble-refresh";
 import { join } from "node:path";
 import type { BrainUpdatesConfig } from "./config.ts";
 import {
@@ -84,10 +87,10 @@ export async function maybeAppendBrainUpdateReminder(
 }
 
 function brainUpdateReminder(toolCallThreshold: number): string {
-  return `<operator-brain-update-reminder>
+  return `<vcc-brain-brain-update-reminder>
 You have completed ${toolCallThreshold} tool calls without a Brain change.
 Before continuing, record any durable decisions, contracts, or lessons in the
 appropriate Brain partition. Do not write transient task progress or restate
 implementation. If nothing durable has emerged, make no Brain edits.
-</operator-brain-update-reminder>`;
+</vcc-brain-brain-update-reminder>`;
 }

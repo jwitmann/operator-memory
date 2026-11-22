@@ -1,6 +1,6 @@
 ---
 description: OpenAI Codex CLI reference source map focused on hooks, plugins, skills, trust, and session identity internals
-read_if: Building the Operator Codex adapter or researching Codex hook execution, plugin packaging, skill invocation, hook trust, or thread identity
+read_if: Building the VCC Brain Codex adapter or researching Codex hook execution, plugin packaging, skill invocation, hook trust, or thread identity
 ---
 
 # Codex (reference/codex)
@@ -12,7 +12,7 @@ read_if: Building the Operator Codex adapter or researching Codex hook execution
 ## Architecture
 
 - Rust workspace; `core` owns session/turn orchestration and hook dispatch, `hooks` is the hook engine, `core-plugins`/`plugin` own manifests and install layout, `ext/skills` owns skill discovery and prompt catalog, `tui` is the terminal client, `app-server*` the JSON-RPC client protocol.
-- Operator research lives in `../../../guides/codex/`; this index maps source only.
+- VCC Brain research lives in `../../../guides/codex/`; this index maps source only.
 
 ## `codex-rs/hooks/src/` Index — hook engine
 

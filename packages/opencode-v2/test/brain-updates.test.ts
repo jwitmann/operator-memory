@@ -1,8 +1,8 @@
 import { fs, vol } from "memfs";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import type { RequestMessage } from "@jwitmann/operator-core/context/tokens";
-import { readReceipts } from "@jwitmann/operator-core/context/receipts";
+import type { RequestMessage } from "@jwitmann/vcc-brain-core/context/tokens";
+import { readReceipts } from "@jwitmann/vcc-brain-core/context/receipts";
 
 import { createContextRuntime, sessionRuntime } from "../src/runtime.ts";
 import { maybeAppendBrainUpdateReminder } from "../src/brain-updates.ts";
@@ -27,12 +27,12 @@ const STATE = "/state";
 function seedBrain(): void {
   for (const root of [`${PROJECT}/.vcc-brain`, `${PROJECT}/.vcc-brain-shared`]) {
     fs.mkdirSync(`${root}/index`, { recursive: true });
-    fs.writeFileSync(`${root}/operator.md`, `# ops ${root}`);
+    fs.writeFileSync(`${root}/vcc-brain.md`, `# ops ${root}`);
     fs.writeFileSync(`${root}/catalog.md`, `# catalog ${root}`);
     fs.writeFileSync(`${root}/index/index.md`, `# index ${root}`);
   }
   fs.mkdirSync(`${HOME}/.vcc-brain/user`, { recursive: true });
-  fs.writeFileSync(`${HOME}/.vcc-brain/user/operator.md`, "# user ops");
+  fs.writeFileSync(`${HOME}/.vcc-brain/user/vcc-brain.md`, "# user ops");
   fs.writeFileSync(`${HOME}/.vcc-brain/user/catalog.md`, "# user catalog");
 }
 
@@ -140,7 +140,7 @@ test("reminds once per fingerprint era", async () => {
     completedMessages(25),
     "preamble",
   );
-  expect(reminded).toContain("<operator-brain-update-reminder>");
+  expect(reminded).toContain("<vcc-brain-brain-update-reminder>");
   expect(reminded).toContain("completed 25 tool calls without a Brain change");
 
   const repeated = await maybeAppendBrainUpdateReminder(
@@ -231,7 +231,7 @@ test("writes one log-only receipt when the reminder fires", async () => {
     completedMessages(25),
     "preamble",
   );
-  expect(reminded).toContain("<operator-brain-update-reminder>");
+  expect(reminded).toContain("<vcc-brain-brain-update-reminder>");
 
   const logged = await readReceipts(`${STATE}/context-log`, SESSION);
   expect(logged.ok && logged.value).toEqual([
@@ -279,5 +279,5 @@ test("a lost receipt never fails the reminder", async () => {
     completedMessages(25),
     "preamble",
   );
-  expect(reminded).toContain("<operator-brain-update-reminder>");
+  expect(reminded).toContain("<vcc-brain-brain-update-reminder>");
 });

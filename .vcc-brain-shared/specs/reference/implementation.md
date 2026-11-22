@@ -10,9 +10,9 @@ What has to be done to implement a harness adapter.
 
 ### Package Boundary
 
-- `@jwitmann/operator-core` — load memory and render the preamble
-- `@jwitmann/operator-helper` — filesystem setup, status, guides, Git, index lint, install, and explicit upgrade
-- `@jwitmann/operator-<harness>` — harness hooks, preamble injection, command registration, optional status UI, and harness-native update when applicable
+- `@jwitmann/vcc-brain-core` — load memory and render the preamble
+- `@jwitmann/vcc-brain-helper` — filesystem setup, status, guides, Git, index lint, install, and explicit upgrade
+- `@jwitmann/vcc-brain-<harness>` — harness hooks, preamble injection, command registration, optional status UI, and harness-native update when applicable
 
 Session, command, and UI behavior belong in the adapter, not core.
 
@@ -31,15 +31,15 @@ Composition, authority, warnings, and diagnostics are specified in [`preamble.md
 
 Expose these command intents on every supported harness. Prefer the following colon-based names, but similar host-compatible names are fully acceptable, including names with dashes instead of colons. Alternate names do not require an exception or separate approval:
 
-- `/operator:user-init` — User Setup
-- `/operator:project-init` — Project Setup
-- `/operator:index` — Project Index Setup
+- `/vcc-brain:user-init` — User Setup
+- `/vcc-brain:project-init` — Project Setup
+- `/vcc-brain:index` — Project Index Setup
 
 Orchestration, helper sequencing, and agent handoff are specified in [`commands.md`](../commands.md). How a harness registers or runs a command, including its names, is adapter-specific.
 
 #### Helper coordination
 
-- Treat `operator-helper` as the install and deterministic coordination entrypoint
+- Treat `vcc-brain-helper` as the install and deterministic coordination entrypoint
 - Do not reimplement helper filesystem or guide logic inside the adapter
 - Prefer agent-driven flows for complex setup; the harness only injects context and thin UI
 
@@ -62,14 +62,14 @@ What a reference adapter would look like, derived primarily from the OpenCode V2
 
 Before any injection, the adapter must obtain exactly one complete rendered preamble for the active project root. Two accepted pathways:
 
-- Bundled core: the adapter imports `@jwitmann/operator-core` in-process and renders memory directly. Preferred where the adapter runs in a trusted TypeScript/JavaScript runtime.
-- Helper subprocess: the adapter runs `operator-helper preamble` with the event working directory and uses its stdout unchanged. Required where the adapter cannot import core (non-TypeScript runtimes, sandboxed or untrusted hook processes).
+- Bundled core: the adapter imports `@jwitmann/vcc-brain-core` in-process and renders memory directly. Preferred where the adapter runs in a trusted TypeScript/JavaScript runtime.
+- Helper subprocess: the adapter runs `vcc-brain-helper preamble` with the event working directory and uses its stdout unchanged. Required where the adapter cannot import core (non-TypeScript runtimes, sandboxed or untrusted hook processes).
 
 Both pathways produce identical output: the complete normal preamble or the canonical all-or-nothing load diagnostic. Successful Helper output is itself the memory-load diagnostic and requires no inspection. Never a partial Brain, never a fallback preamble.
 
 ### Preamble Injection
 
-Required outcome: model calls carry the complete Operator preamble — normal or diagnostic — without partial Brain content. Both pathways below are fully acceptable. Prefer the transform pathway when it fits the harness, but do not treat persistence as a contract deviation or block an adapter over it. The transform pathway keeps one byte-stable render for the session; the persisted-context pathway may re-render at lifecycle boundaries:
+Required outcome: model calls carry the complete VCC Brain preamble — normal or diagnostic — without partial Brain content. Both pathways below are fully acceptable. Prefer the transform pathway when it fits the harness, but do not treat persistence as a contract deviation or block an adapter over it. The transform pathway keeps one byte-stable render for the session; the persisted-context pathway may re-render at lifecycle boundaries:
 
 - Transform pathway (preferred): an outgoing model-boundary context transform — a prepended synthetic user message or an appended system part — applied outside persisted history. It automatically reapplies after retries, tool turns, and compaction. Render lazily once per session, coalesce concurrent first renders, and cache the complete result so every call is byte-stable. Reference bindings: OpenCode V2, Pi.
 - Persisted-context pathway (fully accepted): lifecycle-hook output persisted into the conversation as developer context at session start, after compaction, and at subagent start. Each event renders current memory again, so later renders can reflect Brain changes made mid-session. This remains acceptable even if a non-persisted seam also exists; choose the pathway that fits the harness. Reference binding: Codex.
@@ -88,21 +88,21 @@ Cross-cutting rules under both pathways:
 
 ### Commands
 
-Register `/operator:user-init`, `/operator:project-init`, and `/operator:index` as dedicated commands that submit instructions to the agent in the current conversation. Preserve user-defined commands. Host-compatible slash names are acceptable; if command registration is unavailable, use user-selected skills (Codex). **The adapter must never execute Helper on behalf of the agent.**
+Register `/vcc-brain:user-init`, `/vcc-brain:project-init`, and `/vcc-brain:index` as dedicated commands that submit instructions to the agent in the current conversation. Preserve user-defined commands. Host-compatible slash names are acceptable; if command registration is unavailable, use user-selected skills (Codex). **The adapter must never execute Helper on behalf of the agent.**
 
 Each registration supplies this prompt, substituting its command description, operation, and workflow instruction:
 
 ```text
 # {command description}
 
-1. Run `operator-helper version`. If an update is available, run `operator-helper upgrade` before continuing.
-2. Run `operator-helper {operation}`. {workflow instruction}
+1. Run `vcc-brain-helper version`. If an update is available, run `vcc-brain-helper upgrade` before continuing.
+2. Run `vcc-brain-helper {operation}`. {workflow instruction}
 
 ## Recovery
 
-- If Helper cannot start, install or repair the npm package `@jwitmann/operator-helper` globally and retry the failed command.
+- If Helper cannot start, install or repair the npm package `@jwitmann/vcc-brain-helper` globally and retry the failed command.
 - If the version check or upgrade fails, diagnose the error and retry.
-- If `operator-helper {operation}` reports a failure, use its output to resolve it and rerun it as needed.
+- If `vcc-brain-helper {operation}` reports a failure, use its output to resolve it and rerun it as needed.
 - If you cannot resolve a problem, report the blocker.
 
 Use Helper output as working context. Do not reproduce it wholesale or reimplement Helper logic.
@@ -116,7 +116,7 @@ Optional. Where present: show active or ready state with `Local Build` or `vX.Y.
 
 ### Installation And Updates
 
-Helper owns installation and repair through `operator-helper install <harness>`. Prefer harness-native plugin update flows where they exist; the adapter never races or mutates the harness package store beyond its documented installation ownership.
+Helper owns installation and repair through `vcc-brain-helper install <harness>`. Prefer harness-native plugin update flows where they exist; the adapter never races or mutates the harness package store beyond its documented installation ownership.
 
 ### Runtime Shape
 

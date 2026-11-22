@@ -2,7 +2,7 @@ import { Rpc } from "@opencode/plugin/rpc";
 
 import { pluginId } from "./id.ts";
 
-export const OperatorNotifications = Rpc.define({
+export const VccBrainNotifications = Rpc.define({
   id: pluginId,
   methods: {
     status: {
@@ -38,7 +38,7 @@ export const OperatorNotifications = Rpc.define({
   },
 });
 
-export type OperatorToast = {
+export type VccBrainToast = {
   readonly title: string;
   readonly message: string;
   readonly variant: "info" | "success" | "warning" | "error";
@@ -46,7 +46,7 @@ export type OperatorToast = {
 
 export type PartitionStatus = "loaded" | "uninitialized" | "error";
 
-export type OperatorStatus = {
+export type VccBrainStatus = {
   readonly detail: string;
   readonly user: PartitionStatus;
   readonly private: PartitionStatus;

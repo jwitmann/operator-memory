@@ -2,7 +2,7 @@
 
 Last Updated: October 11, 2026
 
-Reference for Google's native Antigravity application plugin API, not the Python SDK or an implemented Operator adapter. Antigravity 2.0 is the graphical project/orchestration application; CLI `agy` exposes the shared agent engine in a terminal; IDE is the standalone editor surface. Discovery and application-data paths differ by surface.
+Reference for Google's native Antigravity application plugin API, not the Python SDK or an implemented VCC Brain adapter. Antigravity 2.0 is the graphical project/orchestration application; CLI `agy` exposes the shared agent engine in a terminal; IDE is the standalone editor surface. Discovery and application-data paths differ by surface.
 
 #### Guide Map
 

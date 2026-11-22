@@ -11,9 +11,9 @@ Hooks are standalone JSON files in `.kiro/hooks/` (project) or `~/.kiro/hooks/` 
   "version": "v1",
   "hooks": [
     {
-      "name": "operator-memory",
+      "name": "vcc-brain",
       "trigger": "SessionStart",
-      "action": { "type": "command", "command": "operator-helper preamble" }
+      "action": { "type": "command", "command": "vcc-brain-helper preamble" }
     }
   ]
 }
@@ -66,7 +66,7 @@ Matchers accept canonical internal names (`fs_read`, `fs_write`, `execute_bash`,
 
 ## Legacy formats
 
-- CLI legacy engines: embedded camelCase agent-profile hooks precede the standalone format. Profile configuration is outside Operator's general installation scope; details live in [injection verification](./injection.md).
+- CLI legacy engines: embedded camelCase agent-profile hooks precede the standalone format. Profile configuration is outside VCC Brain's general installation scope; details live in [injection verification](./injection.md).
 - IDE 0.x: `.kiro.hook` format with `when`/`then` structure; trigger renames map camelCase to the PascalCase list above. IDE migrates via the Agent Hooks panel.
 
 ## Notes for adapter design

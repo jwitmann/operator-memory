@@ -8,7 +8,7 @@ type HookEvent = {
 };
 
 const SESSION_SOURCES: ReadonlySet<string> = new Set(["startup", "clear", "compact"]);
-const FAILURE_MESSAGE = "Operator could not load memory because operator-helper preamble failed.";
+const FAILURE_MESSAGE = "VCC Brain could not load memory because vcc-brain-helper preamble failed.";
 
 function fail(): never {
   process.stdout.write(JSON.stringify({ continue: false, systemMessage: FAILURE_MESSAGE }));
@@ -37,7 +37,7 @@ function main(): void {
   const event = readEvent();
   if (event.hookEventName === "SessionStart" && !SESSION_SOURCES.has(event.source ?? "")) return;
 
-  const result = spawnSync("operator-helper", ["preamble"], {
+  const result = spawnSync("vcc-brain-helper", ["preamble"], {
     cwd: event.cwd,
     encoding: "utf8",
     shell: process.platform === "win32",

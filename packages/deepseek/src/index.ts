@@ -1,13 +1,13 @@
 import { homedir } from "node:os";
-import { loadMemorySnapshot } from "@jwitmann/operator-core/memory/load";
-import { resolveBrainRoots, resolveStateDirectory } from "@jwitmann/operator-core/memory/roots";
-import { renderPreamble } from "@jwitmann/operator-core/preamble";
-import { fingerprintPreamble } from "@jwitmann/operator-core/preamble-refresh";
+import { loadMemorySnapshot } from "@jwitmann/vcc-brain-core/memory/load";
+import { resolveBrainRoots, resolveStateDirectory } from "@jwitmann/vcc-brain-core/memory/roots";
+import { renderPreamble } from "@jwitmann/vcc-brain-core/preamble";
+import { fingerprintPreamble } from "@jwitmann/vcc-brain-core/preamble-refresh";
 import type { Context } from "@deepseek-ai/cordis";
 import type { Agent } from "@deepseek-ai/dsh-agent";
 import { maybeAppendBrainUpdateReminder } from "./brain-updates.ts";
 import { registerCommands } from "./commands.ts";
-import { DEFAULT_OPERATOR_DEEPSEEK_CONFIG, parseOperatorConfig } from "./config.ts";
+import { DEFAULT_VCC_BRAIN_DEEPSEEK_CONFIG, parseVccBrainConfig } from "./config.ts";
 import { registerSessionObservers, type TokenMeterLike } from "./events.ts";
 import {
   registerLoopEnforcement,
@@ -25,13 +25,13 @@ import {
 import { DEFAULT_BRAIN_PATHS, registerCompactionShaping } from "./shaping.ts";
 
 /** Cordis plugin name used by DeepSeek Harness diagnostics. */
-export const name = "operator-memory";
+export const name = "vcc-brain";
 
 /** Service required for asynchronous system-prompt contribution. */
 export const inject = ["systemPrompt"];
 
 /**
- * Start the Operator Host plugin for this DeepSeek Harness runtime.
+ * Start the VCC Brain Host plugin for this DeepSeek Harness runtime.
  *
  * @param context - plugin context; `tokenMeter` and `compaction` are read
  * defensively (optional services) so the preamble-only baseline works on
@@ -41,15 +41,15 @@ export const inject = ["systemPrompt"];
  * preamble-only adapter.
  */
 export function apply(context: Context, rawConfig?: unknown): void {
-  const parsed = parseOperatorConfig(rawConfig ?? null);
+  const parsed = parseVccBrainConfig(rawConfig ?? null);
   if (!parsed.ok) {
     try {
-      context.logger?.warn?.(`operator-memory: ignoring invalid config: ${parsed.error.message}`);
+      context.logger?.warn?.(`vcc-brain: ignoring invalid config: ${parsed.error.message}`);
     } catch {
       // Logging must never break plugin startup.
     }
   }
-  const config = parsed.ok ? parsed.value : DEFAULT_OPERATOR_DEEPSEEK_CONFIG;
+  const config = parsed.ok ? parsed.value : DEFAULT_VCC_BRAIN_DEEPSEEK_CONFIG;
 
   // Service handles captured from whatever layer exposes them (the joint
   // `["tokenMeter", "compaction"]` inject never fires in the TUI
@@ -89,7 +89,7 @@ export function apply(context: Context, rawConfig?: unknown): void {
   const reportReceiptFailure = (sessionId: string | null, kind: ReceiptFailureKind): void => {
     try {
       context.logger?.warn?.(
-        `operator-memory: context log write failed (${kind}) for session ${sessionId}.`,
+        `vcc-brain: context log write failed (${kind}) for session ${sessionId}.`,
       );
     } catch {
       // Never break the hot path for observability.
@@ -137,7 +137,7 @@ export function apply(context: Context, rawConfig?: unknown): void {
       renders.delete(agent);
       try {
         context.logger?.warn?.(
-          `operator-memory: preamble render failed, skipping section: ${String(error).slice(0, 200)}`,
+          `vcc-brain: preamble render failed, skipping section: ${String(error).slice(0, 200)}`,
         );
       } catch {
         // Logging must never break prompt assembly.
@@ -230,7 +230,7 @@ export function apply(context: Context, rawConfig?: unknown): void {
     }
 
     assembly.sections.unshift({
-      name: "operator:memory",
+      name: "vcc-brain:memory",
       text,
       interpolate: false,
     });

@@ -24,7 +24,7 @@ Minimal legacy manifest:
 {
   "name": "jwitmann",
   "version": "0.1.0",
-  "description": "Operator Memory",
+  "description": "VCC Brain",
   "hooks": "./hooks/hooks.json"
 }
 ```

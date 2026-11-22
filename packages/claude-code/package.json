@@ -1,12 +1,12 @@
 {
-  "name": "@jwitmann/operator-claude-code",
+  "name": "@jwitmann/vcc-brain-claude-code",
   "version": "0.3.1",
-  "description": "Operator Memory adapter for Claude Code.",
+  "description": "VCC Brain adapter for Claude Code.",
   "license": "BSD-3-Clause",
   "author": "jwitmann",
-  "homepage": "https://github.com/jwitmann/operator-memory#readme",
+  "homepage": "https://github.com/jwitmann/vcc-brain#readme",
   "bugs": {
-    "url": "https://github.com/jwitmann/operator-memory/issues"
+    "url": "https://github.com/jwitmann/vcc-brain/issues"
   },
   "files": [
     ".claude-plugin",
@@ -22,7 +22,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jwitmann/operator-memory.git",
+    "url": "git+https://github.com/jwitmann/vcc-brain.git",
     "directory": "packages/claude-code"
   },
   "engines": {

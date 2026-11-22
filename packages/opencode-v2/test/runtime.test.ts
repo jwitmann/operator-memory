@@ -1,4 +1,4 @@
-import { appendReceipt } from "@jwitmann/operator-core/context/receipts";
+import { appendReceipt } from "@jwitmann/vcc-brain-core/context/receipts";
 import { vol } from "memfs";
 import { beforeEach, expect, test, vi } from "vitest";
 
@@ -235,6 +235,6 @@ test("shared runtime is pinned to globalThis so a module reload keeps it", () =>
   const runtime = sharedContextRuntime();
 
   expect(
-    (globalThis as unknown as { __operatorContextRuntime: unknown }).__operatorContextRuntime,
+    (globalThis as unknown as { __vccBrainContextRuntime: unknown }).__vccBrainContextRuntime,
   ).toBe(runtime);
 });

@@ -1,7 +1,7 @@
 // Per-session compaction snapshot: the lossless counterpart of the compiled
 // checkpoint. Stores cleaned raw request messages (full text, reasoning, raw
-// tool-call input, full tool-result values) so `operator-recall` and
-// `operator-search` can restore exactly what a checkpoint elided or
+// tool-call input, full tool-result values) so `vcc-brain-recall` and
+// `vcc-brain-search` can restore exactly what a checkpoint elided or
 // truncated. Faithful logic port of the port repo's `snapshot.mjs` (itself
 // derived from dsh-compaction-vcc@0.7.4): seq assignment goes through the
 // same `toCompilerNode` filter as the checkpoint header, so recall seqs are
@@ -19,9 +19,9 @@
 //   seen-presence skip, which would freeze such staleness in). The
 //   oracle's >1MB warn tripwire has no console here, so the constant is
 //   kept for observability and the write still lands.
-// - Surface is agent tools (`operator-recall`, `operator-search`), not slash
+// - Surface is agent tools (`vcc-brain-recall`, `vcc-brain-search`), not slash
 //   commands: the checkpoint guide promises agent-callable recovery, and
-//   tools follow the `operator-read_omitted` precedent. No status formatter:
+//   tools follow the `vcc-brain-read_omitted` precedent. No status formatter:
 //   the file itself is the status.
 // - No `console` output anywhere: failures resolve through Result, never warn.
 
@@ -36,14 +36,14 @@ import {
   type RecallMessage,
   type RecallResult,
   type SeqSelection,
-} from "@jwitmann/operator-core/context/recall";
+} from "@jwitmann/vcc-brain-core/context/recall";
 import {
   DEFAULT_MAX_SEARCH_HITS,
   searchSession,
   type SearchResult,
-} from "@jwitmann/operator-core/context/search";
-import { isSafePathSegment } from "@jwitmann/operator-core/context/store";
-import { failure, isRecord, type Result, success } from "@jwitmann/operator-core/utils";
+} from "@jwitmann/vcc-brain-core/context/search";
+import { isSafePathSegment } from "@jwitmann/vcc-brain-core/context/store";
+import { failure, isRecord, type Result, success } from "@jwitmann/vcc-brain-core/utils";
 
 import {
   mediaLabel,
@@ -544,7 +544,7 @@ export function searchSnapshot(
 // Format a recall tool reply (header + recalled text).
 export function formatRecallReply(type: string, id: string, recalled: RecallResult): string {
   const label =
-    `**operator-recall ${type} ${id}** (${recalled.seqs.length} event(s), ${recalled.tokens} tokens`
+    `**vcc-brain-recall ${type} ${id}** (${recalled.seqs.length} event(s), ${recalled.tokens} tokens`
     + `${recalled.missing > 0 ? `, ${recalled.missing} missing` : ""}`
     + `${recalled.truncated ? ", budget-truncated" : ""})`;
   return `${label}\n\n${recalled.text}`;
@@ -552,7 +552,7 @@ export function formatRecallReply(type: string, id: string, recalled: RecallResu
 
 // Format a search tool reply (header + search text).
 export function formatSearchReply(pattern: string, found: SearchResult): string {
-  return `**operator-search ${pattern}** (${found.totalMatches} matching event(s))\n\n${found.text}`;
+  return `**vcc-brain-search ${pattern}** (${found.totalMatches} matching event(s))\n\n${found.text}`;
 }
 
 // Classify a snapshot read for tool wiring: read-failure vs empty vs ready

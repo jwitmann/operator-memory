@@ -6,24 +6,24 @@ import { createStore } from "solid-js/store";
 import packageJson from "../package.json" with { type: "json" };
 import { pluginId } from "./id.ts";
 import {
-  OperatorNotifications,
-  type OperatorStatus,
-  type OperatorToast,
+  VccBrainNotifications,
+  type VccBrainStatus,
+  type VccBrainToast,
   type PartitionStatus,
 } from "./notifications.ts";
 
 type Location = Context["location"];
 type StatusState =
   | { readonly connection: "connecting" | "unavailable"; readonly detail: string }
-  | ({ readonly connection: "ready" } & OperatorStatus);
+  | ({ readonly connection: "ready" } & VccBrainStatus);
 
-const OperatorTuiPlugin = Plugin.define({
+const VccBrainTuiPlugin = Plugin.define({
   id: pluginId,
   setup(context) {
     const [statuses, setStatuses] = createStore<Record<string, StatusState>>({});
     const activeSessions = new Set<string>();
     const pending = new Map<string, Promise<void>>();
-    const client = context.client.rpc(OperatorNotifications);
+    const client = context.client.rpc(VccBrainNotifications);
     const status = (location: Location) =>
       statuses[locationKey(location)] ?? {
         connection: "connecting",
@@ -105,13 +105,13 @@ const OperatorTuiPlugin = Plugin.define({
   },
 });
 
-export default OperatorTuiPlugin;
+export default VccBrainTuiPlugin;
 
 export function statusLabel(status: StatusState): string {
   const suffix = status.detail.length > 0 ? ` (${status.detail})` : "";
-  if (status.connection === "connecting") return `Operator Connecting...${suffix}`;
-  if (status.connection === "unavailable") return `Operator Unavailable${suffix}`;
-  return `Operator Ready${suffix}`;
+  if (status.connection === "connecting") return `VCC Brain Connecting...${suffix}`;
+  if (status.connection === "unavailable") return `VCC Brain Unavailable${suffix}`;
+  return `VCC Brain Ready${suffix}`;
 }
 
 function ReadyIndicator(props: { readonly context: Context; readonly status: () => StatusState }) {
@@ -146,7 +146,7 @@ function PartitionStatusView(props: {
   return (
     <box gap={0}>
       <text fg={props.context.theme.text.default}>
-        <b>Operator Status</b>
+        <b>VCC Brain Status</b>
       </text>
       <StatusRow context={props.context} label="User" status={partition(props.status(), "user")} />
       <StatusRow
@@ -161,7 +161,7 @@ function PartitionStatusView(props: {
       />
       <Show when={hasError()}>
         <text fg={props.context.theme.text.feedback.warning.default}>
-          Ask the agent to diagnose Operator loading
+          Ask the agent to diagnose VCC Brain loading
         </text>
       </Show>
     </box>
@@ -203,7 +203,7 @@ function locationKey(location: Location): string {
   return JSON.stringify(location ?? null);
 }
 
-function parseStatus(value: unknown): OperatorStatus | null {
+function parseStatus(value: unknown): VccBrainStatus | null {
   if (value === null || typeof value !== "object") return null;
   if (!("detail" in value) || typeof value.detail !== "string") return null;
   if (!("user" in value) || !isPartitionStatus(value.user)) return null;
@@ -216,7 +216,7 @@ function isPartitionStatus(value: unknown): value is PartitionStatus {
   return value === "loaded" || value === "uninitialized" || value === "error";
 }
 
-function parseToast(value: unknown): OperatorToast | null {
+function parseToast(value: unknown): VccBrainToast | null {
   if (value === null || typeof value !== "object") return null;
   if (!("title" in value) || typeof value.title !== "string") return null;
   if (!("message" in value) || typeof value.message !== "string") return null;
@@ -224,6 +224,6 @@ function parseToast(value: unknown): OperatorToast | null {
   return { title: value.title, message: value.message, variant: value.variant };
 }
 
-function isVariant(value: unknown): value is OperatorToast["variant"] {
+function isVariant(value: unknown): value is VccBrainToast["variant"] {
   return value === "info" || value === "success" || value === "warning" || value === "error";
 }

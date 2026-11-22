@@ -12,7 +12,7 @@ Most have since shipped; the remaining open items are marked.
 
 ### opencode-v1 installer fails gracelessly on the unpublished package — OPEN (added 2026-11-21)
 
-`operator-helper install opencode-v1` resolves `@jwitmann/operator-opencode@latest`,
+`vcc-brain-helper install opencode-v1` resolves `@jwitmann/vcc-brain-opencode@latest`,
 which was never published (V1 frozen and excluded from all release
 machinery), so fresh installs die in the package manager with a bare E404.
 Direction: fail loudly in the installer with a frozen/unpublished
@@ -22,8 +22,8 @@ behavior gap.
 
 ### No helper integration for the new option blocks (deliberately skipped)
 
-The `operator.contextManagement` and `operator.preambleRefresh` blocks
-need no `@jwitmann/operator-helper` support: both validate their own
+The `vcc-brain.contextManagement` and `vcc-brain.preambleRefresh` blocks
+need no `@jwitmann/vcc-brain-helper` support: both validate their own
 options (wrong-typed values fail loudly with an error toast, absent
 blocks fall back to safe disabled defaults), and `memory check` already
 covers the Brain health they depend on. Revisit only if a real
@@ -97,18 +97,18 @@ older entries label `manual`; entry always consumed once.
 
 ### Bound the omission store — shipped
 
-The per-session omission store under `~/.operator/state/omitted/` is
+The per-session omission store under `~/.vcc-brain/state/omitted/` is
 append-only with no pruning, so long-lived sessions grow without bound.
 Direction: count/byte/age retention in core (`pruneOmissions` plus
 `DEFAULT_RETENTION`: 200 payloads, 32 MiB, 30 days), the count cap
 enforced automatically on every batch store, the full policy exposed
-through an `operator-prune` tool for the current session. Notices keep
+through an `vcc-brain-prune` tool for the current session. Notices keep
 their content IDs after pruning; recovery of a pruned payload reports
 absence gracefully.
 
 Shipped: `pruneOmissions` (expired, over-count oldest-first, over-bytes
 newest kept; dangling index entries healed on sized sweeps), adapter
-auto-cap on the write path, `operator-prune` tool, `DEFAULT_RETENTION`
+auto-cap on the write path, `vcc-brain-prune` tool, `DEFAULT_RETENTION`
 as the single source for both.
 
 ### Measure brain-reminder compliance — OPEN (standing)

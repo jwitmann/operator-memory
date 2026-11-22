@@ -3,15 +3,15 @@ import { Effect } from "effect";
 import type { CliContext } from "../../utils.ts";
 import { type ProcessResult, runProcess } from "../common.ts";
 
-const PLUGIN_ID = "operator@operator-memory";
+const PLUGIN_ID = "vcc-brain@vcc-brain";
 
 export const installClaudeCode = Effect.fn("installClaudeCode")(function* (context: CliContext) {
-  const helper = yield* runProcess("operator-helper", ["help"], context.cwd, null);
-  const helperFailure = commandFailure(helper, "Operator Helper must be available on PATH");
+  const helper = yield* runProcess("vcc-brain-helper", ["help"], context.cwd, null);
+  const helperFailure = commandFailure(helper, "VCC Brain Helper must be available on PATH");
   if (helperFailure !== null) return helperFailure;
 
   const commands = [
-    ["plugin", "marketplace", "add", "jwitmann/operator-memory"],
+    ["plugin", "marketplace", "add", "jwitmann/vcc-brain"],
     ["plugin", "install", PLUGIN_ID],
     ["plugin", "update", PLUGIN_ID],
   ];

@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 
-import { projectConfigPaths } from "@jwitmann/operator-core/memory/roots";
+import { projectConfigPaths } from "@jwitmann/vcc-brain-core/memory/roots";
 
 import { parseBrainUpdatesBlock, type BrainUpdatesConfig } from "./brain-updates-config.ts";
 import { parseContextManagementBlock, type ContextManagementConfig } from "./context-config.ts";

@@ -6,8 +6,14 @@ import { Effect } from "effect";
 import { type CliContext, getErrorMessage } from "../../utils.ts";
 import { pathKind, type ProcessResult, readOptionalFile, runProcess } from "../common.ts";
 
-const MARKETPLACE_MARKER = "Operator Memory managed Codex marketplace.\n";
-const MARKETPLACE_NAME = "operator-memory";
+const MARKETPLACE_MARKER = "VCC Brain managed Codex marketplace.\n";
+const LEGACY_MARKETPLACE_MARKER = "Operator Memory managed Codex marketplace.\n";
+
+function isManagedMarketplace(content: string | null): boolean {
+  return content === MARKETPLACE_MARKER || content === LEGACY_MARKETPLACE_MARKER;
+}
+
+const MARKETPLACE_NAME = "vcc-brain";
 const PLUGIN_NAME = "jwitmann";
 const PLUGIN_ID = `${PLUGIN_NAME}@${MARKETPLACE_NAME}`;
 const MARKETPLACE = `${JSON.stringify(
@@ -18,7 +24,7 @@ const MARKETPLACE = `${JSON.stringify(
         name: PLUGIN_NAME,
         source: {
           source: "npm",
-          package: "@jwitmann/operator-codex",
+          package: "@jwitmann/vcc-brain-codex",
           version: "latest",
         },
         policy: { installation: "AVAILABLE" },
@@ -70,7 +76,7 @@ export const installCodex = Effect.fn("installCodex")(function* (context: CliCon
     exitCode: 0,
     output: [
       "✓ Codex plugin installed and enabled",
-      "Start a new Codex session and approve the Operator hooks if prompted.",
+      "Start a new Codex session and approve the VCC Brain hooks if prompted.",
     ].join("\n"),
   };
 });
@@ -82,14 +88,14 @@ function writeMarketplace(
   | { readonly ok: false; readonly result: { readonly exitCode: 1; readonly output: string } }
 > {
   return Effect.promise(async () => {
-    const root = join(home, ".operator-helper", "codex-marketplace");
-    const marker = join(root, ".operator-managed");
+    const root = join(home, ".vcc-brain-helper", "codex-marketplace");
+    const marker = join(root, ".vcc-brain-managed");
     const marketplace = join(root, ".agents", "plugins", "marketplace.json");
     try {
       const kind = await pathKind(root);
       if (
         kind !== "missing"
-        && (kind !== "directory" || (await readOptionalFile(marker)) !== MARKETPLACE_MARKER)
+        && (kind !== "directory" || !isManagedMarketplace(await readOptionalFile(marker)))
       ) {
         return {
           ok: false,
@@ -141,8 +147,8 @@ function registerDesktopMarketplace(
     return {
       exitCode: 0,
       output: [
-        "✓ Registered the Operator Codex marketplace",
-        "Codex CLI unavailable: install aerovato@operator-memory from the Codex plugins browser, then start a new session and approve the Operator hooks.",
+        "✓ Registered the VCC Brain Codex marketplace",
+        "Codex CLI unavailable: install aerovato@vcc-brain from the Codex plugins browser, then start a new session and approve the VCC Brain hooks.",
         // External plugin-browser name: lives outside this repo and cannot
         // be renamed unilaterally. Marketplace-entry rename is a follow-up.
       ].join("\n"),

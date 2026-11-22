@@ -1,7 +1,7 @@
 import type { Context, SlotClaim } from "@opencode/plugin/tui/context";
 import { expect, test, vi } from "vitest";
 
-import OperatorTuiPlugin, { statusLabel } from "../src/tui.tsx";
+import VccBrainTuiPlugin, { statusLabel } from "../src/tui.tsx";
 
 const { effects } = vi.hoisted(() => ({ effects: [] as Array<() => void> }));
 vi.mock("solid-js", async importOriginal => ({
@@ -32,7 +32,7 @@ test("queries server status and registers parity slots", async () => {
     },
   });
 
-  OperatorTuiPlugin.setup(context);
+  VccBrainTuiPlugin.setup(context);
 
   await vi.waitFor(() => expect(status).toHaveBeenCalledWith({ refresh: false }, undefined));
   expect(claims.map(claim => "append" in claim && claim.append)).toEqual([
@@ -55,7 +55,7 @@ test("queries status when the initial home location resolves", async () => {
     },
   });
   Object.defineProperty(context, "location", { get: () => location.current });
-  OperatorTuiPlugin.setup(context);
+  VccBrainTuiPlugin.setup(context);
 
   const home = claims.find(claim => "append" in claim && claim.append === "home.footer.status");
   if (home === undefined) throw new Error("Home footer slot was not registered");
@@ -81,18 +81,18 @@ test("shows server notification events as toasts", () => {
     listen: callback => {
       callback({
         details: {
-          type: "rpc.jwitmann.operator-memory.toast",
-          data: { title: "Operator Error", message: "failed", variant: "error" },
+          type: "rpc.jwitmann.vcc-brain.toast",
+          data: { title: "VCC Brain Error", message: "failed", variant: "error" },
         },
       });
       return vi.fn();
     },
   });
 
-  const cleanup = OperatorTuiPlugin.setup(context);
+  const cleanup = VccBrainTuiPlugin.setup(context);
 
   expect(show).toHaveBeenCalledWith({
-    title: "Operator Error",
+    title: "VCC Brain Error",
     message: "failed",
     variant: "error",
     duration: 10_000,
@@ -102,7 +102,7 @@ test("shows server notification events as toasts", () => {
 
 test("labels connecting, ready, and unavailable states", () => {
   expect(statusLabel({ connection: "connecting", detail: "v1.2.3" })).toBe(
-    "Operator Connecting... (v1.2.3)",
+    "VCC Brain Connecting... (v1.2.3)",
   );
   expect(
     statusLabel({
@@ -112,9 +112,9 @@ test("labels connecting, ready, and unavailable states", () => {
       private: "loaded",
       shared: "loaded",
     }),
-  ).toBe("Operator Ready (Local Build)");
+  ).toBe("VCC Brain Ready (Local Build)");
   expect(statusLabel({ connection: "unavailable", detail: "v1.2.3" })).toBe(
-    "Operator Unavailable (v1.2.3)",
+    "VCC Brain Unavailable (v1.2.3)",
   );
 });
 
@@ -136,7 +136,7 @@ test("refreshes status after a top-level session becomes idle", async () => {
     session: { parentID: undefined, location: { directory: "/project" } },
     status,
   });
-  OperatorTuiPlugin.setup(context);
+  VccBrainTuiPlugin.setup(context);
   await vi.waitFor(() => expect(status).toHaveBeenCalledTimes(1));
 
   handlers.get("session.status")?.({

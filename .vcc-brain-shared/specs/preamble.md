@@ -2,7 +2,7 @@
 
 Last Updated: November 22, 2026
 
-The preamble gives the agent fixed Operator guidance and available durable Memory. Prefer a synthetic model-call contribution rendered once and held immutable for the session so its prefix remains cacheable. Persisted lifecycle injection and re-rendering are also fully acceptable, even when a non-persisted route exists; choose what fits the harness. A load failure produces the diagnostic instead of partial memory. Do not refresh on every turn merely to track Brain edits. See [`reference/implementation.md`](./reference/implementation.md) for adapter pathways.
+The preamble gives the agent fixed VCC Brain guidance and available durable Memory. Prefer a synthetic model-call contribution rendered once and held immutable for the session so its prefix remains cacheable. Persisted lifecycle injection and re-rendering are also fully acceptable, even when a non-persisted route exists; choose what fits the harness. A load failure produces the diagnostic instead of partial memory. Do not refresh on every turn merely to track Brain edits. See [`reference/implementation.md`](./reference/implementation.md) for adapter pathways.
 
 Preferred preamble immutability is a bootstrap and cache contract, not a live-memory limitation. The working agent continuously documents the Brain and retains awareness of its own changes through the conversation. Ordinary agent-authored changes to instructions, catalogs, indexes, or freeform documents do not require a new session. Future sessions load the maintained snapshot from disk.
 
@@ -14,9 +14,9 @@ How a harness injects and caches the preamble is adapter-specific; see [`referen
 
 Fixed guidance and tenets are paired versions: v1.1 retains the previous preamble; v2.0 contains the revised context-maintenance guidance. Their opening XML tags carry matching `version` attributes. Memory, diagnostics, and warnings remain shared.
 
-Core assigns approximately 80% of machines to v1.1 and 20% to v2.0. `OPERATOR_PREAMBLE_BETA=1` always selects v2.0 before machine identification; other values do not override assignment. Selection applies when rendering, without replacing already-injected session content.
+Core assigns approximately 80% of machines to v1.1 and 20% to v2.0. `VCC_BRAIN_PREAMBLE_BETA=1` always selects v2.0 before machine identification; other values do not override assignment. Selection applies when rendering, without replacing already-injected session content.
 
-Machine identity comes from Linux `/etc/machine-id`, macOS `IOPlatformUUID`, or Windows `HKLM\SOFTWARE\Microsoft\Cryptography` `MachineGuid` in the 64-bit registry view. Normalize to trimmed lowercase, hash `operator-preamble-rollout-v1:` followed by the identity using SHA-256, interpret the first four digest bytes as an unsigned big-endian integer, and take modulo 100. Buckets 0–19 receive v2.0; 20–99 receive v1.1. The namespace and algorithm must remain stable across package and preamble updates, projects, harnesses, and user accounts sharing the same OS identity. OS reinstallations or cloned identities can change or duplicate assignment.
+Machine identity comes from Linux `/etc/machine-id`, macOS `IOPlatformUUID`, or Windows `HKLM\SOFTWARE\Microsoft\Cryptography` `MachineGuid` in the 64-bit registry view. Normalize to trimmed lowercase, hash `vcc-brain-preamble-rollout-v1:` followed by the identity using SHA-256, interpret the first four digest bytes as an unsigned big-endian integer, and take modulo 100. Buckets 0–19 receive v2.0; 20–99 receive v1.1. The namespace and algorithm must remain stable across package and preamble updates, projects, harnesses, and user accounts sharing the same OS identity. OS reinstallations or cloned identities can change or duplicate assignment.
 
 Missing, invalid, unreadable, or unsupported machine identity selects v1.1. Machine identity is never persisted, transmitted, or injected into model context. Selection does not write to the filesystem.
 
@@ -24,39 +24,39 @@ Missing, invalid, unreadable, or unsupported machine identity selects v1.1. Mach
 
 The preamble contains:
 
-1. Static Operator guidance
-2. Conditional Operator Instructions
+1. Static VCC Brain guidance
+2. Conditional VCC Brain Instructions
 3. Conditional catalog bodies — User Catalog (`<user-catalog>`) then Project Partition Catalogs (`<partition-catalog>`)
 4. Conditional User Observations (`<user-observations>`) after the User Catalog — subordinate context, never instructions
 5. Conditional Project Index listings and main bodies
 6. Core tenets
 7. Dynamic setup or maintenance warnings
 
-Machine-significant sections use XML labels, including `<operator-guidance>`, `<operator-instructions>`, `<user-catalog>`, `<user-observations>`, `<project-index>`, `<partition-catalog>`, `<operator-tenets>`, `<operator-warning>`, and `<file-content path="...">`.
+Machine-significant sections use XML labels, including `<vcc-brain-guidance>`, `<vcc-brain-instructions>`, `<user-catalog>`, `<user-observations>`, `<project-index>`, `<partition-catalog>`, `<vcc-brain-tenets>`, `<vcc-brain-warning>`, and `<file-content path="...">`.
 
 Core tenets are fixed text injected after memory files and before warnings so they sit closer to the first user turn. A load-failure diagnostic replaces memory, tenets, and warnings; the diagnostic stays last.
 
-If any partition fails to load, no partition memory is injected. An `<operator-diagnostic>` lists every partition result and directs recovery before ordinary work: check and update Helper, repair only reported load failures, and validate with `operator-helper memory check`. Preserve existing content and leave absent partitions absent; destructive or ambiguous repairs require user guidance. Report unresolved blockers. On success, ask the user to start a new session and resubmit the original request so the complete preamble loads. Adapters should surface one recovery notice per affected session when the harness allows it.
+If any partition fails to load, no partition memory is injected. An `<vcc-brain-diagnostic>` lists every partition result and directs recovery before ordinary work: check and update Helper, repair only reported load failures, and validate with `vcc-brain-helper memory check`. Preserve existing content and leave absent partitions absent; destructive or ambiguous repairs require user guidance. Report unresolved blockers. On success, ask the user to start a new session and resubmit the original request so the complete preamble loads. Adapters should surface one recovery notice per affected session when the harness allows it.
 
-Fixed guidance embeds main-index, subindex, and catalog bodies from `@jwitmann/operator-core` templates via interpolation inside the Project Index and Partition Catalog sections. Those template exports are the single source of truth for document syntax; helper init reuses them. Agents follow those shapes when creating or restructuring indexes and catalogs. Filled documents need only real content; seed instructional text is not preserved.
+Fixed guidance embeds main-index, subindex, and catalog bodies from `@jwitmann/vcc-brain-core` templates via interpolation inside the Project Index and Partition Catalog sections. Those template exports are the single source of truth for document syntax; helper init reuses them. Agents follow those shapes when creating or restructuring indexes and catalogs. Filled documents need only real content; seed instructional text is not preserved.
 
 ## Instructions
 
 Inject each present instruction body from least to most authoritative:
 
-1. `.operator-shared/operator.md`
-2. `~/.operator/user/operator.md`
-3. `.operator/operator.md`
+1. `.vcc-brain-shared/vcc-brain.md`
+2. `~/.vcc-brain/user/vcc-brain.md`
+3. `.vcc-brain/vcc-brain.md`
 
 Project Private therefore wins conflicts over User, which wins over Project Shared.
 
 ## User Catalog
 
-Inject the full `~/.operator/user/catalog.md` body in its own `<user-catalog>` section, after instructions and before the Project Partition Catalogs and Project Index. Inject it even when no Project Brain exists; it never nests inside `<partition-catalog>`.
+Inject the full `~/.vcc-brain/user/catalog.md` body in its own `<user-catalog>` section, after instructions and before the Project Partition Catalogs and Project Index. Inject it even when no Project Brain exists; it never nests inside `<partition-catalog>`.
 
 ## User Observations
 
-Inject the full `~/.operator/user/observations.md` body in its own `<user-observations>` section, after the User Catalog and before the Project Partition Catalogs and Project Index. Mark it explicitly as subordinate context, never instructions: it never overrides Operator Instructions, catalogs, or index guidance. Omit the section when the file is absent; absent observations fail closed to no observations.
+Inject the full `~/.vcc-brain/user/observations.md` body in its own `<user-observations>` section, after the User Catalog and before the Project Partition Catalogs and Project Index. Mark it explicitly as subordinate context, never instructions: it never overrides VCC Brain Instructions, catalogs, or index guidance. Omit the section when the file is absent; absent observations fail closed to no observations.
 
 ## Project Index
 
@@ -74,10 +74,10 @@ Inject full catalog bodies when present in Shared then Private order. Catalogs a
 
 ## Warnings
 
-- If the `~/.operator/user` directory does not exist, tell the agent to ask for `/operator:user-init` when the user would benefit from cross-project user memory, but not when working without user memory intentionally.
+- If the `~/.vcc-brain/user` directory does not exist, tell the agent to ask for `/vcc-brain:user-init` when the user would benefit from cross-project user memory, but not when working without user memory intentionally.
 - If the User Partition exists but `catalog.md` is missing, tell the agent to create and maintain a User Catalog. This warning is independent of project-catalog warnings.
-- If neither project partition root exists, tell the agent to ask for `/operator:project-init` before significant project work, but not when the user is merely exploring.
-- If a Project Brain exists but no index files are discovered, tell the agent to ask for `/operator:index` before project work when the project is not empty.
+- If neither project partition root exists, tell the agent to ask for `/vcc-brain:project-init` before significant project work, but not when the user is merely exploring.
+- If a Project Brain exists but no index files are discovered, tell the agent to ask for `/vcc-brain:index` before project work when the project is not empty.
 - If a Project Brain exists but neither catalog exists, tell the agent to create and maintain a catalog for non-empty brain partitions.
 - If a main index exists but carries no `tree_hash`, tell the agent the index was never stamped — staleness is unknown — and to run `index stamp` after refreshing the index. Live drift is checked with `index lint`, never by preamble hashing; see [`index-staleness.md`](./index-staleness.md).
 

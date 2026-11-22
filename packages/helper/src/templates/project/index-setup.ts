@@ -1,8 +1,8 @@
 export const PROJECT_INDEX_SETUP_TEMPLATE = `# Project Index Setup
 
-You are helping the user build or refresh the Operator Project Index — the living map of **codebase** structure and intent under \`.vcc-brain/index/\` and/or \`.vcc-brain-shared/index/\`.
+You are helping the user build or refresh the VCC Brain Project Index — the living map of **codebase** structure and intent under \`.vcc-brain/index/\` and/or \`.vcc-brain-shared/index/\`.
 
-Only populate or update the **main project code** index. Do not put brain layout, doctrine, specs, plans, or setup metadata in the index. You may re-run \`operator-helper index init\` and \`operator-helper index lint\` as needed.
+Only populate or update the **main project code** index. Do not put brain layout, doctrine, specs, plans, or setup metadata in the index. You may re-run \`vcc-brain-helper index init\` and \`vcc-brain-helper index lint\` as needed.
 
 **Document syntax:** Main-index and subindex structure, entry syntax, and examples are defined in the fixed preamble (Project Index section). **You must follow that preamble document syntax** when creating or filling every index file. Do not invent layouts. Write files directly from the preamble shapes (init may already have seeded a main index with canonical syntax).
 
@@ -23,8 +23,8 @@ Only populate or update the **main project code** index. Do not put brain layout
 
 Read when present:
 
-- Status listings from \`operator-helper index init\`
-- \`.vcc-brain/operator.md\` and \`.vcc-brain-shared/operator.md\` (placement / share policy)
+- Status listings from \`vcc-brain-helper index init\`
+- \`.vcc-brain/vcc-brain.md\` and \`.vcc-brain-shared/vcc-brain.md\` (placement / share policy)
 - All existing files under \`.vcc-brain/index/\` and \`.vcc-brain-shared/index/\`
 
 Decide write targets:
@@ -101,7 +101,7 @@ When spawning a subagent to fill subindexes:
 - Paste the fixed preamble subindex required shape and rules into the prompt (subagents may not have the full preamble)
 
 \`\`\`text
-You are responsible for filling one Operator Project Index subindex. Do not edit any other index file, operator.md, catalog.md, or brain content.
+You are responsible for filling one VCC Brain Project Index subindex. Do not edit any other index file, vcc-brain.md, catalog.md, or brain content.
 
 ## Assignment
 
@@ -114,7 +114,7 @@ You are responsible for filling one Operator Project Index subindex. Do not edit
 - Create or read the assigned subindex file
 - Explore the project's coverage area and fill: frontmatter, Architecture, and the tree listing
 - You may lightly explore other related packages or modules only if necessary; keep main focus on assigned directories
-- **You must follow the Project Index subindex document syntax from the fixed Operator preamble** (frontmatter, title, Coverage, Architecture, tree, entry patterns). Filled files need only real content. Do not invent layouts.
+- **You must follow the Project Index subindex document syntax from the fixed VCC Brain preamble** (frontmatter, title, Coverage, Architecture, tree, entry patterns). Filled files need only real content. Do not invent layouts.
 
 ## Rules
 
@@ -150,7 +150,7 @@ Main agent after subagents return:
 
 ## Phase 5: Verify
 
-- Run \`operator-helper index stamp\` to record the current tree hash in each main index, then run \`operator-helper index lint\` and fix reported issues
+- Run \`vcc-brain-helper index stamp\` to record the current tree hash in each main index, then run \`vcc-brain-helper index lint\` and fix reported issues
 - Re-read written files for broken subindex links, empty required sections, or wrong partition
 
 ## Phase 6: Confirm

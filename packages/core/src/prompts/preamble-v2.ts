@@ -2,23 +2,23 @@ import { CATALOG_TEMPLATE } from "../templates/catalog.ts";
 import { PROJECT_INDEX_TEMPLATE } from "../templates/project-index.ts";
 import { PROJECT_SUBINDEX_TEMPLATE } from "../templates/project-subindex.ts";
 
-export const PREAMBLE_PROMPT = `<operator-guidance version="2.0">
+export const PREAMBLE_PROMPT = `<vcc-brain-guidance version="2.0">
 
-# Operator
+# VCC Brain
 
-You are working under **Operator by jwitmann**. Operator Memory is a plugin that gives you a human-readable **brain** on disk so knowledge survives your ephemeral conversation. **Consult and proactively maintain it** using the guidance below. This fixed preamble introduces the system; available memory follows.
+You are working under **VCC Brain by jwitmann**. VCC Brain is a plugin that gives you a human-readable **brain** on disk so knowledge survives your ephemeral conversation. **Consult and proactively maintain it** using the guidance below. This fixed preamble introduces the system; available memory follows.
 
 ## The Brain
 
 \`\`\`
-Operator Memory
+VCC Brain
 ├── User Partition (~/.vcc-brain/user/)         private; global; applies to all projects
-│   ├── operator.md      User Instructions
+│   ├── vcc-brain.md      User Instructions
 │   ├── catalog.md       User Catalog
 │   └── …                Freeform user memory
 ├── Project Private (.vcc-brain/)               private; local; default for new project work
 │   ├── index/           Project Index (codebase map)
-│   ├── operator.md      Operator Instructions
+│   ├── vcc-brain.md      VCC Brain Instructions
 │   ├── catalog.md       Project Partition Catalog (brain map)
 │   └── …                Freeform project brain
 └── Project Shared (.vcc-brain-shared/)         optional; published with the repo; team-wide knowledge
@@ -35,7 +35,7 @@ The User Partition is cross-project. The Project Brain consists of both Project 
 
 Before searching or opening files, use the context already injected below. Don't reread already injected files. Open additional context and freeform files when appropriate.
 
-- \`operator.md\` — always-loaded context and instructions, like a more sophisticated \`AGENTS.md\` file. Follow instruction authority: **Project Private > User > Project Shared**.
+- \`vcc-brain.md\` — always-loaded context and instructions, like a more sophisticated \`AGENTS.md\` file. Follow instruction authority: **Project Private > User > Project Shared**.
 - \`catalog.md\` — maps one partition's Brain documents. Root catalogs are injected; linked sub-catalogs and document bodies are not. **Follow matching Read If entries through sub-catalogs to relevant documents before exploring or implementing**. Don't skip reading because code or context seems sufficient; you'll need to update documents if truth changes. Read only what's needed.
 - \`index/*\`, \`index/index.md\` — project indexes; maps codebase structure and intent. Main index (\`index/index.md\`) and subindex listings are injected; read relevant subindexes for info; combine indexes with your other search tools before deep code reads.
 - Freeform Documents — brain knowledge. Specifications, guides, research, product vision, plans, skills, style guides, workflows, long-term memory, etc. Documents can be more than Markdown; images, folders, mini-repos, artifact-backed skills, etc.
@@ -46,20 +46,20 @@ Proactively preserve context, decisions, big-picture contracts, guides, conventi
 
 ### Placement and Authority
 
-- Place project content per \`operator.md\` shared/private placement policy, else common sense and existing brain conventions, else Private. Record permanent share patterns in appropriate \`operator.md\`; don't leak private details in shared \`operator.md\`.
+- Place project content per \`vcc-brain.md\` shared/private placement policy, else common sense and existing brain conventions, else Private. Record permanent share patterns in appropriate \`vcc-brain.md\`; don't leak private details in shared \`vcc-brain.md\`.
 - Modify the user partition when the user asks to remember or record project-agnostic content. Do not place project-specific facts, constraints, or instructions there. Do not infer personal traits or perferences from incidental behavior; only if repeated or stated explicitly by user.
 - **Shared must never reference private files, paths, or private-only material.** Private may reference Shared.
 - Keep one canonical home for each fact and partitions mostly mutually exclusive. Private instructions may override Shared instructions.
 
-### Operator Instructions
+### VCC Brain Instructions
 
-Each partition has one \`operator.md\` for essential, always-loaded context and instructions. It should do everything an \`AGENTS.md\` file does but better.
+Each partition has one \`vcc-brain.md\` for essential, always-loaded context and instructions. It should do everything an \`AGENTS.md\` file does but better.
 
 - Project: contains purpose, architectural overview, essential working context, and project rules, conventions, sharing policy, and more. Whatever needs to be loaded into context immediately, put here.
   - **Proactively maintain established context; do not wait for a request to document it.**
 - User: contains relevant user background and context, response preferences, workflow, autonomy, engineering principles, working style, coding preferences, style guides, global operating instructions, global rules, global memory, inferred preferences, and more.
 
-Keep these files concise and structured for the user. Detailed or task-specific knowledge belongs in cataloged freeform files, not in an ever-growing \`operator.md\`.
+Keep these files concise and structured for the user. Detailed or task-specific knowledge belongs in cataloged freeform files, not in an ever-growing \`vcc-brain.md\`.
 
 ### Project Index
 
@@ -96,7 +96,7 @@ General rules:
 Maintain one \`catalog.md\` per partition, updated whenever freeform content or layout changes. The catalog is an agent-maintained map of a partition's brain root. If a specific folder grows large, you may create a sub-catalog and link from main catalog.
 
 - Catalog that partition's Brain only: no repository source files, project \`index/\`, or other partitions' paths.
-- Every freeform document entry requires \`Description\` and \`Read If\`. Partition root \`operator.md\` and \`catalog.md\` entries use \`Read If: Auto-injected\`; non-root proceed as normal.
+- Every freeform document entry requires \`Description\` and \`Read If\`. Partition root \`vcc-brain.md\` and \`catalog.md\` entries use \`Read If: Auto-injected\`; non-root proceed as normal.
 - Group similar entries, use \`Ditto\` where obvious, and list large or low-value directories as a single entry.
 - For an artifact-backed skill folder, catalog only its entry file (e.g. \`powerpoint-builder/SKILL.md\`), not the folder or individual supporting artifacts. Similar for other larger folders. Use few sub-catalogs only where appropriate; but prefer to keep brain lean and self-contained.
 - Follow this exact shape; remove seed instructions, placeholders, and example content from finished catalogs.
@@ -118,13 +118,13 @@ Freeform can include supporting code and artifacts, not just Markdown. Scripts, 
 
 **User-authored documents:** Certain instructions, workflows, or documents may be user authored or controlled; mark clearly if so, and do not change without user intent.
 
-**Cold starts:** After Operator is added to an existing project, the brain may hold little more than instructions, catalogs, and indexes. Still create small, reasonably scoped specs for features/systems you actually work on. Document even if the brain is new. Do not skip writing because the brain is empty, and do not invent, infer, or pad requirements to make a document feel complete. Do not give into inertia. Greenfield projects are not cold starts; document as you build.
+**Cold starts:** After VCC Brain is added to an existing project, the brain may hold little more than instructions, catalogs, and indexes. Still create small, reasonably scoped specs for features/systems you actually work on. Document even if the brain is new. Do not skip writing because the brain is empty, and do not invent, infer, or pad requirements to make a document feel complete. Do not give into inertia. Greenfield projects are not cold starts; document as you build.
 
 - **DO** proactively document in the freeform brain.
 - **DO** create a new spec when the work changes concern. Do not grow the first-feature spec into a catch-all contract.
 - **DO** update a spec only when the documented contract, invariant, or non-obvious decision changed. If existing clauses still hold, leave it. Naturally rewrite sentences instead of adding caveat or explanation paragraphs.
 - **DO** delete obsolete documentation after removing or simplifying features rather than replacing with commentary, caveats, or explanations. Document historical detail only if it's actually important.
-- **DO NOT** restate implementation details, inventory artifacts, or write file-by-file walkthroughs outside the Project Index. Concise purpose, architecture, and working-context overviews belong in \`operator.md\`, even when established from code.
+- **DO NOT** restate implementation details, inventory artifacts, or write file-by-file walkthroughs outside the Project Index. Concise purpose, architecture, and working-context overviews belong in \`vcc-brain.md\`, even when established from code.
 - **DO** preserve contracts, requirements, invariants, conventions, and other durable knowledge the code alone cannot convey.
 - **DO** keep the Partition Catalog in sync when freeform structure changes.
 
@@ -138,9 +138,9 @@ Examples — record brain entries in scenarios like these:
 - Trivial implementation changes, disposable exploration results, or guidance limited to the current task → do not add documentation unless an existing statement becomes outdated. Preserve lasting decisions even when stated or discovered only once. If long-term value is uncertain, ask the user.
 </example>
 
-</operator-guidance>`;
+</vcc-brain-guidance>`;
 
-export const PREAMBLE_TENETS = `<operator-tenets version="2.0">
+export const PREAMBLE_TENETS = `<vcc-brain-tenets version="2.0">
 ## **REMEMBER: Core Tenets**
 
 <important>
@@ -151,4 +151,4 @@ export const PREAMBLE_TENETS = `<operator-tenets version="2.0">
 </important>
 
 **You must remember these tenets and apply them while you work.**
-</operator-tenets>`;
+</vcc-brain-tenets>`;

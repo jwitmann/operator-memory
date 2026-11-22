@@ -6,9 +6,9 @@ import { NodeChildProcessSpawner, NodeFileSystem, NodePath } from "@effect/platf
 import { Effect, Layer } from "effect";
 import { afterEach, beforeEach, expect, test } from "vitest";
 
-import { loadMemorySnapshot } from "@jwitmann/operator-core/memory/load";
-import { resolveBrainRoots } from "@jwitmann/operator-core/memory/roots";
-import { renderPreamble } from "@jwitmann/operator-core/preamble";
+import { loadMemorySnapshot } from "@jwitmann/vcc-brain-core/memory/load";
+import { resolveBrainRoots } from "@jwitmann/vcc-brain-core/memory/roots";
+import { renderPreamble } from "@jwitmann/vcc-brain-core/preamble";
 
 import { runCli } from "../src/cli.ts";
 import { GitError } from "../src/git.ts";
@@ -40,7 +40,7 @@ const registry = Layer.succeed(
 const services = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, child, gitLayer, registry);
 
 beforeEach(() => {
-  directory = fs.mkdtempSync(join(tmpdir(), "operator-helper-cli-"));
+  directory = fs.mkdtempSync(join(tmpdir(), "vcc-brain-helper-cli-"));
   context = {
     cwd: join(directory, "project"),
     home: join(directory, "home"),
@@ -64,8 +64,8 @@ test("routes help, version, and invalid commands", async () => {
   expect(help.output).not.toMatch(/^user guide\s/m);
   expect(help.output).toMatch(/^index lint\s+Check Project Index structure/m);
   expect(help.output).toMatch(/^index stamp\s+Stamp Project Index/m);
-  expect(help.output).toMatch(/^memory check\s+Check that all Operator memory/m);
-  expect(help.output).toMatch(/^preamble\s+Render the Operator preamble/m);
+  expect(help.output).toMatch(/^memory check\s+Check that all VCC Brain memory/m);
+  expect(help.output).toMatch(/^preamble\s+Render the VCC Brain preamble/m);
   expect(help.output).toMatch(/^install codex\s+Install or update the Codex plugin/m);
   expect(help.output).toMatch(/^install opencode\s+Install or update the OpenCode plugin/m);
   expect(help.output).not.toMatch(/^install opencode-v2\s/m);
@@ -81,7 +81,7 @@ test("routes help, version, and invalid commands", async () => {
 
 test("formats help as plaintext", async () => {
   const help = (await executeCli(["help"], context)).output;
-  expect(help).toContain("Operator Helper");
+  expect(help).toContain("VCC Brain Helper");
   expect(help).toContain("COMMANDS\n\n");
   expect(help).toMatch(/^user status\s+Show User Partition status$/m);
   expect(help).not.toContain("FLAGS");
@@ -95,11 +95,11 @@ test("reports, initializes, preserves, and guides the user partition", async () 
   const initialized = await executeCli(["user", "init"], context);
   expect(initialized.exitCode).toBe(0);
   expect(initialized.output).toContain(
-    "✓ User Partition Initialized\nCreated  ~/.vcc-brain/user/operator.md\nCreated  ~/.vcc-brain/user/catalog.md",
+    "✓ User Partition Initialized\nCreated  ~/.vcc-brain/user/vcc-brain.md\nCreated  ~/.vcc-brain/user/catalog.md",
   );
   expect(initialized.output).toContain("# User Setup");
-  expect(fs.readFileSync(resolvePath("/home/.vcc-brain/user/operator.md"), "utf8")).toBe(
-    readTemplate(TemplatePath.UserOperator),
+  expect(fs.readFileSync(resolvePath("/home/.vcc-brain/user/vcc-brain.md"), "utf8")).toBe(
+    readTemplate(TemplatePath.UserVccBrain),
   );
   expect(fs.readFileSync(resolvePath("/home/.vcc-brain/user/catalog.md"), "utf8")).toBe(
     readTemplate(TemplatePath.UserCatalog),
@@ -115,23 +115,23 @@ test("reports, initializes, preserves, and guides the user partition", async () 
   expect(status.output).toContain("User Catalog");
   expect(status.output).toContain("~/.vcc-brain/user/catalog.md (");
   expect(status.output).toContain("Freeform Content");
-  expect(status.output).not.toContain("/operator:user-init");
+  expect(status.output).not.toContain("/vcc-brain:user-init");
 
-  fs.writeFileSync(resolvePath("/home/.vcc-brain/user/operator.md"), "custom");
+  fs.writeFileSync(resolvePath("/home/.vcc-brain/user/vcc-brain.md"), "custom");
   expect((await executeCli(["user", "init"], context)).output).toContain("Preserved");
-  expect(fs.readFileSync(resolvePath("/home/.vcc-brain/user/operator.md"), "utf8")).toBe("custom");
+  expect(fs.readFileSync(resolvePath("/home/.vcc-brain/user/vcc-brain.md"), "utf8")).toBe("custom");
 
   fs.rmSync(resolvePath("/home/.vcc-brain/user/catalog.md"));
   const incomplete = await executeCli(["user", "status"], context);
   expect(incomplete.exitCode).toBe(0);
   expect(incomplete.output).toContain("Missing (~/.vcc-brain/user/catalog.md)");
-  expect(incomplete.output).toContain("/operator:user-init");
+  expect(incomplete.output).toContain("/vcc-brain:user-init");
 
   expect(await executeCli(["user", "guide"], context)).toEqual({ exitCode: 0, output: "" });
 });
 
 test("reports a user instruction path obstruction", async () => {
-  fs.mkdirSync(resolvePath("/home/.vcc-brain/user/operator.md"), { recursive: true });
+  fs.mkdirSync(resolvePath("/home/.vcc-brain/user/vcc-brain.md"), { recursive: true });
   const result = await executeCli(["user", "status"], context);
   expect(result.exitCode).toBe(1);
   expect(result.output).toContain("Expected a file, found directory");
@@ -146,7 +146,7 @@ test("prints the user setup guide when initialization cannot create its root", a
   expect(result.output).toContain("# User Setup");
 });
 
-test.runIf(process.platform !== "win32")("restricts an existing user Operator root", async () => {
+test.runIf(process.platform !== "win32")("restricts an existing user VCC Brain root", async () => {
   fs.mkdirSync(resolvePath("/home/.vcc-brain"), { recursive: true, mode: 0o755 });
   fs.chmodSync(resolvePath("/home/.vcc-brain"), 0o755);
 
@@ -161,27 +161,27 @@ test("initializes Private content without creating the Shared partition", async 
   expect(result.output).toContain("Created  .vcc-brain/index/index.md");
   expect(result.output).toContain("Project Shared Not Initialized");
   expect(result.output).toContain("# Project Setup");
-  expect(fs.readFileSync(resolvePath("/project/.vcc-brain/operator.md"), "utf8")).toBe(
-    readTemplate(TemplatePath.ProjectOperator),
+  expect(fs.readFileSync(resolvePath("/project/.vcc-brain/vcc-brain.md"), "utf8")).toBe(
+    readTemplate(TemplatePath.ProjectVccBrain),
   );
   expect(fs.existsSync(resolvePath("/project/.vcc-brain-shared"))).toBe(false);
   expect(fs.readFileSync(resolvePath("/home/.config/git/ignore"), "utf8")).toContain(".vcc-brain/");
 
-  fs.writeFileSync(resolvePath("/project/.vcc-brain/operator.md"), "custom");
+  fs.writeFileSync(resolvePath("/project/.vcc-brain/vcc-brain.md"), "custom");
   const repeated = await executeCli(["project", "init"], context);
-  expect(repeated.output).toContain("Preserved  .vcc-brain/operator.md");
-  expect(fs.readFileSync(resolvePath("/project/.vcc-brain/operator.md"), "utf8")).toBe("custom");
+  expect(repeated.output).toContain("Preserved  .vcc-brain/vcc-brain.md");
+  expect(fs.readFileSync(resolvePath("/project/.vcc-brain/vcc-brain.md"), "utf8")).toBe("custom");
   expect(fs.existsSync(resolvePath("/project/.vcc-brain-shared"))).toBe(false);
 });
 
 test("reuses a legacy private partition instead of shadowing it", async () => {
-  seed({ "/project/.operator/operator.md": "legacy instructions" });
+  seed({ "/project/.operator/vcc-brain.md": "legacy instructions" });
 
   const result = await executeCli(["project", "init"], context);
   expect(result.exitCode).toBe(0);
   expect(result.output).toContain("Reusing legacy .operator/");
-  expect(result.output).toContain("Preserved  .operator/operator.md");
-  expect(fs.readFileSync(resolvePath("/project/.operator/operator.md"), "utf8")).toBe(
+  expect(result.output).toContain("Preserved  .operator/vcc-brain.md");
+  expect(fs.readFileSync(resolvePath("/project/.operator/vcc-brain.md"), "utf8")).toBe(
     "legacy instructions",
   );
   expect(fs.existsSync(resolvePath("/project/.vcc-brain"))).toBe(false);
@@ -189,8 +189,8 @@ test("reuses a legacy private partition instead of shadowing it", async () => {
 
 test("warns when both primary and legacy partitions exist", async () => {
   seed({
-    "/project/.vcc-brain/operator.md": "current",
-    "/project/.operator/operator.md": "legacy",
+    "/project/.vcc-brain/vcc-brain.md": "current",
+    "/project/.operator/vcc-brain.md": "legacy",
   });
 
   const result = await executeCli(["project", "status"], context);
@@ -259,13 +259,13 @@ test("reports Shared partition and file obstructions", async () => {
 });
 
 test("reports detailed project file write failures and continues", async () => {
-  fs.mkdirSync(resolvePath("/project/.vcc-brain/operator.md"), { recursive: true });
+  fs.mkdirSync(resolvePath("/project/.vcc-brain/vcc-brain.md"), { recursive: true });
 
   const result = await executeCli(["project", "init"], context);
 
   expect(result.exitCode).toBe(1);
   expect(result.output).toContain("Failed");
-  expect(result.output).toContain(".vcc-brain/operator.md");
+  expect(result.output).toContain(".vcc-brain/vcc-brain.md");
   expect(result.output).toContain("Expected a file, found directory");
   expect(result.output).toContain("# Project Setup");
   expect(fs.readFileSync(resolvePath("/project/.vcc-brain/catalog.md"), "utf8")).toBe(
@@ -292,23 +292,23 @@ test("uses a configured global ignore and appends the exact pattern", async () =
   const result = await executeCli(["project", "init"], context);
   expect(result.exitCode).toBe(0);
   expect(fs.readFileSync(ignore, "utf8")).toBe(
-    ".operator*\n# Operator: Ignore private partition\n.vcc-brain/\n.operator/\n",
+    ".operator*\n# VCC Brain: Ignore private partition\n.vcc-brain/\n.operator/\n",
   );
 });
 
 test("reports project files, freeform content, ignore, and tracked private files", async () => {
   seed({
-    "/project/.vcc-brain/operator.md": "abc",
+    "/project/.vcc-brain/vcc-brain.md": "abc",
     "/project/.vcc-brain/index/nested/core.md": "index",
     "/project/.vcc-brain/notes/plan.md": "plan",
     "/project/.vcc-brain-shared/README.md": "readme",
     "/home/.config/git/ignore": ".operator/\n",
   });
-  mockGit([".vcc-brain/operator.md"], null);
+  mockGit([".vcc-brain/vcc-brain.md"], null);
 
   const result = await executeCli(["project", "status"], context);
   expect(result.exitCode).toBe(1);
-  expect(result.output).toContain(".vcc-brain/operator.md (3 bytes)");
+  expect(result.output).toContain(".vcc-brain/vcc-brain.md (3 bytes)");
   expect(result.output.match(/Freeform Content\s+1 files/g)).toHaveLength(2);
   expect(result.output).toContain("Project Private Has Tracked Files");
 });
@@ -356,9 +356,9 @@ test("checks full memory loading and reports partition errors independently", as
   expect(missing.output).toContain("No memory load failures detected.");
 
   seed({
-    "/project/.vcc-brain-shared/operator.md": "shared",
-    "/home/.vcc-brain/user/operator.md": "user",
-    "/project/.vcc-brain/operator.md": "private",
+    "/project/.vcc-brain-shared/vcc-brain.md": "shared",
+    "/home/.vcc-brain/user/vcc-brain.md": "user",
+    "/project/.vcc-brain/vcc-brain.md": "private",
   });
   const loaded = await executeCli(["memory", "check"], context);
   expect(loaded.exitCode).toBe(0);
@@ -399,8 +399,8 @@ test("memory check accepts loadable partitions with missing core files and inval
 
 test("renders the canonical preamble for normal and failed memory loads", async () => {
   seed({
-    "/project/.vcc-brain/operator.md": "private instructions",
-    "/home/.vcc-brain/user/operator.md": "user instructions",
+    "/project/.vcc-brain/vcc-brain.md": "private instructions",
+    "/home/.vcc-brain/user/vcc-brain.md": "user instructions",
   });
   const loadedSnapshot = await loadMemorySnapshot(context.cwd, context.home, true);
   const loadedRoots = await resolveBrainRoots(context.cwd, context.home);
@@ -436,7 +436,7 @@ test("renders the canonical preamble for normal and failed memory loads", async 
       },
     }).content,
   });
-  expect(diagnostic.output).toContain("<operator-diagnostic>");
+  expect(diagnostic.output).toContain("<vcc-brain-diagnostic>");
 });
 
 test("lints frontmatter, shared private references, titles, and non-Markdown files", async () => {

@@ -69,8 +69,12 @@ test("apply registers recall and search and disposes both", () => {
   } as never);
 
   expect(register).toHaveBeenCalledTimes(2);
-  expect(register.mock.calls[0]?.[0]).toEqual(expect.objectContaining({ name: "operator-recall" }));
-  expect(register.mock.calls[1]?.[0]).toEqual(expect.objectContaining({ name: "operator-search" }));
+  expect(register.mock.calls[0]?.[0]).toEqual(
+    expect.objectContaining({ name: "vcc-brain-recall" }),
+  );
+  expect(register.mock.calls[1]?.[0]).toEqual(
+    expect.objectContaining({ name: "vcc-brain-search" }),
+  );
   dispose?.();
   expect(disposers[0]).toHaveBeenCalledOnce();
   expect(disposers[1]).toHaveBeenCalledOnce();
@@ -78,7 +82,7 @@ test("apply registers recall and search and disposes both", () => {
 
 test("recall restores a seq selection from the durable log", async () => {
   const tool = defineRecallTool();
-  expect(tool.name).toBe("operator-recall");
+  expect(tool.name).toBe("vcc-brain-recall");
   const out = (await tool.execute({ type: "seq", id: "1" }, execWith(LOG))) as {
     text: string;
     recalled: number;
@@ -86,7 +90,7 @@ test("recall restores a seq selection from the durable log", async () => {
   };
 
   expect(out.recalled).toBe(1);
-  expect(out.text).toContain("**operator-recall seq 1** (1 event(s),");
+  expect(out.text).toContain("**vcc-brain-recall seq 1** (1 event(s),");
   expect(out.text).toContain("please fix the login bug");
 });
 
@@ -159,7 +163,7 @@ test("search degrades to text on a poisoned session log", async () => {
 
 test("search finds keyword hits with recall pointers", async () => {
   const tool = defineSearchTool();
-  expect(tool.name).toBe("operator-search");
+  expect(tool.name).toBe("vcc-brain-search");
   const out = (await tool.execute({ pattern: "login" }, execWith(LOG))) as {
     text: string;
     totalMatches: number;
@@ -168,7 +172,7 @@ test("search finds keyword hits with recall pointers", async () => {
 
   expect(out.totalMatches).toBe(1);
   expect(out.pattern).toBe("login");
-  expect(out.text).toContain("**operator-search login** (1 matching event(s))");
+  expect(out.text).toContain("**vcc-brain-search login** (1 matching event(s))");
   expect(out.text).toContain("[seq 1");
 });
 

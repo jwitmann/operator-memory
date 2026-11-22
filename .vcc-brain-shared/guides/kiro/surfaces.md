@@ -19,7 +19,7 @@ Turn anatomy relevant to injection: context is assembled first (prompt, history,
 - Project — `<project-root>/.kiro/`
 - Agent — `~/.kiro/agents/` or `.kiro/agents/`
 
-The documentation says `KIRO_HOME` redirects the global `~/.kiro` directory for agents, skills, steering, settings, and sessions. Verified exception: CLI binary `2.27.1` running the V3 engine (`--v3`), KAS `0.66.22`, ignores the override for global hooks, steering, and skills. All three resolve under ordinary `$HOME/.kiro/`; redirected resources are undiscovered. For this tested runtime, install Operator's resources where V3 actually reads them. Do not generalize to other configuration resources, versions, or IDE behavior. See [injection verification](./injection.md).
+The documentation says `KIRO_HOME` redirects the global `~/.kiro` directory for agents, skills, steering, settings, and sessions. Verified exception: CLI binary `2.27.1` running the V3 engine (`--v3`), KAS `0.66.22`, ignores the override for global hooks, steering, and skills. All three resolve under ordinary `$HOME/.kiro/`; redirected resources are undiscovered. For this tested runtime, install VCC Brain's resources where V3 actually reads them. Do not generalize to other configuration resources, versions, or IDE behavior. See [injection verification](./injection.md).
 
 Key paths:
 

@@ -4,10 +4,10 @@ OpenCode V2 is the default supported version. For legacy installations, see [Ope
 
 ### Install
 
-Requires Node.js 20 or newer (for Operator Helper) and the [Helper](../../README.md#installation) installed.
+Requires Node.js 20 or newer (for VCC Brain Helper) and the [Helper](../../README.md#installation) installed.
 
 ```sh
-operator-helper install opencode
+vcc-brain-helper install opencode
 ```
 
 Restart OpenCode after installation. Until OpenCode reloads the plugin, commands and preamble injection will not work.
@@ -19,18 +19,18 @@ The default command no longer installs V1; use `install opencode-v1` for legacy 
 In a new conversation, ask:
 
 ```text
-Is Operator Memory guidance available to you? Give a brief outline of what it says.
+Is VCC Brain guidance available to you? Give a brief outline of what it says.
 ```
 
 The agent should confirm the guidance is loaded and outline the brain, partitions, and memory-aware workflow. If it cannot, injection is not working.
 
-Secondary signals: the home footer shows `Operator Ready (vX.Y.Z)` and the session sidebar shows partition states. `Operator Connecting` means the TUI is still verifying the server plugin; `Operator Unavailable` means the status query failed.
+Secondary signals: the home footer shows `VCC Brain Ready (vX.Y.Z)` and the session sidebar shows partition states. `VCC Brain Connecting` means the TUI is still verifying the server plugin; `VCC Brain Unavailable` means the status query failed.
 
 ### Commands
 
-- `/operator:user-init`
-- `/operator:project-init`
-- `/operator:index`
+- `/vcc-brain:user-init`
+- `/vcc-brain:project-init`
+- `/vcc-brain:index`
 
 Run each in a new conversation. See [Getting Started](../getting-started.md#appendix-commands) for what each command does.
 
@@ -38,9 +38,9 @@ Once the basics are running, see [Context Management](#context-management): dete
 
 ### Context Management
 
-When enabled, Operator Memory reduces what a session resends to the model. Three deterministic rules, evaluated with token arithmetic and host-reported run outcomes — never model judgment. Compaction runs through the deterministic VCC engine, ported in-tree from the [VCC reference engine](https://github.com/jwitmann/opencode-vcc-compaction):
+When enabled, VCC Brain reduces what a session resends to the model. Three deterministic rules, evaluated with token arithmetic and host-reported run outcomes — never model judgment. Compaction runs through the deterministic VCC engine, ported in-tree from the [VCC reference engine](https://github.com/jwitmann/opencode-vcc-compaction):
 
-Why shaped compaction matters: a plain summarizer rewrites what it touches, including your rules — a restated rule is a different rule, and the next session treats the paraphrase as fact. Operator's compaction instructions forbid restating Brain content: durable findings are written to the Brain before summarizing, the summary references Brain paths instead of inlining them, and trimmed tool output keeps verbatim omission handles recoverable through `operator-read_omitted`. Your rules survive long sessions as pointers to verbatim source. Shaping is prompt-only — the host still writes the summary.
+Why shaped compaction matters: a plain summarizer rewrites what it touches, including your rules — a restated rule is a different rule, and the next session treats the paraphrase as fact. VCC Brain's compaction instructions forbid restating Brain content: durable findings are written to the Brain before summarizing, the summary references Brain paths instead of inlining them, and trimmed tool output keeps verbatim omission handles recoverable through `vcc-brain-read_omitted`. Your rules survive long sessions as pointers to verbatim source. Shaping is prompt-only — the host still writes the summary.
 
 1. A run ends successfully and context clears `compactFloorTokens`: compact once.
 2. Estimated context passes `ratio` of the model window: trim bulky tool I/O, then compact if still over.
@@ -50,11 +50,11 @@ Trimming replaces completed tool inputs and outputs with short notices and store
 
 #### Prerequisites
 
-The Brain must exist: run `/operator:user-init` (cross-project memory) or `/operator:project-init` (project memory) first. Without an initialized Brain the feature stays off and records one refusal receipt per session explaining why. The feature itself is off by default.
+The Brain must exist: run `/vcc-brain:user-init` (cross-project memory) or `/vcc-brain:project-init` (project memory) first. Without an initialized Brain the feature stays off and records one refusal receipt per session explaining why. The feature itself is off by default.
 
 #### Configuration
 
-Preferred: per-project `<project>/.operator/config.json`, using the same flat block names (no `operator` wrapper). `operator-helper project init` scaffolds it with everything disabled; the setup interview asks which features to enable. Present fields merge over plugin options below, so the project file wins on conflict:
+Preferred: per-project `<project>/.vcc-brain/config.json`, using the same flat block names (no `vcc-brain` wrapper). `vcc-brain-helper project init` scaffolds it with everything disabled; the setup interview asks which features to enable. Present fields merge over plugin options below, so the project file wins on conflict:
 
 ```json
 {
@@ -75,9 +75,9 @@ Alternative: organization-wide defaults through the `plugins` entry's `options` 
 {
   "plugins": [
     {
-      "package": "<operator-memory>/packages/opencode-v2/dist",
+      "package": "<vcc-brain>/packages/opencode-v2/dist",
       "options": {
-        "operator": {
+        "vcc-brain": {
           "contextManagement": {
             "enabled": false,
             "ratio": 0.8,
@@ -93,7 +93,7 @@ Alternative: organization-wide defaults through the `plugins` entry's `options` 
 }
 ```
 
-- `enabled`: the master switch. Vanilla Operator behavior is unchanged while `false`.
+- `enabled`: the master switch. Vanilla VCC Brain behavior is unchanged while `false`.
 - `ratio`: trim past this fraction of the model's declared window.
 - `hardCapTokens`: trim past this absolute size. The backstop when the model window is unknown.
 - `keepRecentTurns`: the most recent assistant turns are never trimmed.
@@ -102,7 +102,7 @@ Alternative: organization-wide defaults through the `plugins` entry's `options` 
 
 #### What it leaves behind
 
-Receipts, one JSON line per trim or compaction, at `~/.operator/state/context-log/<sessionID>.log`:
+Receipts, one JSON line per trim or compaction, at `~/.vcc-brain/state/context-log/<sessionID>.log`:
 
 ```text
 trim trigger=hard-cap tokens=20206 removed=8305 omissions=1
@@ -111,13 +111,13 @@ compact trigger=task-complete summarized=11951
 
 Compact receipts name their cause: the firing trigger, or `manual` for compactions you (or the host) initiated. Refusals look like `refusal reason=brain-unavailable`.
 
-Trimmed payloads live as plain files under `~/.operator/state/omitted/<sessionID>/<contentID>`, with an index per session. These are operational state, not Brain documents: never cataloged, safe to delete when the session is done with.
+Trimmed payloads live as plain files under `~/.vcc-brain/state/omitted/<sessionID>/<contentID>`, with an index per session. These are operational state, not Brain documents: never cataloged, safe to delete when the session is done with.
 
 #### Recovering trimmed content
 
-A notice in place of trimmed output names a content ID. In the same session, ask the agent to call `operator-read_omitted` with that ID — or call it yourself with the ID from the receipt log. IDs from other sessions do not resolve; re-trimming a session reuses the same IDs.
+A notice in place of trimmed output names a content ID. In the same session, ask the agent to call `vcc-brain-read_omitted` with that ID — or call it yourself with the ID from the receipt log. IDs from other sessions do not resolve; re-trimming a session reuses the same IDs.
 
-Checkpoints are a separate mechanism with their own recovery tools (`operator-recall`, `operator-search`); see the implementation spec for the contract.
+Checkpoints are a separate mechanism with their own recovery tools (`vcc-brain-recall`, `vcc-brain-search`); see the implementation spec for the contract.
 
 #### Notes and limits
 
@@ -128,15 +128,15 @@ Checkpoints are a separate mechanism with their own recovery tools (`operator-re
 
 ### Preamble Refresh
 
-Opt-in mid-session preamble re-render when the Brain changes on disk — independent from context management, disabled by default, with its own switch. Prefer `<project>/.operator/config.json` (`{ "preambleRefresh": { "enabled": true } }`, scaffolded disabled by project init); the plugin-`options` form below sets organization-wide defaults instead:
+Opt-in mid-session preamble re-render when the Brain changes on disk — independent from context management, disabled by default, with its own switch. Prefer `<project>/.vcc-brain/config.json` (`{ "preambleRefresh": { "enabled": true } }`, scaffolded disabled by project init); the plugin-`options` form below sets organization-wide defaults instead:
 
 ```jsonc
 {
   "plugins": [
     {
-      "package": "<operator-memory>/packages/opencode-v2/dist",
+      "package": "<vcc-brain>/packages/opencode-v2/dist",
       "options": {
-        "operator": {
+        "vcc-brain": {
           "preambleRefresh": {
             "enabled": true
           }
@@ -151,15 +151,15 @@ A Brain change re-renders from current disk state only when the provider's promp
 
 ### Brain Updates
 
-Opt-in nudge to record durable knowledge — never an automatic Brain writer. Disabled by default, with its own switch. Prefer `<project>/.operator/config.json` (`{ "brainUpdates": { "enabled": true, "toolCallThreshold": 25 } }`, scaffolded disabled by project init); the plugin-`options` form below sets organization-wide defaults instead:
+Opt-in nudge to record durable knowledge — never an automatic Brain writer. Disabled by default, with its own switch. Prefer `<project>/.vcc-brain/config.json` (`{ "brainUpdates": { "enabled": true, "toolCallThreshold": 25 } }`, scaffolded disabled by project init); the plugin-`options` form below sets organization-wide defaults instead:
 
 ```jsonc
 {
   "plugins": [
     {
-      "package": "<operator-memory>/packages/opencode-v2/dist",
+      "package": "<vcc-brain>/packages/opencode-v2/dist",
       "options": {
-        "operator": {
+        "vcc-brain": {
           "brainUpdates": {
             "enabled": true,
             "toolCallThreshold": 25
@@ -186,6 +186,6 @@ Restart OpenCode after updating.
 
 ### Troubleshooting
 
-- `Operator Connecting` persists: the server plugin is not active. Rerun `operator-helper install opencode` and restart OpenCode.
-- `Operator Unavailable` or sidebar `Error`: see [Troubleshooting](../troubleshooting.md).
+- `VCC Brain Connecting` persists: the server plugin is not active. Rerun `vcc-brain-helper install opencode` and restart OpenCode.
+- `VCC Brain Unavailable` or sidebar `Error`: see [Troubleshooting](../troubleshooting.md).
 - Duplicate plugin failures after installing both the global package and a local dev build: OpenCode V2 cannot dedupe package identity. Remove one source with `opencode plugin remove`.

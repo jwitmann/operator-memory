@@ -1,6 +1,6 @@
 ---
 description: DeepSeek Harness reference monorepo architecture and navigation to runtime, plugin, and distribution source maps
-read_if: Preparing or implementing an Operator adapter for DeepSeek Harness, or navigating reference/deepseek-harness
+read_if: Preparing or implementing a VCC Brain adapter for DeepSeek Harness, or navigating reference/deepseek-harness
 ---
 
 # DeepSeek Harness

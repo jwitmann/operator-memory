@@ -6,10 +6,10 @@ const core = vi.hoisted(() => ({
   renderPreamble: vi.fn(),
 }));
 
-vi.mock("@jwitmann/operator-core/memory/load", () => ({
+vi.mock("@jwitmann/vcc-brain-core/memory/load", () => ({
   loadMemorySnapshot: core.loadMemorySnapshot,
 }));
-vi.mock("@jwitmann/operator-core/preamble", () => ({
+vi.mock("@jwitmann/vcc-brain-core/preamble", () => ({
   renderPreamble: core.renderPreamble,
 }));
 
@@ -72,7 +72,7 @@ test("sets and clears the local-build status with the session lifecycle", () => 
   expect(context.ui.setStatus).toHaveBeenNthCalledWith(
     1,
     "__operator",
-    "\u001B[35m· Operator Active (Local Build)\u001B[39m",
+    "\u001B[35m· VCC Brain Active (Local Build)\u001B[39m",
   );
   expect(context.ui.setStatus).toHaveBeenNthCalledWith(2, "__operator", undefined);
 });
@@ -92,7 +92,10 @@ test("injects a canonical load diagnostic and shows one recovery notice", async 
   });
   expect(second.messages[0]).toBe(first.messages[0]);
   expect(context.ui.notify).toHaveBeenCalledOnce();
-  expect(context.ui.setStatus).toHaveBeenCalledWith("__operator", "[error] · Operator Unavailable");
+  expect(context.ui.setStatus).toHaveBeenCalledWith(
+    "__operator",
+    "[error] · VCC Brain Unavailable",
+  );
   expect(context.abort).not.toHaveBeenCalled();
 });
 
@@ -111,7 +114,7 @@ test("aborts every affected call after an unexpected render failure", async () =
 
   expect(context.abort).toHaveBeenCalledTimes(2);
   expect(context.ui.notify).toHaveBeenCalledOnce();
-  expect(context.ui.setStatus).toHaveBeenCalledWith("__operator", "[error] · Operator Error");
+  expect(context.ui.setStatus).toHaveBeenCalledWith("__operator", "[error] · VCC Brain Error");
   expect(provider).not.toHaveBeenCalled();
   expect(core.loadMemorySnapshot).toHaveBeenCalledOnce();
 });

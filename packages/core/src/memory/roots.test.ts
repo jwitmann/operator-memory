@@ -10,6 +10,7 @@ import {
   pickPrimary,
   projectConfigPaths,
   resolveBrainRoots,
+  resolveInstructionsPath,
   resolveStateDirectory,
 } from "./roots.ts";
 
@@ -120,4 +121,14 @@ test("resolveStateDirectory prefers primary and falls back to legacy", () => {
 
   mkdirSync(join(home, ".vcc-brain", "state"), { recursive: true });
   expect(resolveStateDirectory(home)).toBe(join(home, ".vcc-brain", "state"));
+});
+
+test("resolveInstructionsPath prefers vcc-brain.md and falls back to operator.md", async () => {
+  const root = join(PROJECT, ".vcc-brain");
+  fs.mkdirSync(root, { recursive: true });
+
+  expect(await resolveInstructionsPath(root)).toBe(join(root, "operator.md"));
+
+  fs.writeFileSync(join(root, "vcc-brain.md"), "# instructions");
+  expect(await resolveInstructionsPath(root)).toBe(join(root, "vcc-brain.md"));
 });

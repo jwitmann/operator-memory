@@ -100,6 +100,19 @@ migrate_one() { # <legacy> <primary>
 migrate_one ".operator" ".vcc-brain"
 migrate_one ".operator-shared" ".vcc-brain-shared"
 
+rename_inner() { # <dir>
+  if [ -f "$1/operator.md" ] && [ ! -e "$1/vcc-brain.md" ]; then
+    run mv -- "$1/operator.md" "$1/vcc-brain.md"
+    echo "Moved inner instructions: $1/operator.md -> $1/vcc-brain.md"
+  fi
+}
+
+for dir in ".vcc-brain" ".vcc-brain-shared"; do
+  if [ "$REFUSED" -eq 0 ] && [ -d "$dir" ]; then
+    rename_inner "$dir"
+  fi
+done
+
 ensure_line() { # <line> <file>
   if ! grep -qF -- "$1" "$2"; then
     if [ "$DRY_RUN" -eq 1 ]; then
@@ -127,7 +140,7 @@ if [ -f ".gitignore" ]; then
     fi
   fi
 else
-  echo "No .gitignore here; leaving ignore rules to 'operator-helper project init'."
+  echo "No .gitignore here; leaving ignore rules to 'vcc-brain-helper project init'."
 fi
 
 EXCLUDES="$(git config --get core.excludesFile 2>/dev/null || true)"
@@ -145,4 +158,4 @@ if [ "$REFUSED" -ne 0 ]; then
   echo "Done WITH REFUSALS (exit 1): resolve the both-exist partitions by hand."
   exit 1
 fi
-echo "Migration complete. Verify with: operator-helper project status"
+echo "Migration complete. Verify with: vcc-brain-helper project status"

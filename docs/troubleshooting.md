@@ -4,11 +4,11 @@
 
 #### Requirements
 
-Operator Helper requires Node.js 20 or newer.
+VCC Brain Helper requires Node.js 20 or newer.
 
 #### Install Or Reinstall The Adapter
 
-Run `operator-helper install <id>` for your harness — see the [harness docs](harnesses/) for the exact command, verification, and update behavior:
+Run `vcc-brain-helper install <id>` for your harness — see the [harness docs](harnesses/) for the exact command, verification, and update behavior:
 
 - [Claude Code](harnesses/claude-code.md)
 - [Codex](harnesses/codex.md)
@@ -21,7 +21,7 @@ Restart the harness after installation or repair. Until the harness reloads the 
 
 #### Helper Updates
 
-Run `operator-helper version` to check for updates and `operator-helper upgrade` to install them. Setup and automatic loading recovery check the version before continuing. If Helper cannot determine whether Bun or npm owns the global installation, update it using the original installation method.
+Run `vcc-brain-helper version` to check for updates and `vcc-brain-helper upgrade` to install them. Setup and automatic loading recovery check the version before continuing. If Helper cannot determine whether Bun or npm owns the global installation, update it using the original installation method.
 
 Adapter updates are harness-specific; see the [harness docs](harnesses/).
 
@@ -29,14 +29,14 @@ Adapter updates are harness-specific; see the [harness docs](harnesses/).
 
 If a partition fails to load, the preamble directs the agent to repair loading before ordinary work. After successful recovery, start a new session and resubmit your original request so the complete preamble loads.
 
-For on-demand diagnosis, ask the agent or run `operator-helper memory check` from the project directory. It validates loading only and does not modify files.
+For on-demand diagnosis, ask the agent or run `vcc-brain-helper memory check` from the project directory. It validates loading only and does not modify files.
 
-A stale Project Index surfaces as a warning, not an error: ask the agent to refresh the index through the `/operator:index` flow, which re-stamps it. `operator-helper index lint` checks for structural drift without modifying files.
+A stale Project Index surfaces as a warning, not an error: ask the agent to refresh the index through the `/vcc-brain:index` flow, which re-stamps it. `vcc-brain-helper index lint` checks for structural drift without modifying files.
 
 #### Private Files Appear In Git
 
-Run `operator-helper project status` to inspect ignore and tracking status. Project initialization ensures the exact `.operator/` entry is in the global Git ignore, but does not untrack files already committed or staged.
+Run `vcc-brain-helper project status` to inspect ignore and tracking status. Project initialization ensures the exact `.vcc-brain/` entry is in the global Git ignore, but does not untrack files already committed or staged.
 
 ### Context Management Is Inert
 
-Context management, preamble refresh, and brain-update nudges require an initialized Brain (`/operator:user-init` or `/operator:project-init`) and stay off without one — by design, never silently degraded. When a trigger fires while Brainless, the adapter records a refusal receipt instead of acting. Check the session context log at `~/.operator/state/context-log/<sessionID>.log`: `refusal reason=brain-unavailable` means the Brain gate, not a bug. Trim and compaction receipts in the same file show what fired, what was removed, and which engine ran. On the DeepSeek Harness there is additionally no trim by design (the host owns tool-result reduction), so only compaction receipts appear.
+Context management, preamble refresh, and brain-update nudges require an initialized Brain (`/vcc-brain:user-init` or `/vcc-brain:project-init`) and stay off without one — by design, never silently degraded. When a trigger fires while Brainless, the adapter records a refusal receipt instead of acting. Check the session context log at `~/.vcc-brain/state/context-log/<sessionID>.log`: `refusal reason=brain-unavailable` means the Brain gate, not a bug. Trim and compaction receipts in the same file show what fired, what was removed, and which engine ran. On the DeepSeek Harness there is additionally no trim by design (the host owns tool-result reduction), so only compaction receipts appear.

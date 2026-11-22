@@ -1,5 +1,5 @@
 {
-  "description": "Inject Operator Memory into Codex sessions and delegated subagents.",
+  "description": "Inject VCC Brain into Codex sessions and delegated subagents.",
   "hooks": {
     "SessionStart": [
       {

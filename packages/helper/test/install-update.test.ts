@@ -20,12 +20,12 @@ let context: CliContext;
 let record: string;
 
 beforeEach(() => {
-  directory = fs.mkdtempSync(join(tmpdir(), "operator-helper-install-"));
+  directory = fs.mkdtempSync(join(tmpdir(), "vcc-brain-helper-install-"));
   const bin = join(directory, "bin");
   fs.mkdirSync(bin);
   record = join(directory, "record");
   process.env.PATH = bin;
-  process.env.OPERATOR_TEST_RECORD = record;
+  process.env.VCC_BRAIN_TEST_RECORD = record;
   context = {
     cwd: directory,
     home: directory,
@@ -41,7 +41,7 @@ afterEach(() => {
   } else {
     process.env.CODEX_HOME = originalCodexHome;
   }
-  delete process.env.OPERATOR_TEST_RECORD;
+  delete process.env.VCC_BRAIN_TEST_RECORD;
   fs.rmSync(directory, { recursive: true, force: true });
 });
 
@@ -50,14 +50,14 @@ test.runIf(process.platform !== "win32")(
   async () => {
     executable(
       "codex",
-      `printf '%s|%s\n' "$NPM_CONFIG_MIN_RELEASE_AGE" "$*" >> "$OPERATOR_TEST_RECORD"
-if [ "$1 $2 $3" = "plugin marketplace add" ]; then printf '{"marketplaceName":"operator-memory"}'; exit 0; fi
-if [ "$1 $2 $3" = "plugin add jwitmann@operator-memory" ]; then printf '{"pluginId":"jwitmann@operator-memory"}'; exit 0; fi
-printf '{"installed":[{"pluginId":"jwitmann@operator-memory","installed":true,"enabled":true}]}'`,
+      `printf '%s|%s\n' "$NPM_CONFIG_MIN_RELEASE_AGE" "$*" >> "$VCC_BRAIN_TEST_RECORD"
+if [ "$1 $2 $3" = "plugin marketplace add" ]; then printf '{"marketplaceName":"vcc-brain"}'; exit 0; fi
+if [ "$1 $2 $3" = "plugin add jwitmann@vcc-brain" ]; then printf '{"pluginId":"jwitmann@vcc-brain"}'; exit 0; fi
+printf '{"installed":[{"pluginId":"jwitmann@vcc-brain","installed":true,"enabled":true}]}'`,
     );
 
     const result = await execute(["install", "codex"], "4.5.6");
-    const marketplaceRoot = join(directory, ".operator-helper", "codex-marketplace");
+    const marketplaceRoot = join(directory, ".vcc-brain-helper", "codex-marketplace");
     const marketplace = JSON.parse(
       fs.readFileSync(join(marketplaceRoot, ".agents", "plugins", "marketplace.json"), "utf8"),
     );
@@ -66,16 +66,16 @@ printf '{"installed":[{"pluginId":"jwitmann@operator-memory","installed":true,"e
       exitCode: 0,
       output:
         "✓ Codex plugin installed and enabled\n"
-        + "Start a new Codex session and approve the Operator hooks if prompted.",
+        + "Start a new Codex session and approve the VCC Brain hooks if prompted.",
     });
     expect(marketplace).toEqual({
-      name: "operator-memory",
+      name: "vcc-brain",
       plugins: [
         {
           name: "jwitmann",
           source: {
             source: "npm",
-            package: "@jwitmann/operator-codex",
+            package: "@jwitmann/vcc-brain-codex",
             version: "latest",
           },
           policy: { installation: "AVAILABLE" },
@@ -84,8 +84,8 @@ printf '{"installed":[{"pluginId":"jwitmann@operator-memory","installed":true,"e
     });
     expect(fs.readFileSync(record, "utf8")).toBe(
       `0|plugin marketplace add ${marketplaceRoot} --json\n`
-        + "0|plugin add jwitmann@operator-memory --json\n"
-        + "0|plugin list --marketplace operator-memory --json\n",
+        + "0|plugin add jwitmann@vcc-brain --json\n"
+        + "0|plugin list --marketplace vcc-brain --json\n",
     );
   },
 );
@@ -96,8 +96,8 @@ test.runIf(process.platform !== "win32")(
     executable(
       "codex",
       `if [ "$1 $2 $3" = "plugin marketplace add" ]; then printf '{}'; exit 0; fi
-if [ "$1 $2 $3" = "plugin add jwitmann@operator-memory" ]; then printf '{}'; exit 0; fi
-printf '{"installed":[{"pluginId":"jwitmann@operator-memory","installed":true,"enabled":false}]}'`,
+if [ "$1 $2 $3" = "plugin add jwitmann@vcc-brain" ]; then printf '{}'; exit 0; fi
+printf '{"installed":[{"pluginId":"jwitmann@vcc-brain","installed":true,"enabled":false}]}'`,
     );
 
     expect(await execute(["install", "codex"], "4.5.6")).toEqual({
@@ -108,7 +108,7 @@ printf '{"installed":[{"pluginId":"jwitmann@operator-memory","installed":true,"e
 );
 
 test("preserves an unmanaged Codex marketplace", async () => {
-  const marketplaceRoot = join(directory, ".operator-helper", "codex-marketplace");
+  const marketplaceRoot = join(directory, ".vcc-brain-helper", "codex-marketplace");
   fs.mkdirSync(marketplaceRoot, { recursive: true });
   fs.writeFileSync(join(marketplaceRoot, "user-file"), "user owned");
 
@@ -124,7 +124,7 @@ test("preserves an unmanaged Codex marketplace", async () => {
 test.runIf(process.platform !== "win32")(
   "delegates Claude Code npm installation and updates to the repository marketplace",
   async () => {
-    claudeExecutables('[{"id":"operator@operator-memory","enabled":true}]');
+    claudeExecutables('[{"id":"vcc-brain@vcc-brain","enabled":true}]');
     const result = await execute(["install", "claude-code"], "4.5.6");
     expect(result).toEqual({
       exitCode: 0,
@@ -132,13 +132,13 @@ test.runIf(process.platform !== "win32")(
     });
     expect(fs.readFileSync(record, "utf8")).toBe(
       "helper|help\n"
-        + "claude|plugin marketplace add jwitmann/operator-memory\n"
-        + "claude|plugin install operator@operator-memory\n"
-        + "claude|plugin update operator@operator-memory\n"
+        + "claude|plugin marketplace add jwitmann/vcc-brain\n"
+        + "claude|plugin install vcc-brain@vcc-brain\n"
+        + "claude|plugin update vcc-brain@vcc-brain\n"
         + "claude|plugin list --json\n",
     );
     expect(await execute(["install", "claude-code"], "4.5.6")).toEqual(result);
-    expect(fs.existsSync(join(directory, ".operator-helper"))).toBe(false);
+    expect(fs.existsSync(join(directory, ".vcc-brain-helper"))).toBe(false);
   },
 );
 
@@ -146,16 +146,16 @@ test("the repository marketplace points at the Claude Code npm package", () => {
   const manifest = JSON.parse(
     fs.readFileSync(join(import.meta.dirname, "../../../.claude-plugin/marketplace.json"), "utf8"),
   );
-  expect(manifest.name).toBe("operator-memory");
+  expect(manifest.name).toBe("vcc-brain");
   expect(manifest.plugins).toEqual([
-    { name: "operator", source: { source: "npm", package: "@jwitmann/operator-claude-code" } },
+    { name: "vcc-brain", source: { source: "npm", package: "@jwitmann/vcc-brain-claude-code" } },
   ]);
 });
 
 test.runIf(process.platform !== "win32")(
   "rejects a Claude Code plugin that is not enabled",
   async () => {
-    claudeExecutables('[{"id":"operator@operator-memory","enabled":false}]');
+    claudeExecutables('[{"id":"vcc-brain@vcc-brain","enabled":false}]');
     expect(await execute(["install", "claude-code"], "4.5.6")).toEqual({
       exitCode: 1,
       output:
@@ -165,13 +165,13 @@ test.runIf(process.platform !== "win32")(
 );
 
 test.runIf(process.platform !== "win32")(
-  "requires Operator Helper on PATH before installing the Claude Code package",
+  "requires VCC Brain Helper on PATH before installing the Claude Code package",
   async () => {
     claudeExecutables("[]");
-    executable("operator-helper", "exit 1");
+    executable("vcc-brain-helper", "exit 1");
     expect(await execute(["install", "claude-code"], "4.5.6")).toEqual({
       exitCode: 1,
-      output: "Operator Helper must be available on PATH",
+      output: "VCC Brain Helper must be available on PATH",
     });
     expect(fs.existsSync(record)).toBe(false);
   },
@@ -208,15 +208,18 @@ test.runIf(process.platform !== "win32")(
 test.runIf(process.platform !== "win32")(
   "installs the Kiro SessionStart hook, steering, and skills",
   async () => {
-    executable("operator-helper", 'printf "helper|%s\\n" "$*" >> "$OPERATOR_TEST_RECORD"');
+    executable("vcc-brain-helper", 'printf "helper|%s\\n" "$*" >> "$VCC_BRAIN_TEST_RECORD"');
     const kiroHome = join(directory, ".kiro");
-    const skill = join(kiroHome, "skills", "operator-index", "SKILL.md");
+    const skill = join(kiroHome, "skills", "vcc-brain-index", "SKILL.md");
     fs.mkdirSync(dirname(skill), { recursive: true });
     fs.writeFileSync(skill, "stale");
-    const retiredSkill = join(kiroHome, "skills", "operator-repair", "SKILL.md");
+    const retiredSkill = join(kiroHome, "skills", "vcc-brain-repair", "SKILL.md");
+    const legacyRetiredSkill = join(kiroHome, "skills", "operator-repair", "SKILL.md");
     const retainedFile = join(dirname(retiredSkill), "user-content.md");
     fs.mkdirSync(dirname(retiredSkill), { recursive: true });
     fs.writeFileSync(retiredSkill, "retired repair skill");
+    fs.mkdirSync(dirname(legacyRetiredSkill), { recursive: true });
+    fs.writeFileSync(legacyRetiredSkill, "pre-rename retired repair skill");
     fs.writeFileSync(retainedFile, "preserve unrelated content");
 
     const result = await execute(["install", "kiro"], "4.5.6");
@@ -226,41 +229,40 @@ test.runIf(process.platform !== "win32")(
       output: `✓ Kiro adapter installed in ${kiroHome}\nStart a new Kiro session.`,
     });
     expect(fs.readFileSync(record, "utf8")).toBe("helper|help\n");
-    expect(
-      JSON.parse(fs.readFileSync(join(kiroHome, "hooks", "operator-memory.json"), "utf8")),
-    ).toEqual({
+    expect(JSON.parse(fs.readFileSync(join(kiroHome, "hooks", "vcc-brain.json"), "utf8"))).toEqual({
       version: "v1",
       hooks: [
         {
-          name: "Operator Memory preamble",
+          name: "VCC Brain preamble",
           trigger: "SessionStart",
-          action: { type: "command", command: "operator-helper preamble" },
+          action: { type: "command", command: "vcc-brain-helper preamble" },
           timeout: 120,
           enabled: true,
         },
       ],
     });
-    expect(fs.readFileSync(join(kiroHome, "steering", "operator-memory.md"), "utf8")).toBe(
-      "---\ninclusion: always\n---\n\n# Operator Memory\n\nOperator Memory is installed for Kiro. If you do not see Operator's preamble guidance above wrapped within `<operator-guidance>`, manually run the `operator-helper preamble` command once from the workspace root and follow all instructions from the command output. If the command fails, report to the user and stop. Do not run if the preamble is already available.\n",
+    expect(fs.readFileSync(join(kiroHome, "steering", "vcc-brain.md"), "utf8")).toBe(
+      "---\ninclusion: always\n---\n\n# VCC Brain\n\nVCC Brain is installed for Kiro. If you do not see VCC Brain's preamble guidance above wrapped within `<vcc-brain-guidance>`, manually run the `vcc-brain-helper preamble` command once from the workspace root and follow all instructions from the command output. If the command fails, report to the user and stop. Do not run if the preamble is already available.\n",
     );
-    for (const name of ["operator-user-init", "operator-project-init", "operator-index"]) {
+    for (const name of ["vcc-brain-user-init", "vcc-brain-project-init", "vcc-brain-index"]) {
       expect(fs.readFileSync(join(kiroHome, "skills", name, "SKILL.md"), "utf8")).toMatch(
         new RegExp(`^---\\nname: ${name}\\n`),
       );
     }
     expect(fs.existsSync(retiredSkill)).toBe(false);
+    expect(fs.existsSync(legacyRetiredSkill)).toBe(false);
     expect(fs.readFileSync(retainedFile, "utf8")).toBe("preserve unrelated content");
     expect(await execute(["install", "kiro"], "4.5.6")).toEqual(result);
   },
 );
 
 test.runIf(process.platform !== "win32")(
-  "requires Operator Helper on PATH before installing the Kiro adapter",
+  "requires VCC Brain Helper on PATH before installing the Kiro adapter",
   async () => {
-    executable("operator-helper", "exit 1");
+    executable("vcc-brain-helper", "exit 1");
     expect(await execute(["install", "kiro"], "4.5.6")).toEqual({
       exitCode: 1,
-      output: "Operator Helper must be available on PATH",
+      output: "VCC Brain Helper must be available on PATH",
     });
     expect(fs.existsSync(join(directory, ".kiro"))).toBe(false);
   },
@@ -269,21 +271,21 @@ test.runIf(process.platform !== "win32")(
 test("registers the marketplace in config.toml when the Codex CLI is unavailable", async () => {
   const codexHome = join(directory, "codex-home");
   process.env.CODEX_HOME = codexHome;
-  const marketplaceRoot = join(directory, ".operator-helper", "codex-marketplace");
+  const marketplaceRoot = join(directory, ".vcc-brain-helper", "codex-marketplace");
 
   const result = await execute(["install", "codex"], "4.5.6");
 
   expect(result).toEqual({
     exitCode: 0,
     output:
-      "✓ Registered the Operator Codex marketplace\n"
-      + "Codex CLI unavailable: install aerovato@operator-memory from the Codex plugins browser, then start a new session and approve the Operator hooks.",
+      "✓ Registered the VCC Brain Codex marketplace\n"
+      + "Codex CLI unavailable: install aerovato@vcc-brain from the Codex plugins browser, then start a new session and approve the VCC Brain hooks.",
     // External plugin-browser name (see install/codex.ts): the public
     // listing still lives under aerovato until the marketplace entry
     // is renamed.
   });
   expect(fs.readFileSync(join(codexHome, "config.toml"), "utf8")).toBe(
-    `[marketplaces.operator-memory]\nsource_type = "local"\nsource = ${JSON.stringify(marketplaceRoot)}\n`,
+    `[marketplaces.vcc-brain]\nsource_type = "local"\nsource = ${JSON.stringify(marketplaceRoot)}\n`,
   );
 });
 
@@ -297,7 +299,7 @@ test("refreshes an existing marketplace table without touching other config", as
     [
       'model = "gpt-5"',
       "",
-      "[marketplaces.operator-memory]",
+      "[marketplaces.vcc-brain]",
       'source_type = "local"',
       'source = "/old/path"',
       "",
@@ -306,7 +308,7 @@ test("refreshes an existing marketplace table without touching other config", as
       "",
     ].join("\n"),
   );
-  const marketplaceRoot = join(directory, ".operator-helper", "codex-marketplace");
+  const marketplaceRoot = join(directory, ".vcc-brain-helper", "codex-marketplace");
 
   const result = await execute(["install", "codex"], "4.5.6");
 
@@ -321,10 +323,7 @@ test("refuses config.toml that expresses marketplaces without tables", async () 
   const codexHome = join(directory, "codex-home");
   process.env.CODEX_HOME = codexHome;
   fs.mkdirSync(codexHome, { recursive: true });
-  fs.writeFileSync(
-    join(codexHome, "config.toml"),
-    'marketplaces.operator-memory.source = "/old/path"\n',
-  );
+  fs.writeFileSync(join(codexHome, "config.toml"), 'marketplaces.vcc-brain.source = "/old/path"\n');
 
   const result = await execute(["install", "codex"], "4.5.6");
 
@@ -344,9 +343,9 @@ test.runIf(process.platform !== "win32")(
     fs.mkdirSync(codexHome, { recursive: true });
     fs.writeFileSync(
       config,
-      ['model = "gpt-5"', "", "[marketplaces.operator-memory]", 'source = "/old/path"'].join("\n"),
+      ['model = "gpt-5"', "", "[marketplaces.vcc-brain]", 'source = "/old/path"'].join("\n"),
     );
-    const marketplaceRoot = join(directory, ".operator-helper", "codex-marketplace");
+    const marketplaceRoot = join(directory, ".vcc-brain-helper", "codex-marketplace");
 
     const result = await execute(["install", "codex"], "4.5.6");
 
@@ -355,7 +354,7 @@ test.runIf(process.platform !== "win32")(
       [
         'model = "gpt-5"',
         "",
-        `[marketplaces.operator-memory]`,
+        `[marketplaces.vcc-brain]`,
         `source_type = "local"`,
         `source = ${JSON.stringify(marketplaceRoot)}`,
         "",
@@ -373,7 +372,7 @@ test("replaces stale keys and comments inside an existing marketplace table", as
     config,
     [
       "# user comment",
-      "[marketplaces.operator-memory]",
+      "[marketplaces.vcc-brain]",
       "# stale comment",
       'source_type = "git"',
       'source = "https://example.com/old"',
@@ -383,7 +382,7 @@ test("replaces stale keys and comments inside an existing marketplace table", as
       'model = "gpt-5-mini"',
     ].join("\n"),
   );
-  const marketplaceRoot = join(directory, ".operator-helper", "codex-marketplace");
+  const marketplaceRoot = join(directory, ".vcc-brain-helper", "codex-marketplace");
 
   const result = await execute(["install", "codex"], "4.5.6");
 
@@ -408,7 +407,7 @@ test("appends without disturbing other marketplace tables", async () => {
       "\n",
     ),
   );
-  const marketplaceRoot = join(directory, ".operator-helper", "codex-marketplace");
+  const marketplaceRoot = join(directory, ".vcc-brain-helper", "codex-marketplace");
 
   const result = await execute(["install", "codex"], "4.5.6");
 
@@ -417,7 +416,7 @@ test("appends without disturbing other marketplace tables", async () => {
   expect(content).toContain('source = "/personal/plugins"');
   expect(
     content.endsWith(
-      `[marketplaces.operator-memory]\nsource_type = "local"\nsource = ${JSON.stringify(marketplaceRoot)}\n`,
+      `[marketplaces.vcc-brain]\nsource_type = "local"\nsource = ${JSON.stringify(marketplaceRoot)}\n`,
     ),
   ).toBe(true);
 });
@@ -428,13 +427,13 @@ test("appends when the config has no trailing newline", async () => {
   const config = join(codexHome, "config.toml");
   fs.mkdirSync(codexHome, { recursive: true });
   fs.writeFileSync(config, 'model = "gpt-5"');
-  const marketplaceRoot = join(directory, ".operator-helper", "codex-marketplace");
+  const marketplaceRoot = join(directory, ".vcc-brain-helper", "codex-marketplace");
 
   const result = await execute(["install", "codex"], "4.5.6");
 
   expect(result.exitCode).toBe(0);
   expect(fs.readFileSync(config, "utf8")).toBe(
-    `model = "gpt-5"\n[marketplaces.operator-memory]\nsource_type = "local"\nsource = ${JSON.stringify(marketplaceRoot)}\n`,
+    `model = "gpt-5"\n[marketplaces.vcc-brain]\nsource_type = "local"\nsource = ${JSON.stringify(marketplaceRoot)}\n`,
   );
 });
 
@@ -443,11 +442,8 @@ test("recognizes a spaced marketplace table header", async () => {
   process.env.CODEX_HOME = codexHome;
   const config = join(codexHome, "config.toml");
   fs.mkdirSync(codexHome, { recursive: true });
-  fs.writeFileSync(
-    config,
-    ["[ marketplaces.operator-memory ]", 'source = "/old/path"', ""].join("\n"),
-  );
-  const marketplaceRoot = join(directory, ".operator-helper", "codex-marketplace");
+  fs.writeFileSync(config, ["[ marketplaces.vcc-brain ]", 'source = "/old/path"', ""].join("\n"));
+  const marketplaceRoot = join(directory, ".vcc-brain-helper", "codex-marketplace");
 
   const result = await execute(["install", "codex"], "4.5.6");
 
@@ -463,7 +459,7 @@ test("refuses an inline marketplaces table", async () => {
   fs.mkdirSync(codexHome, { recursive: true });
   fs.writeFileSync(
     join(codexHome, "config.toml"),
-    'marketplaces = { operator-memory = { source_type = "local", source = "/old" } }\n',
+    'marketplaces = { vcc-brain = { source_type = "local", source = "/old" } }\n',
   );
 
   const result = await execute(["install", "codex"], "4.5.6");
@@ -499,20 +495,20 @@ test.runIf(process.platform !== "win32")(
       "opencode",
       "packages",
       "@jwitmann",
-      "operator-opencode@latest",
+      "vcc-brain-opencode@latest",
     );
     fs.mkdirSync(cache, { recursive: true });
     fs.writeFileSync(join(cache, "stale"), "stale");
     executable(
       "opencode",
-      'printf "%s\\n%s" "$*" "$NPM_CONFIG_MIN_RELEASE_AGE" > "$OPERATOR_TEST_RECORD"\nprintf "installed"',
+      'printf "%s\\n%s" "$*" "$NPM_CONFIG_MIN_RELEASE_AGE" > "$VCC_BRAIN_TEST_RECORD"\nprintf "installed"',
     );
 
     const result = await execute(["install", "opencode-v1"], "4.5.6");
 
     expect(result).toEqual({ exitCode: 0, output: "installed" });
     expect(fs.readFileSync(record, "utf8")).toBe(
-      "plugin @jwitmann/operator-opencode@latest --global --force\n0",
+      "plugin @jwitmann/vcc-brain-opencode@latest --global --force\n0",
     );
     expect(fs.existsSync(cache)).toBe(false);
   },
@@ -527,7 +523,7 @@ test.runIf(process.platform !== "win32")(
       "opencode",
       "packages",
       "@jwitmann",
-      "operator-opencode@latest",
+      "vcc-brain-opencode@latest",
     );
     process.env.XDG_CACHE_HOME = xdgCacheHome;
     fs.mkdirSync(cache, { recursive: true });
@@ -546,7 +542,7 @@ test.runIf(process.platform !== "win32")(
   async () => {
     executable(
       "opencode",
-      'printf "%s\n%s" "$*" "$NPM_CONFIG_MIN_RELEASE_AGE" > "$OPERATOR_TEST_RECORD"\nprintf "installed"',
+      'printf "%s\n%s" "$*" "$NPM_CONFIG_MIN_RELEASE_AGE" > "$VCC_BRAIN_TEST_RECORD"\nprintf "installed"',
     );
 
     const cache = join(
@@ -555,7 +551,7 @@ test.runIf(process.platform !== "win32")(
       "opencode",
       "packages",
       "@jwitmann",
-      "operator-opencode@latest",
+      "vcc-brain-opencode@latest",
     );
     fs.mkdirSync(cache, { recursive: true });
     fs.writeFileSync(join(cache, "stale"), "stale");
@@ -565,7 +561,7 @@ test.runIf(process.platform !== "win32")(
 
       expect(result).toEqual({ exitCode: 0, output: "installed" });
       expect(fs.readFileSync(record, "utf8")).toBe(
-        "plugin add @jwitmann/operator-opencode-v2@latest\n0",
+        "plugin add @jwitmann/vcc-brain-opencode-v2@latest\n0",
       );
       expect(fs.readFileSync(join(cache, "stale"), "utf8")).toBe("stale");
     }
@@ -573,12 +569,12 @@ test.runIf(process.platform !== "win32")(
 );
 
 test.runIf(process.platform !== "win32")("installs the Pi plugin globally", async () => {
-  executable("pi", 'printf "%s" "$*" > "$OPERATOR_TEST_RECORD"\nprintf "installed"');
+  executable("pi", 'printf "%s" "$*" > "$VCC_BRAIN_TEST_RECORD"\nprintf "installed"');
 
   const result = await execute(["install", "pi"], "4.5.6");
 
   expect(result).toEqual({ exitCode: 0, output: "installed" });
-  expect(fs.readFileSync(record, "utf8")).toBe("install npm:@jwitmann/operator-pi");
+  expect(fs.readFileSync(record, "utf8")).toBe("install npm:@jwitmann/vcc-brain-pi");
 });
 
 test.runIf(process.platform !== "win32")(
@@ -586,7 +582,7 @@ test.runIf(process.platform !== "win32")(
   async () => {
     executable(
       "dsh",
-      `printf '%s\n' "$*" >> "$OPERATOR_TEST_RECORD"
+      `printf '%s\n' "$*" >> "$VCC_BRAIN_TEST_RECORD"
 printf '%s installed' "$3"`,
     );
 
@@ -597,12 +593,12 @@ printf '%s installed' "$3"`,
       output:
         "✓ Web: web installed\n✓ Desktop: desktop installed\n\n"
         + "To install a profile manually, run:\n\n"
-        + "  dsh plugin --profile <profile-name> add @jwitmann/operator-deepseek\n\n"
+        + "  dsh plugin --profile <profile-name> add @jwitmann/vcc-brain-deepseek\n\n"
         + "If the desktop profile was not installed, quit the desktop application and install manually.",
     });
     expect(fs.readFileSync(record, "utf8")).toBe(
-      "plugin --profile web add @jwitmann/operator-deepseek\n"
-        + "plugin --profile desktop add @jwitmann/operator-deepseek\n",
+      "plugin --profile web add @jwitmann/vcc-brain-deepseek\n"
+        + "plugin --profile desktop add @jwitmann/vcc-brain-deepseek\n",
     );
   },
 );
@@ -612,7 +608,7 @@ test.runIf(process.platform !== "win32")(
   async () => {
     executable(
       "dsh",
-      `printf '%s\n' "$*" >> "$OPERATOR_TEST_RECORD"
+      `printf '%s\n' "$*" >> "$VCC_BRAIN_TEST_RECORD"
 if [ "$3" = "desktop" ]; then printf 'Desktop runtime required' >&2; exit 7; fi
 printf 'web installed'`,
     );
@@ -624,7 +620,7 @@ printf 'web installed'`,
       output:
         "✓ Web: web installed\n✗ Desktop: Desktop runtime required\n\n"
         + "To install a profile manually, run:\n\n"
-        + "  dsh plugin --profile <profile-name> add @jwitmann/operator-deepseek\n\n"
+        + "  dsh plugin --profile <profile-name> add @jwitmann/vcc-brain-deepseek\n\n"
         + "If the desktop profile was not installed, quit the desktop application and install manually.",
     });
     expect(fs.readFileSync(record, "utf8")).toContain("--profile desktop");
@@ -645,7 +641,7 @@ printf 'desktop installed'`,
       output:
         "✗ Web: web failed\n✓ Desktop: desktop installed\n\n"
         + "To install a profile manually, run:\n\n"
-        + "  dsh plugin --profile <profile-name> add @jwitmann/operator-deepseek\n\n"
+        + "  dsh plugin --profile <profile-name> add @jwitmann/vcc-brain-deepseek\n\n"
         + "If the desktop profile was not installed, quit the desktop application and install manually.",
     });
   },
@@ -656,7 +652,7 @@ test.runIf(process.platform !== "win32")(
   async () => {
     executable(
       "bun",
-      'if [ "$1 $2 $3" = "pm ls --global" ]; then printf "@jwitmann/operator-helper@1.2.3"; exit 0; fi\nif [ "$1 $2 $3" = "pm bin --global" ]; then printf "/nonexistent/bun/bin"; exit 0; fi\nprintf "%s" "$*" > "$OPERATOR_TEST_RECORD"',
+      'if [ "$1 $2 $3" = "pm ls --global" ]; then printf "@jwitmann/vcc-brain-helper@1.2.3"; exit 0; fi\nif [ "$1 $2 $3" = "pm bin --global" ]; then printf "/nonexistent/bun/bin"; exit 0; fi\nprintf "%s" "$*" > "$VCC_BRAIN_TEST_RECORD"',
     );
     executable(
       "npm",
@@ -667,7 +663,7 @@ test.runIf(process.platform !== "win32")(
 
     expect(result).toEqual({ status: "updated", latest: "4.5.6" });
     expect(fs.readFileSync(record, "utf8")).toBe(
-      "add --global --minimum-release-age 0 @jwitmann/operator-helper@4.5.6",
+      "add --global --minimum-release-age 0 @jwitmann/vcc-brain-helper@4.5.6",
     );
   },
 );
@@ -678,14 +674,14 @@ test.runIf(process.platform !== "win32")(
     executable("bun", "exit 1");
     executable(
       "npm",
-      'if [ "$1" = "list" ]; then printf "@jwitmann/operator-helper@1.2.3"; exit 0; fi\nif [ "$1 $2" = "prefix --global" ]; then printf "/nonexistent/npm/prefix"; exit 0; fi\nprintf "%s\\n%s" "$*" "$NPM_CONFIG_MIN_RELEASE_AGE" > "$OPERATOR_TEST_RECORD"',
+      'if [ "$1" = "list" ]; then printf "@jwitmann/vcc-brain-helper@1.2.3"; exit 0; fi\nif [ "$1 $2" = "prefix --global" ]; then printf "/nonexistent/npm/prefix"; exit 0; fi\nprintf "%s\\n%s" "$*" "$NPM_CONFIG_MIN_RELEASE_AGE" > "$VCC_BRAIN_TEST_RECORD"',
     );
 
     const result = await update("4.5.6");
 
     expect(result).toEqual({ status: "updated", latest: "4.5.6" });
     expect(fs.readFileSync(record, "utf8")).toBe(
-      "install --global @jwitmann/operator-helper@4.5.6\n0",
+      "install --global @jwitmann/vcc-brain-helper@4.5.6\n0",
     );
   },
 );
@@ -738,11 +734,11 @@ test("version checks the registry without installing or caching", async () => {
 
   await expect(run()).resolves.toEqual({
     exitCode: 0,
-    output: "Operator Helper 1.2.3\nUpdate available: 4.5.6. Run `operator-helper upgrade`.",
+    output: "VCC Brain Helper 1.2.3\nUpdate available: 4.5.6. Run `vcc-brain-helper upgrade`.",
   });
   await expect(run()).resolves.toEqual({
     exitCode: 0,
-    output: "Operator Helper 1.2.3\nUpdate available: 4.5.6. Run `operator-helper upgrade`.",
+    output: "VCC Brain Helper 1.2.3\nUpdate available: 4.5.6. Run `vcc-brain-helper upgrade`.",
   });
   expect(checks).toBe(2);
   expect(fs.existsSync(record)).toBe(false);
@@ -751,7 +747,7 @@ test("version checks the registry without installing or caching", async () => {
 test("version reports current and registry errors", async () => {
   expect(await execute(["version"], "1.2.3")).toEqual({
     exitCode: 0,
-    output: "Operator Helper 1.2.3 is up to date.",
+    output: "VCC Brain Helper 1.2.3 is up to date.",
   });
 
   const child = NodeChildProcessSpawner.layer.pipe(
@@ -774,7 +770,7 @@ test("version reports current and registry errors", async () => {
     await Effect.runPromise(runCli(["version"], context).pipe(Effect.provide(layers))),
   ).toEqual({
     exitCode: 1,
-    output: "Operator Helper 1.2.3\nRegistry unavailable",
+    output: "VCC Brain Helper 1.2.3\nRegistry unavailable",
   });
 });
 
@@ -783,14 +779,14 @@ test.runIf(process.platform !== "win32")("upgrade reports an up-to-date helper",
 
   expect(result).toEqual({
     exitCode: 0,
-    output: "Operator Helper 1.2.3 is up to date.",
+    output: "VCC Brain Helper 1.2.3 is up to date.",
   });
 });
 
 test.runIf(process.platform !== "win32")("reports failed explicit installation", async () => {
   executable(
     "bun",
-    'if [ "$1 $2 $3" = "pm ls --global" ]; then printf "@jwitmann/operator-helper@1.2.3"; exit 0; fi\nexit 1',
+    'if [ "$1 $2 $3" = "pm ls --global" ]; then printf "@jwitmann/vcc-brain-helper@1.2.3"; exit 0; fi\nexit 1',
   );
   executable("npm", "exit 1");
 
@@ -798,7 +794,7 @@ test.runIf(process.platform !== "win32")("reports failed explicit installation",
 
   expect(result).toEqual({
     status: "failed",
-    message: "Operator Helper update failed: exit code 1.",
+    message: "VCC Brain Helper update failed: exit code 1.",
   });
 });
 
@@ -815,17 +811,17 @@ test.runIf(process.platform !== "win32")(
       "node",
       "v22.23.2",
       "bin",
-      "operator-helper",
+      "vcc-brain-helper",
     );
     fs.mkdirSync(dirname(executablePath), { recursive: true });
     fs.writeFileSync(executablePath, "", { mode: 0o755 });
     executable(
       "bun",
-      'if [ "$1 $2 $3" = "pm ls --global" ]; then printf "@jwitmann/operator-helper@1.2.3"; exit 0; fi\nif [ "$1 $2 $3" = "pm bin --global" ]; then printf "/nonexistent/bun/bin"; exit 0; fi\nexit 0',
+      'if [ "$1 $2 $3" = "pm ls --global" ]; then printf "@jwitmann/vcc-brain-helper@1.2.3"; exit 0; fi\nif [ "$1 $2 $3" = "pm bin --global" ]; then printf "/nonexistent/bun/bin"; exit 0; fi\nexit 0',
     );
     executable(
       "npm",
-      'if [ "$1" = "list" ]; then printf "@jwitmann/operator-helper@1.2.3"; exit 0; fi\nif [ "$1 $2" = "prefix --global" ]; then printf "%s" "'
+      'if [ "$1" = "list" ]; then printf "@jwitmann/vcc-brain-helper@1.2.3"; exit 0; fi\nif [ "$1 $2" = "prefix --global" ]; then printf "%s" "'
         + npmPrefix
         + '"; exit 0; fi\nexit 0',
     );
@@ -842,11 +838,11 @@ function executable(name: string, body: string): void {
 }
 
 function claudeExecutables(status: string): void {
-  executable("operator-helper", 'printf "helper|%s\\n" "$*" >> "$OPERATOR_TEST_RECORD"');
-  executable("npm", 'printf "unexpected npm call\\n" >> "$OPERATOR_TEST_RECORD"; exit 1');
+  executable("vcc-brain-helper", 'printf "helper|%s\\n" "$*" >> "$VCC_BRAIN_TEST_RECORD"');
+  executable("npm", 'printf "unexpected npm call\\n" >> "$VCC_BRAIN_TEST_RECORD"; exit 1');
   executable(
     "claude",
-    `printf 'claude|%s\\n' "$*" >> "$OPERATOR_TEST_RECORD"
+    `printf 'claude|%s\\n' "$*" >> "$VCC_BRAIN_TEST_RECORD"
 if [ "$1 $2" = "plugin list" ]; then printf '%s' '${status}'; fi`,
   );
 }

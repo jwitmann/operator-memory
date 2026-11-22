@@ -1,4 +1,4 @@
-// Optional per-project Operator config: `<project>/.vcc-brain/config.json` (legacy `<project>/.operator/config.json` also checked).
+// Optional per-project VCC Brain config: `<project>/.vcc-brain/config.json` (legacy `<project>/.operator/config.json` also checked).
 // Same flat block names the opencode-v2 and deepseek adapters parse, with
 // stock thresholds and everything disabled — absent config behaves
 // identically, so scaffolding this file changes no runtime behavior. The

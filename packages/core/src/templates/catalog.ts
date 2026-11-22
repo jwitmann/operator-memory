@@ -2,8 +2,8 @@ export const CATALOG_TEMPLATE = `# {User|Private|Shared} Partition Catalog
 
 ## Tree
 
-- \`operator.md\`
-  - Description: Operator Instructions for this partition.
+- \`vcc-brain.md\`
+  - Description: VCC Brain Instructions for this partition.
   - Read If: Auto-injected.
 - \`catalog.md\`
   - Description: This catalog.

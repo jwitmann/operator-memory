@@ -2,9 +2,9 @@ import { homedir } from "node:os";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { loadMemorySnapshot } from "@jwitmann/operator-core/memory/load";
-import { resolveBrainRoots } from "@jwitmann/operator-core/memory/roots";
-import { renderPreamble } from "@jwitmann/operator-core/preamble";
+import { loadMemorySnapshot } from "@jwitmann/vcc-brain-core/memory/load";
+import { resolveBrainRoots } from "@jwitmann/vcc-brain-core/memory/roots";
+import { renderPreamble } from "@jwitmann/vcc-brain-core/preamble";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 import packageJson from "../package.json" with { type: "json" };
@@ -25,9 +25,9 @@ export default function operatorPi(pi: ExtensionAPI): void {
       message ??= await pending;
       if (!message.loaded && context.hasUI && !recoveryNoticeShown) {
         recoveryNoticeShown = true;
-        context.ui.setStatus("__operator", context.ui.theme.fg("error", "· Operator Unavailable"));
+        context.ui.setStatus("__operator", context.ui.theme.fg("error", "· VCC Brain Unavailable"));
         context.ui.notify(
-          "Operator memory failed to load. The agent is attempting to recover.",
+          "VCC Brain memory failed to load. The agent is attempting to recover.",
           "error",
         );
       }
@@ -37,9 +37,9 @@ export default function operatorPi(pi: ExtensionAPI): void {
       if (context.hasUI && !failureNoticeShown) {
         failureNoticeShown = true;
         const causeMessage = cause instanceof Error ? cause.message : "Preamble Error";
-        context.ui.setStatus("__operator", context.ui.theme.fg("error", "· Operator Error"));
+        context.ui.setStatus("__operator", context.ui.theme.fg("error", "· VCC Brain Error"));
         context.ui.notify(
-          `Operator failed to create the session preamble. ${causeMessage}`,
+          `VCC Brain failed to create the session preamble. ${causeMessage}`,
           "error",
         );
       }
@@ -49,7 +49,7 @@ export default function operatorPi(pi: ExtensionAPI): void {
 
   pi.on("session_start", (_event, context) => {
     if (context.hasUI) {
-      context.ui.setStatus("__operator", `\u001B[35m· Operator Active (${detail})\u001B[39m`);
+      context.ui.setStatus("__operator", `\u001B[35m· VCC Brain Active (${detail})\u001B[39m`);
     }
   });
 

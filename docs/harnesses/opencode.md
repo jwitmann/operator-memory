@@ -4,10 +4,10 @@ OpenCode V1 is frozen and receives no further releases. For current OpenCode, us
 
 ### Install
 
-Legacy path, kept for existing setups: OpenCode V1 is frozen and its package is not published under the new scope, so fresh installs fail at the registry and no releases ship. Requires Node.js 20 or newer (for Operator Helper) and the [Helper](../../README.md#installation) installed.
+Legacy path, kept for existing setups: OpenCode V1 is frozen and its package is not published under the new scope, so fresh installs fail at the registry and no releases ship. Requires Node.js 20 or newer (for VCC Brain Helper) and the [Helper](../../README.md#installation) installed.
 
 ```sh
-operator-helper install opencode-v1
+vcc-brain-helper install opencode-v1
 ```
 
 Restart OpenCode after installation. Until OpenCode reloads the plugin, commands and preamble injection will not work.
@@ -17,28 +17,28 @@ Restart OpenCode after installation. Until OpenCode reloads the plugin, commands
 In a new conversation, ask:
 
 ```text
-Is Operator Memory guidance available to you? Give a brief outline of what it says.
+Is VCC Brain guidance available to you? Give a brief outline of what it says.
 ```
 
 The agent should confirm the guidance is loaded and outline the brain, partitions, and memory-aware workflow. If it cannot, injection is not working.
 
-Secondary signal: the optional TUI status indicator shows `Operator Ready (vX.Y.Z)`; local installs show `(Local Build)`.
+Secondary signal: the optional TUI status indicator shows `VCC Brain Ready (vX.Y.Z)`; local installs show `(Local Build)`.
 
 ### Commands
 
-- `/operator:user-init`
-- `/operator:project-init`
-- `/operator:index`
-- `/operator:repair`
+- `/vcc-brain:user-init`
+- `/vcc-brain:project-init`
+- `/vcc-brain:index`
+- `/vcc-brain:repair`
 
 Run each in a new conversation. See [Getting Started](../getting-started.md#appendix-commands) for what each command does.
 
 ### Update
 
-The plugin updates itself after a restart when a newer npm release exists. On success OpenCode shows `Operator Updated`; on a failed update it shows `Operator Update Failed` or `Operator Update Queued`.
+The plugin updates itself after a restart when a newer npm release exists. On success OpenCode shows `VCC Brain Updated`; on a failed update it shows `VCC Brain Update Failed` or `VCC Brain Update Queued`.
 
 ### Troubleshooting
 
-- Any update or load failure: rerun `operator-helper install opencode-v1` and restart OpenCode. This is also the recovery path for a damaged plugin cache.
+- Any update or load failure: rerun `vcc-brain-helper install opencode-v1` and restart OpenCode. This is also the recovery path for a damaged plugin cache.
 - A container launch that rebuilds the plugin cache can reject a freshly published version because of npm release-age policy. The install command sets `NPM_CONFIG_MIN_RELEASE_AGE=0` itself; other cache rebuilds need the same environment override or a persisted cache.
-- Sidebar `Error` or missing memory: run `/operator:repair` in a new conversation. See [Troubleshooting](../troubleshooting.md).
+- Sidebar `Error` or missing memory: run `/vcc-brain:repair` in a new conversation. See [Troubleshooting](../troubleshooting.md).

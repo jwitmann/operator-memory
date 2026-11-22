@@ -1,5 +1,5 @@
 ---
-description: "@jwitmann/operator-deepseek Host plugin, commands, tests, and installable DeepSeek Harness bundle"
+description: "@jwitmann/vcc-brain-deepseek Host plugin, commands, tests, and installable DeepSeek Harness bundle"
 read_if: Working in packages/deepseek or changing the DeepSeek Harness adapter
 ---
 
@@ -12,14 +12,14 @@ read_if: Working in packages/deepseek or changing the DeepSeek Harness adapter
 ## Architecture
 
 - The published package is a Cordis Host and Web Client plugin plus a DeepSeek Harness bundle whose patch mounts it under a stable row id.
-- The Host runtime lazily renders and caches one complete Core preamble per live agent, contributes it through the asynchronous system-prompt assembly hook, blocks prompt assembly after unexpected render failures, and optionally registers the three Helper-backed Operator commands when DeepSeek supplies its interactive command service.
+- The Host runtime lazily renders and caches one complete Core preamble per live agent, contributes it through the asynchronous system-prompt assembly hook, blocks prompt assembly after unexpected render failures, and optionally registers the three Helper-backed VCC Brain commands when DeepSeek supplies its interactive command service.
 - The package is an installable DeepSeek bundle whose stable patch row mounts the Host plugin in any compatible profile.
 
 ## `packages/deepseek/` Index
 
 - `README.md` — Ditto.
 - `package.json` — Published package, DeepSeek bundle metadata, compatibility peers, and build command.
-- `cordis.patch.yml` — Bundle patch mounting the Operator Host plugin.
+- `cordis.patch.yml` — Bundle patch mounting the VCC Brain Host plugin.
 - `tsconfig.check.json` — Package check configuration.
 
 ### `src/`
@@ -27,7 +27,7 @@ read_if: Working in packages/deepseek or changing the DeepSeek Harness adapter
 - `index.ts` — Cordis Host plugin entrypoint, optional command binding, lazy Core preamble rendering, and system-prompt assembly contribution.
 - `client.js` — Web Client composer-dock availability indicator, registered through the browser module loader.
 - `client.css` — Composer-dock indicator styling aligned with the Harness's static statistics pills.
-- `commands.ts` — Hyphenated Operator commands, instruction handoff, and cancellation.
+- `commands.ts` — Hyphenated VCC Brain commands, instruction handoff, and cancellation.
 
 ### `scripts/`
 
