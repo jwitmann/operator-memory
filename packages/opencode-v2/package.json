@@ -1,6 +1,6 @@
 {
   "name": "@jwitmann/vcc-brain-opencode-v2",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "description": "VCC Brain adapter for OpenCode V2.",
   "license": "BSD-3-Clause",
   "author": "jwitmann",

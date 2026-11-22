@@ -5,6 +5,17 @@
 Generated from conventional commits (`scripts/changelog.sh`).
 Human-readable record of what shipped, per package.
 
+## [v2.6.0] - 2026-11-22
+
+### Features
+
+- use .vcc-brain roots first, fall back to .operator ([`4943ee9`](https://github.com/jwitmann/vcc-brain/commit/4943ee9cb5cc580e0d74faf3b3288c997a0acf82))
+- rename operator-memory to vcc-brain ([`1634359`](https://github.com/jwitmann/vcc-brain/commit/1634359795b2f9b73741774612c84aae2bd4cdf7))
+
+### Other
+
+- migrate this repo to .vcc-brain roots ([`07f9e90`](https://github.com/jwitmann/vcc-brain/commit/07f9e902cc0b517b1f13a7166e0f4432e1aa5f2c))
+
 ## [v2.5.0] - 2026-11-22
 
 ### Other

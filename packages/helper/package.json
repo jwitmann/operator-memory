@@ -1,6 +1,6 @@
 {
   "name": "@jwitmann/vcc-brain-helper",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "description": "Installation and setup CLI for VCC Brain",
   "license": "BSD-3-Clause",
   "author": "jwitmann",

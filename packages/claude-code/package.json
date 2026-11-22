@@ -1,6 +1,6 @@
 {
   "name": "@jwitmann/vcc-brain-claude-code",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "VCC Brain adapter for Claude Code.",
   "license": "BSD-3-Clause",
   "author": "jwitmann",

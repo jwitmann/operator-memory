@@ -5,6 +5,12 @@
 Generated from conventional commits (`scripts/changelog.sh`).
 Human-readable record of what shipped, per package.
 
+## [v0.5.0] - 2026-11-22
+
+### Features
+
+- rename operator-memory to vcc-brain ([`1634359`](https://github.com/jwitmann/vcc-brain/commit/1634359795b2f9b73741774612c84aae2bd4cdf7))
+
 ## [v0.4.1] - 2026-11-22
 
 ### Fixes
