@@ -3,16 +3,26 @@
 // time lag. See "Measure brain-reminder compliance" in
 // docs/dev/follow-ups.md. Read-only over ~/.vcc-brain/state/context-log/.
 import { readdirSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { join } from "node:path";
 
-const dir = join(process.env.HOME ?? "~", ".vcc-brain/state/context-log");
+import { resolveStateDirectory } from "../packages/core/src/memory/roots.ts";
+
+const dir = join(resolveStateDirectory(process.env.HOME ?? homedir()), "context-log");
 
 type Verdict = { moved: number; unanswered: number; lagsMin: number[] };
 const total: Verdict = { moved: 0, unanswered: 0, lagsMin: [] };
 let reminders = 0;
 const withReminders = new Set<string>();
 
-for (const file of readdirSync(dir).filter(f => f.endsWith(".log"))) {
+let logFiles: string[] = [];
+try {
+  logFiles = readdirSync(dir).filter(f => f.endsWith(".log"));
+} catch (cause) {
+  if ((cause as { code?: unknown }).code !== "ENOENT") throw cause;
+}
+
+for (const file of logFiles) {
   let pending: { at: string } | null = null;
   for (const line of readFileSync(join(dir, file), "utf8").split("\n")) {
     if (!line) continue;
