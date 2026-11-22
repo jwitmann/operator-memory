@@ -1,197 +1,112 @@
-# Review — dual brain roots: `.vcc-brain` primary, `.operator` legacy fallback (this session)
+# Review — session: migrate this repo to `.vcc-brain` roots (+ rename fallout)
 
-Product-code change. Full battery: pattern-guardian + style-enforcer +
-code-reviewer in parallel, fixes applied, gates re-run.
+Session delta is `4943ee9...HEAD` (migration commit `07f9e90`, amended with
+fallout fixes) plus the new migration script. The prior `4943ee9` product
+change (60 files, dual-root engine) keeps its previous specialist battery —
+that scope has not changed since its reports, so it was not re-run.
 
-## Scope — every changed file
+## Scope — every session-changed file
 
-New:
+Config (no product code):
 
-- `packages/core/src/memory/roots.ts` — canonical root constants
-  (`.vcc-brain`, `.vcc-brain-shared`, `~/.vcc-brain/user` + legacy
-  counterparts), pure `pickPrimary` precedence policy, async
-  `resolveBrainRoots` (ENOENT falls back, other errors count as present
-  so the loader surfaces them), sync `resolveStateDirectory`, shared
-  `projectConfigPaths`, shared `DEFAULT_BRAIN_PATHS`.
-- `packages/core/src/memory/roots.test.ts` — grounding tests
-  (precedence table, empty/legacy-only/both resolution, config order,
-  state-dir fallback).
-- `packages/helper/src/commands/project/brain-roots.ts` — shared
-  Effect-based `resolveEffectivePartition` (primary-first, legacy reuse,
-  obstruction + both-exist reporting, IO-failure-tolerant probing).
+- `.gitignore` — added `/.vcc-brain-shared/references/` (legacy line kept)
+  and a private-partition block (`/.vcc-brain/`, `/.operator/`), matching the
+  helper's own ignore-block convention (`packages/helper/src/git.ts:7`).
+- `biome.json` — added `!.vcc-brain`, `!.vcc-brain-shared` to
+  `files.includes`, legacy entries kept so legacy dirs stay excluded too.
+- `.vcc-brain/` — private partition moved from `.operator/` (plain `mv`,
+  untracked, content-identical). Gate-tracked as a changed path.
+- 78 tracked files `.operator-shared/**` → `.vcc-brain-shared/**` via
+  `git mv` — byte-identical renames, history preserved, zero content changes.
 
-Core:
+Code/test fallout from the rename:
 
-- `packages/core/package.json` — export `./memory/roots`.
-- `packages/core/src/memory/project.ts` — root constants now re-exported
-  from `roots.ts` (single source of truth).
-- `packages/core/src/memory/load.ts` — loads `resolveBrainRoots` output.
-- `packages/core/src/preamble.ts` — `displayRoots` is required (no
-  default), imports roots from `roots.ts`, canonical
-  `(legacy X also checked)` wording, new both-exist shadowing warning
-  via `legacyIgnored` flags.
-- `packages/core/src/preamble-refresh.ts` — fingerprints resolved roots.
-- `packages/core/src/preamble.test.ts` — explicit display roots, legacy
-  shadowing warning test.
-- `packages/core/src/prompts/preamble-v1.ts`,
-  `packages/core/src/prompts/preamble-v2.ts` — brain tree uses
-  `.vcc-brain*` names plus a legacy-checked sentence.
-- `packages/core/src/context/compaction.ts`,
-  `packages/core/src/context/receipts.ts`,
-  `packages/core/src/context/store.ts` — comment examples use new paths.
+- `packages/opencode-v2/test/index.test.ts` — the cold-refresh e2e test read
+  receipts from hardcoded `~/.operator/state/context-log`; after the home
+  rename that path no longer exists. Now reads
+  `join(resolveStateDirectory(homedir()), "context-log")` via the canonical
+  helper, the same function production uses to write.
+- `scripts/measure-reminder-compliance.ts` — dev-only measurement script with
+  the same hardcoded-root flaw, plus a crash when the state dir is missing.
+  Now resolves via `resolveStateDirectory(process.env.HOME ?? homedir())`
+  (relative import, root scripts declare no workspace deps) and treats
+  missing-dir `ENOENT` as an empty report.
 
-Adapters (all five preamble sites pass explicit roots + `legacyIgnored`;
-snapshot promise starts before root resolution to preserve sync-call test
-timing):
+New helper:
 
-- `packages/opencode-v2/src/preamble.ts`, `packages/opencode/src/preamble.ts`,
-  `packages/pi/src/index.ts`, `packages/deepseek/src/index.ts`,
-  `packages/helper/src/commands/preamble.ts`.
-- `packages/opencode-v2/src/project-config.ts`,
-  `packages/deepseek/src/project-config.ts` — shared core
-  `projectConfigPaths`, let-free first-existing-candidate loops; dead
-  singular `projectConfigPath` and `PROJECT_CONFIG_*` aliases removed;
-  DeepSeek mtime stamp now includes the winning path.
-- `packages/opencode-v2/src/compaction.ts`,
-  `packages/deepseek/src/shaping.ts` — `DEFAULT_BRAIN_PATHS` re-exported
-  from core.
-- `packages/opencode-v2/src/index.ts` — `join` import dropped (unused
-  after state-dir switch), config comments updated.
-- `packages/opencode-v2/src/runtime.ts`, `packages/opencode-v2/src/tool.ts`,
-  `packages/deepseek/src/config.ts` — comment wording.
+- `scripts/migrate-brain-to-vcc-brain.sh` — per-project migration script
+  (`--dry-run` supported): legacy-only moves (`git mv` when tracked, plain
+  `mv` otherwise), primary-only/absent skips, both-exist refuses with exit 1
+  (never merges, never deletes), patches `.gitignore` idempotently, reminds
+  about the global ignore entry. Executable, `bash -n` clean.
 
-Helper:
+Environment (not a repo file, recorded so future sessions know):
 
-- `packages/helper/src/commands/project/common.ts`,
-  `packages/helper/src/commands/user/common.ts` — constants re-exported
-  from core roots.
-- `packages/helper/src/commands/project/init.ts`,
-  `packages/helper/src/commands/project/status.ts`,
-  `packages/helper/src/commands/user/init.ts`,
-  `packages/helper/src/commands/user/status.ts` — all four use the shared
-  resolver: legacy reuse instead of shadowing, obstruction fallback
-  (non-directory primary falls through to a usable legacy), both-exist
-  and obstruction warnings. `user/init` no longer uses dynamic
-  `node:fs` import + `existsSync`.
-- `packages/helper/src/commands/index/init.ts` — Expected text names
-  both legacy roots.
-- `packages/helper/src/git.ts` — ignore block carries both roots;
-  `checkGlobalIgnore` accepts either, `ensureGlobalIgnore` normalizes to
-  primary; tracked-private check covers both.
-- `packages/helper/src/lint.ts` — lints all four existing partitions;
-  shared-private reference message covers both names; unread `legacy`
-  flag removed.
-- `packages/helper/src/tree-hash.ts` — all four roots pruned; dot-access
-  lint fix.
-- Templates (primary `.vcc-brain*` paths with legacy notes):
-  `packages/helper/src/templates/project/config.ts`,
-  `packages/helper/src/templates/project/index-setup.ts`,
-  `packages/helper/src/templates/project/setup.ts`,
-  `packages/helper/src/templates/user/operator.ts`,
-  `packages/helper/src/templates/user/setup.ts`.
+- `~/.operator` → `~/.vcc-brain` (15M, user + state, content-identical).
+  Resolver proof in this repo now reads
+  `private: .vcc-brain | shared: .vcc-brain-shared | user: ~/.vcc-brain/user`
+  with all `legacyAlso` flags false, state `~/.vcc-brain/state`.
 
-Tests updated to the new primary (bulk renames, no behavior change):
+Ephemeral verification fixtures (created under the gate's `$R` fixture root,
+asserted, then deleted — not repo changes, no longer on disk):
 
-- `packages/helper/test/cli.test.ts` (+2 new legacy tests:
-  legacy-partition reuse, both-exist status warning),
-  `packages/helper/test/git.test.ts`,
-  `packages/helper/test/lint.test.ts`,
-  `packages/helper/test/stamp.test.ts`.
-- `packages/opencode-v2/test/brain-updates-index.test.ts`,
-  `packages/opencode-v2/test/brain-updates.test.ts`,
-  `packages/opencode-v2/test/compaction-snapshot.test.ts`,
-  `packages/opencode-v2/test/compaction.test.ts`,
-  `packages/opencode-v2/test/context.test.ts`,
-  `packages/opencode-v2/test/events.test.ts`,
-  `packages/opencode-v2/test/index.test.ts`,
-  `packages/opencode-v2/test/preamble.test.ts`,
-  `packages/opencode-v2/test/project-config-setup.test.ts`,
-  `packages/opencode-v2/test/project-config.test.ts`,
-  `packages/opencode-v2/test/refresh.test.ts`,
-  `packages/opencode-v2/test/tool.test.ts`
-  (path renames, toast/message expectations).
+- `$R/projA/.gitignore`, `$R/projA/.operator/operator.md`,
+  `$R/projA/.operator-shared/operator.md` — standard git-repo fixture:
+  legacy-only private+shared, shared committed, legacy references line.
+- `$R/projB/.operator/operator.md`, `$R/projB/.vcc-brain/operator.md` —
+  both-exist divergent fixture (refusal path).
+- `$R/projC/.vcc-brain/operator.md` — already-migrated fixture.
+- `$R/projD/.operator/operator.md` — dry-run fixture.
+- `$R/projE/.operator/operator.md` — non-git fixture.
+- Plus a second root with one dry-run re-check fixture and a `HEAD`-extracted
+  copy of the compliance script used for the fail-before run. All 57 fixture
+  files were removed after assertion (`find -type f -exec rm`, empty dirs
+  pruned); the 7 script runs in the grounder evidence below are their record.
+
+## Battery
+
+- `pattern-guardian`, `style-enforcer`, `code-reviewer` in parallel over the
+  delta above (read-only specialists, no file writes).
+- Targeted re-confirmation from pattern-guardian and code-reviewer after the
+  `measure-reminder-compliance.ts` fixes (single-question messages, no full
+  re-run — no other scope changed).
+- Test-grounder evidence below; `bun run check` (typecheck, lint, tests) and
+  `bun run lint:md` as the confirming commands.
 
 ## Findings and resolutions
 
-Blocking (pattern-guardian):
+Blocking: none — all three specialists report clean.
 
-1. Quadruple source of truth for root strings (`project.ts`,
-   `roots.ts`, `preamble.ts`, helper `common.ts`).
-   Resolution: `roots.ts` is canonical; `project.ts` re-exports,
-   `preamble.ts` and both helper commons import from core.
-2. `user/init` re-invented existence checks via dynamic `node:fs`
-   import, losing file/dir distinction and unmockable.
-   Resolution: deleted; all four commands share
-   `resolveEffectivePartition` (Effect `inspectPath`-based).
-3. Copy-pasted project-config path lists in opencode-v2 + deepseek.
-   Resolution: shared core `projectConfigPaths`; per-adapter read
-   semantics kept (opencode-v2 read-then-parse, deepseek stat-cache).
+Should-fix 1 (pattern-guardian): the compliance script hardcoded the primary
+root with no legacy fallback. Fixed by importing `resolveStateDirectory`
+(verified zero transitive weight: `roots.ts` pulls only `node:` builtins plus
+dependency-free `utils.ts`). Re-confirmed resolved; the relative-import
+spelling is accepted as minimal (no root workspace dep for one script).
 
-Blocking (code-reviewer):
+Should-fix 2 (code-reviewer): `readdirSync` crashed `ENOENT` on a missing
+state dir, and `HOME ?? "~"` never expanded. Fixed with an `ENOENT`-only
+guard (other errors rethrow) and `homedir()` fallback. Re-confirmed
+resolved.
 
-1. Silent legacy shadowing when both roots exist.
-   Resolution: `resolveBrainRoots` reports `*LegacyAlsoExists` flags;
-   preamble renders a merge-then-remove warning per partition; both
-   status commands warn; init notes legacy reuse.
-2. Primary file-obstruction blocked legacy fallback in status paths.
-   Resolution: shared resolver falls back unless primary is a
-   directory; obstruction reported via `primaryObstructed` warnings.
+Notes (no action): the test fix is exemplary helper reuse (dynamic import
+matches surrounding lines; production and test call the same function with
+the same argument in all three home states); dual-name retention in
+`.gitignore`/`biome.json` matches the repo-wide primary+legacy convention;
+`biome.json` exclusions are correct (brain dirs hold docs, `ignoreUnknown`
+has nothing to do there); `.gitignore` cannot affect tracked files so the
+kept legacy lines hide nothing.
 
-Blocking (style-enforcer):
+## Test-grounder evidence
 
-1. `renderPreamble` default argument.
-   Resolution: parameter required; all five production callers pass
-   explicit roots; tests updated; `DEFAULT_DISPLAY_ROOTS` removed.
-2. Triple declaration of root literals.
-   Resolution: same as pattern-guardian (1) above.
-3. Dead exports (`PROJECT_CONFIG_RELATIVE_PATH` aliases, singular
-   `projectConfigPath`, `DEFAULT_DISPLAY_ROOTS`).
-   Resolution: removed (zero callers verified).
-
-Should-fix, all resolved except two justified N/A:
-
-- Shared `pickPrimary` policy for sync/async twins (done in roots.ts).
-- `let`-free config loops (done via early-return loops + helper).
-- DeepSeek cache stamp now includes winning path (done).
-- `exists()` distinguishes ENOENT from other errors (done; others
-  count as present so loaders surface them).
-- Canonical `(legacy X also checked)` wording applied everywhere except
-  the prompt tree diagram (parentheticals don't fit ASCII art; a
-  precedence sentence follows the tree instead) — justified variance.
-- `USER_LEGACY_PREFIX` → imported `USER_LEGACY_DISPLAY`; `path` →
-  `candidate` in config loops; roots.ts uses `join` with adjacent
-  `node:fs*` imports; one comment phrasing for the precedence rule.
-- N/A (1): five-site render block (`loadMemorySnapshot` +
-  `resolveBrainRoots` + `renderPreamble`) NOT extracted — pi/deepseek
-  coalescing tests explicitly pin the snapshot-first call wiring
-  through separate mocks; a shared helper would hide that seam for
-  six saved lines per site.
-- N/A (2): `ensureGlobalIgnore` appends the primary line when only
-  legacy is present while `checkGlobalIgnore` accepts either — the
-  append happens once (next run reports present), i.e. one-time
-  normalize-on-write, not drift.
-
-Note disposition: `PARTITIONS` length change is safe (missing roots
-lint to zero findings); `tree-hash` dot-access rode along as a biome
-fix; `resolveStateDirectory` stays sync by adapter-setup necessity
-(documented in its comment); preamble default-root risk closed by (6).
-
-## Grounding (fail-before evidence)
-
-- New `roots.test.ts` (7 tests) and the preamble shadowing test
-  exercise APIs that do not exist on the base tree (`resolveBrainRoots`
-  fallback/flags, `legacyIgnored` warnings) — they fail there by
-  construction and pass here.
-- New cli tests (legacy reuse, both-exist status warning) fail on the
-  base tree, which hardcoded primary paths and had no fallback.
-- Session fail→pass trail: core `preamble.test` 10 failures before
-  expectation updates; helper 14 failures before test migration;
-  deepseek/pi coalescing failures before snapshot-first ordering —
-  each resolved in-tree, none worked around.
-
-## Verification (final tree)
-
-- `bun run check` (root): 66 files, 553 tests, exit 0.
-- Per-package gates: core 160, helper 103, opencode-v2 166,
-  deepseek 72, pi 9, opencode 23 — all exit 0.
-- `bun run lint:md`: 135 files, 0 issues.
+- `index.test.ts` cold-refresh: failed before
+  (`expected [] to match object [{ kind: "refresh", … }]`, full run 552/553),
+  passes after (file run 9/9).
+- Compliance script: pre-fix file from git HEAD with `HOME=<empty dir>`
+  crashes `ENOENT` exit 1; fixed file prints the zero report exit 0; with the
+  real home prints the real report (14 sessions) exit 0.
+- Migration script: 7 fixture runs — standard git repo (history-preserving
+  renames, content intact), rerun idempotent, both-exist refuses exit 1
+  untouched, already-migrated skips, `--dry-run` changes nothing (wording
+  fixed when the dry run printed "Moved"), non-git plain `mv`.
+- Confirming commands: `bun run check` 66 files / 553 tests, exit 0;
+  `bun run lint:md` 135 files, 0 issues (this artifact included).
