@@ -57,13 +57,15 @@ Setup is a conversation with your agent. Run each command in a new conversation.
 
 #### For the best long-session results
 
-Long sessions must compact, and a plain summarizer rewrites your rules in the process. On DeepSeek Harness, install the deterministic VCC engine alongside the Operator plugin:
+Long sessions must compact, and a plain summarizer rewrites your rules in the process. Pair Operator with deterministic compaction:
+
+- On DeepSeek Harness, install the VCC engine alongside the Operator plugin — without it, compaction falls back to the host's LLM summarizer:
 
 ```sh
 dsh plugin --profile web add dsh-compaction-vcc
 ```
 
-Without it, compaction falls back to the host's LLM summarizer. On OpenCode the engine is built into the plugin — just enable context management during project setup.
+- On OpenCode, the engine ships inside the plugin — enable it during `/operator:project-init`, which flips `contextManagement.enabled` on in `<project>/.operator/config.json`.
 
 When starting cold on an existing project, expect a sparse brain at first; ask the agent to write the first specifications for the modules you work on. Once those documents exist, later sessions maintain them as part of ordinary work.
 

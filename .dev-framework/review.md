@@ -1,28 +1,30 @@
-# Review — docs-only: VCC install recommendation (this session)
+# Review — docs-only: README VCC block fix (this session)
 
 ## Scope — every changed file
 
-- `README.md` — Installation flow gains "For the best
-  long-session results" (harm sentence, `dsh plugin --profile
-  web add dsh-compaction-vcc`, without-it fallback, OpenCode
-  built-in note).
-- `docs/harnesses/deepseek.md` — existing drop-in sentence
-  gains the exact install command.
+- `README.md` — "For the best long-session results" block
+  restructured from prose to per-harness bullets: DeepSeek
+  keeps the install command + fallback line; OpenCode now
+  names the concrete enablement (`/operator:project-init`
+  flips `contextManagement.enabled` in
+  `<project>/.operator/config.json`) instead of the vague
+  "enable during setup".
 - `.dev-framework/review.md` — this artifact.
 
-No product code. Install command verified verbatim against
-the upstream `dsh-compaction-vcc` README; fallback claim
-matches `deepseek.md` ("backend choice, not adapter code");
-OpenCode built-in claim matches `opencode-v2.md`
-("ported in-tree"). Wording is our own; the reference repo
-supplied structure (problem → command → without-it cost).
+No product code. Enablement verified against the tree
+before writing: core `compiler.ts` header (faithful port of
+`dsh-compaction-vcc@0.7.4`, in-tree, bundled in dists);
+`PROJECT_CONFIG_TEMPLATE` (`contextManagement.enabled`,
+default false, flipped at project setup); opencode-v2
+reads the flag (`index.ts`). Fixes the prior revision's
+asymmetry (copy-paste command vs hand-waving).
 
 ## Findings and resolutions
 
-- **Gap as reported, confirmed.** The README recommended
-  no install for better results — only the mechanism. The
-  install phase now names the VCC engine explicitly, per
-  harness (install on DeepSeek, enable on OpenCode).
+- **Gap as reported by the user: OpenCode half was not
+  actionable.** Fixed with the exact switch and the flow
+  that flips it. No new claims — same verified facts,
+  concrete form.
 - **No specialists — docs-only cadence.** Markdown lint is
   the entire battery for this scope.
 
