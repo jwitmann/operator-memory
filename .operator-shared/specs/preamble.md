@@ -1,6 +1,6 @@
 # Preamble
 
-Last Updated: November 21, 2026
+Last Updated: November 22, 2026
 
 The preamble gives the agent fixed Operator guidance and available durable Memory. Prefer a synthetic model-call contribution rendered once and held immutable for the session so its prefix remains cacheable. Persisted lifecycle injection and re-rendering are also fully acceptable, even when a non-persisted route exists; choose what fits the harness. A load failure produces the diagnostic instead of partial memory. Do not refresh on every turn merely to track Brain edits. See [`reference/implementation.md`](./reference/implementation.md) for adapter pathways.
 
@@ -79,5 +79,6 @@ Inject full catalog bodies when present in Shared then Private order. Catalogs a
 - If neither project partition root exists, tell the agent to ask for `/operator:project-init` before significant project work, but not when the user is merely exploring.
 - If a Project Brain exists but no index files are discovered, tell the agent to ask for `/operator:index` before project work when the project is not empty.
 - If a Project Brain exists but neither catalog exists, tell the agent to create and maintain a catalog for non-empty brain partitions.
+- If a main index exists but carries no `tree_hash`, tell the agent the index was never stamped — staleness is unknown — and to run `index stamp` after refreshing the index. Live drift is checked with `index lint`, never by preamble hashing; see [`index-staleness.md`](./index-staleness.md).
 
 Warnings are conditional injection, not part of the fixed prompt.

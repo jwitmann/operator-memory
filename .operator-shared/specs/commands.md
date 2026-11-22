@@ -52,6 +52,8 @@ Deterministic setup initializes Private only. The agent creates `.operator-share
 
 Project Index population is intentionally separate from Project Setup. Index structure and maintenance behavior are specified in the Project Index guidance embedded in the fixed preamble.
 
+After refreshing the index, run `index stamp` to record the tree hash and use `index lint` to check for structural drift; see [`index-staleness.md`](./index-staleness.md).
+
 ## Canonical Guides
 
 The User Setup, Project Setup, and Project Index Setup guides are defined under [`packages/helper/src/templates/`](../../packages/helper/src/templates/) and emitted by `user init`, `project init`, and `index init`.

@@ -85,7 +85,13 @@ test("loads core documents and recursive indexes in stable path order", async ()
   expect(result.shared.indexes.map(index => index.path)).toEqual(["index.md", "packages/core.md"]);
   expect(result.shared.indexes[0]?.frontmatter).toEqual({
     ok: true,
-    value: { description: "Main index", readIf: "Always" },
+    value: {
+      description: "Main index",
+      readIf: "Always",
+      treeHash: null,
+      stampedAt: null,
+      stampedCommit: null,
+    },
   });
   expect(result.user.operatorInstructions).toBe("user instructions");
   expect(result.user.catalog).toBe("user catalog");

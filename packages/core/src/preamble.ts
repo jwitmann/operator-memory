@@ -100,6 +100,8 @@ Neither .operator/catalog.md nor .operator-shared/catalog.md exists. You must cr
 Neither .operator/index/index.md nor .operator-shared/index/index.md exists. If the project is not in an empty state, ask the user to run /operator:index to initialize a project index before performing any work.
 </operator-warning>`,
       );
+    } else {
+      warnings.push(...collectUnstampedWarnings(loaded));
     }
   }
 
@@ -119,6 +121,28 @@ function hasMainIndex(memory: LoadedMemorySnapshot): boolean {
   return [memory.shared, memory.private].some(partition =>
     partition.indexes.some(index => index.path === "index.md"),
   );
+}
+
+function collectUnstampedWarnings(memory: LoadedMemorySnapshot): string[] {
+  const targets = [
+    { partition: memory.shared, root: SHARED_ROOT },
+    { partition: memory.private, root: PRIVATE_ROOT },
+  ];
+  const warnings: string[] = [];
+  for (const target of targets) {
+    const main = target.partition.indexes.find(index => index.path === "index.md");
+    if (main?.frontmatter.ok === true) {
+      const treeHash = main.frontmatter.value.treeHash;
+      if (typeof treeHash !== "string" || treeHash === "") {
+        warnings.push(
+          `<operator-warning>
+${target.root}/index/index.md exists but was never stamped — staleness is unknown. Run \`index stamp\` after refreshing the index; run \`index lint\` to check for drift.
+</operator-warning>`,
+        );
+      }
+    }
+  }
+  return warnings;
 }
 
 function renderLoadDiagnostic(memory: MemorySnapshot): string {

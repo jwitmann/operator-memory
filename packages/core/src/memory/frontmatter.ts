@@ -7,6 +7,9 @@ const FRONTMATTER_PATTERN = /^---[\t ]*\r?\n([\s\S]*?)\r?\n---[\t ]*(?:\r?\n|$)/
 export type IndexFrontmatter = {
   readonly description: string;
   readonly readIf: string;
+  readonly treeHash: string | null;
+  readonly stampedAt: string | null;
+  readonly stampedCommit: string | null;
 };
 
 export type FrontmatterError = {
@@ -49,8 +52,22 @@ export function parseIndexFrontmatter(content: string): Result<IndexFrontmatter,
       });
     }
 
-    return success({ description, readIf });
+    return success({
+      description,
+      readIf,
+      treeHash: readStampString(value, "tree_hash"),
+      stampedAt: readStampString(value, "stamped_at"),
+      stampedCommit: readStampString(value, "stamped_commit"),
+    });
   } catch (error) {
     return failure({ kind: "invalid", message: getErrorMessage(error) });
   }
+}
+
+function readStampString(value: Record<string, unknown>, key: string): string | null {
+  const field: unknown = value[key];
+  if (typeof field === "string") {
+    return field;
+  }
+  return field instanceof Date ? field.toISOString() : null;
 }

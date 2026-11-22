@@ -72,7 +72,13 @@ test("renders conditional memory in authority and partition order", () => {
         {
           path: "index.md",
           content: "shared main index",
-          frontmatter: success({ description: "Shared map", readIf: "Always" }),
+          frontmatter: success({
+            description: "Shared map",
+            readIf: "Always",
+            treeHash: "abc",
+            stampedAt: "2026-11-22T00:00:00.000Z",
+            stampedCommit: null,
+          }),
         },
         {
           path: "packages/core.md",
@@ -95,7 +101,13 @@ test("renders conditional memory in authority and partition order", () => {
         {
           path: "index.md",
           content: "private main index",
-          frontmatter: success({ description: "Private map", readIf: "Private work" }),
+          frontmatter: success({
+            description: "Private map",
+            readIf: "Private work",
+            treeHash: "def",
+            stampedAt: "2026-11-22T00:00:00.000Z",
+            stampedCommit: null,
+          }),
         },
       ],
     },
@@ -178,17 +190,35 @@ test("renders index listing connectors and metadata for every valid index", () =
         {
           path: "index.md",
           content: "main index",
-          frontmatter: success({ description: "Main", readIf: "Always" }),
+          frontmatter: success({
+            description: "Main",
+            readIf: "Always",
+            treeHash: "abc",
+            stampedAt: "2026-11-22T00:00:00.000Z",
+            stampedCommit: null,
+          }),
         },
         {
           path: "packages/core.md",
           content: "core body",
-          frontmatter: success({ description: "Core", readIf: "Core work" }),
+          frontmatter: success({
+            description: "Core",
+            readIf: "Core work",
+            treeHash: null,
+            stampedAt: null,
+            stampedCommit: null,
+          }),
         },
         {
           path: "packages/helper.md",
           content: "helper body",
-          frontmatter: success({ description: "Helper", readIf: "CLI work" }),
+          frontmatter: success({
+            description: "Helper",
+            readIf: "CLI work",
+            treeHash: null,
+            stampedAt: null,
+            stampedCommit: null,
+          }),
         },
       ],
     },
@@ -227,7 +257,13 @@ test("renders an index listing without a main index body", () => {
         {
           path: "source.md",
           content: "source body",
-          frontmatter: success({ description: "Source", readIf: "Source work" }),
+          frontmatter: success({
+            description: "Source",
+            readIf: "Source work",
+            treeHash: null,
+            stampedAt: null,
+            stampedCommit: null,
+          }),
         },
       ],
     },
@@ -441,4 +477,132 @@ test("reports initialization separately from load success", () => {
   const initialized = renderMemoryPreamble(userOnly);
   expect(initialized.loaded).toBe(true);
   expect(initialized.initialized).toBe(true);
+});
+
+test("warns when a main index exists but was never stamped", () => {
+  const memory: LoadedMemorySnapshot = {
+    shared: {
+      exists: true,
+      operatorInstructions: null,
+      catalog: "catalog",
+      indexes: [
+        {
+          path: "index.md",
+          content: "main index",
+          frontmatter: success({
+            description: "Main",
+            readIf: "Always",
+            treeHash: null,
+            stampedAt: null,
+            stampedCommit: null,
+          }),
+        },
+      ],
+    },
+    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
+    private: { exists: false, operatorInstructions: null, catalog: null, indexes: [] },
+  };
+
+  const preamble = renderPreamble(memory);
+
+  expect(preamble).toContain(".operator-shared/index/index.md exists but was never stamped");
+  expect(preamble).toContain("staleness is unknown");
+  expect(preamble).not.toContain("Neither .operator/index/index.md");
+});
+
+test("warns per unstamped partition and stays silent when both are stamped", () => {
+  const unstamped: LoadedMemorySnapshot = {
+    shared: {
+      exists: true,
+      operatorInstructions: null,
+      catalog: "catalog",
+      indexes: [
+        {
+          path: "index.md",
+          content: "shared main",
+          frontmatter: success({
+            description: "Shared",
+            readIf: "Always",
+            treeHash: null,
+            stampedAt: null,
+            stampedCommit: null,
+          }),
+        },
+      ],
+    },
+    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
+    private: {
+      exists: true,
+      operatorInstructions: null,
+      catalog: "catalog",
+      indexes: [
+        {
+          path: "index.md",
+          content: "private main",
+          frontmatter: success({
+            description: "Private",
+            readIf: "Private work",
+            treeHash: null,
+            stampedAt: null,
+            stampedCommit: null,
+          }),
+        },
+      ],
+    },
+  };
+
+  const unstampedPreamble = renderPreamble(unstamped);
+  expect(unstampedPreamble).toContain(
+    ".operator-shared/index/index.md exists but was never stamped",
+  );
+  expect(unstampedPreamble).toContain(".operator/index/index.md exists but was never stamped");
+
+  const stamped: LoadedMemorySnapshot = {
+    shared: {
+      exists: true,
+      operatorInstructions: null,
+      catalog: "catalog",
+      indexes: [
+        {
+          path: "index.md",
+          content: "shared main",
+          frontmatter: success({
+            description: "Shared",
+            readIf: "Always",
+            treeHash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            stampedAt: "2026-11-22T00:00:00.000Z",
+            stampedCommit: null,
+          }),
+        },
+      ],
+    },
+    user: { exists: false, operatorInstructions: null, catalog: null, observations: null },
+    private: {
+      exists: true,
+      operatorInstructions: null,
+      catalog: "catalog",
+      indexes: [
+        {
+          path: "index.md",
+          content: "private main",
+          frontmatter: success({
+            description: "Private",
+            readIf: "Private work",
+            treeHash: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            stampedAt: "2026-11-22T00:00:00.000Z",
+            stampedCommit: "123",
+          }),
+        },
+      ],
+    },
+  };
+
+  const stampedPreamble = renderPreamble(stamped);
+  expect(stampedPreamble).not.toContain("was never stamped");
+  expect(stampedPreamble).not.toContain(
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  );
+  expect(stampedPreamble).not.toContain(
+    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  );
 });
