@@ -44,7 +44,6 @@ Then install the VCC Brain adapter for your harness. Click each link for harness
 | [Claude Code (CLI + Desktop)](docs/harnesses/claude-code.md) | 🟢 Fully Supported      | `vcc-brain-helper install claude-code` |
 | [Codex (CLI + Desktop)](docs/harnesses/codex.md)             | 🟢 Fully Supported      | `vcc-brain-helper install codex`       |
 | [OpenCode](docs/harnesses/opencode-v2.md)                    | 🟢 Fully Supported (V2) | `vcc-brain-helper install opencode`    |
-| [OpenCode V1 (legacy)](docs/harnesses/opencode.md)           | 🟡 Supported, Legacy    | `vcc-brain-helper install opencode-v1` |
 | [Pi](docs/harnesses/pi.md)                                   | 🟢 Fully Supported      | `vcc-brain-helper install pi`          |
 | [DeepSeek Harness](docs/harnesses/deepseek.md)               | 🟢 Fully Supported      | `vcc-brain-helper install deepseek`    |
 | [Kiro](docs/harnesses/kiro.md)                               | 🟡 Supported            | `vcc-brain-helper install kiro`        |
