@@ -65,7 +65,7 @@ Long sessions must compact, and a plain summarizer rewrites your rules in the pr
 dsh plugin --profile web add dsh-compaction-vcc
 ```
 
-- On OpenCode, the engine ships inside the plugin — enable it during `/operator:project-init`, which flips `contextManagement.enabled` on in `<project>/.operator/config.json`.
+- On OpenCode, no extra install — the VCC compiler is bundled in the plugin. It does nothing until you opt in and stays inert without a Brain: set `contextManagement.enabled: true` (per-project `<project>/.operator/config.json`, scaffolded disabled by `/operator:project-init` with a setup-interview prompt to enable it, or organization defaults via `operator.contextManagement` in `opencode.json`; the project file wins). Even enabled, deterministic `vcc` fires only when the framed checkpoint is smaller and a keepID tail exists — otherwise the host summarizes with Brain-referencing shaping (`shaped`). Verify in `~/.operator/state/context-log/<sessionID>.log` (`engine=vcc|shaped`, or `refusal reason=brain-unavailable`).
 
 When starting cold on an existing project, expect a sparse brain at first; ask the agent to write the first specifications for the modules you work on. Once those documents exist, later sessions maintain them as part of ordinary work.
 
