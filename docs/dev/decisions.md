@@ -316,3 +316,11 @@ distribution fallback; behavior stays in the spec.
 
 Import note: the fallback never triggered — the feature shipped in-tree.
 Kept for the record.
+
+### Cross-session recall calibration (2026-11-24)
+
+Blind A4 re-run (seeded sampler, keywords-from-sample-only, mechanical scoring, DSH store): round 1 scored 12/20 top-5, round 2 (fixed sampler, fixed cap) 10/20 on a fresh sample. Diagnosis split the misses: two were BM25 burial (origin at depth 79 and 149, cut by the helper's hardcoded 50-row candidate cap — long turns lose length normalization), the rest were fair ranking losses (origin in-pool, outscored by same-project near-duplicate sessions) plus one sampler bug (JS tokenizer glued fragments across separators into a phantom keyword; fixed with a contiguity check). Retrieval (origin reachable) was 20/20; the shortfall is top-5 precision on synthetic colliding keywords, not reachability.
+
+Candidate cap set to 500 from a benchmark, not judgment: latency flat 7–25ms at every LIMIT 50→5000 on the real 22k-turn corpus, so the value comes from coverage — 500 covers ~3x the worst observed burial (149). The naive raise deterministically crashed sandboxed runs (SQLITE_CANTOPEN: selecting wide `text` rows inside ORDER BY spills the sorter to temp files past ~50 wide rows), fixed via narrow-then-fetch (`SELECT rowid ... ORDER BY ... LIMIT`, point-fetch, JS re-sort; core keeps the single final ranking).
+
+Adaptive fetching (widen-while-unstable loop) DECIDED not-now: it answers a latency problem the benchmark shows does not exist, and the stopping rule is heuristic machinery. Revisit triggers (either fires): worst observed burial depth exceeds 500 on re-measure, or query latency at 500 leaves the ~1s budget. Metric caveat: the blind protocol scores fair ranking ties as misses, so a sub-20/20 synthetic score alone is not a build signal — production reach-backs (≥1/20 sessions) govern.
