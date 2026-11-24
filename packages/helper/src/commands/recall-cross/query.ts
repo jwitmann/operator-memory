@@ -72,6 +72,12 @@ const syncOpencodeForQuery = Effect.fn("syncOpencodeForQuery")(function* (
 const SELECT_COLUMNS =
   "harness, session_id, project, timestamp, seq, kind, text, pointer, how_to_pull";
 
+// Candidate cap: measured 2026-11-24 on a 22k-turn corpus — worst
+// origin depth 149 (long-turn BM25 burial), latency flat 7–25ms from
+// 50 to 5000. 500 covers ~3x the worst observed depth at zero
+// latency cost; re-measure if the corpus grows an order of magnitude.
+const CANDIDATE_LIMIT = 500;
+
 function escapePhrase(term: string): string {
   return term.replace(/"/g, `""`);
 }
@@ -98,6 +104,31 @@ function collectRecords(rows: unknown): SessionRecord[] {
   return records;
 }
 
+// Narrow-then-fetch: selecting wide `text` rows inside the ORDER BY
+// spills the sorter to temp files, which sandboxed runs cannot create
+// (SQLITE_CANTOPEN past ~50 wide rows). Sort narrow rowids in memory,
+// then point-fetch the winners; the JS re-sort preserves candidate
+// order for the single core re-sort downstream. Callers must cap input
+// at CANDIDATE_LIMIT: the single IN list is only safe bounded.
+function fetchOrdered(db: SqliteDatabase, ids: readonly unknown[]): unknown[] {
+  const rowids = ids
+    .map(id => (typeof id === "number" ? id : Number((id as Record<string, unknown>).rowid)))
+    .filter(id => Number.isInteger(id));
+  if (rowids.length === 0) {
+    return [];
+  }
+  const order = new Map(rowids.map((id, at) => [id, at]));
+  const position = (row: Record<string, unknown>): number =>
+    order.get(Number(row.rowid)) ?? Number.MAX_SAFE_INTEGER;
+  const rows = db
+    .prepare(
+      `SELECT rowid AS rowid, ${SELECT_COLUMNS} FROM turns WHERE rowid IN (${rowids.map(() => "?").join(",")})`,
+    )
+    .all(...rowids) as Array<Record<string, unknown>>;
+  rows.sort((a, b) => position(a) - position(b));
+  return rows;
+}
+
 // `MATCH` misses on punctuation/single characters or throws on FTS syntax:
 // the caller treats empty-or-throw as the signal for the `instr` fallback.
 function matchCandidates(
@@ -110,12 +141,12 @@ function matchCandidates(
     return [];
   }
   const match = terms.map(term => `"${escapePhrase(term)}"`).join(" AND ");
-  const rows = db
+  const ids = db
     .prepare(
-      `SELECT ${SELECT_COLUMNS}, bm25(turns) AS score FROM turns WHERE turns MATCH ?${harnessClause(harness)} ORDER BY score LIMIT 50`,
+      `SELECT rowid AS rowid FROM turns WHERE turns MATCH ?${harnessClause(harness)} ORDER BY bm25(turns) LIMIT ${CANDIDATE_LIMIT}`,
     )
     .all(match, ...harnessArgs(harness));
-  return collectRecords(rows);
+  return collectRecords(fetchOrdered(db, ids as readonly unknown[]));
 }
 
 function instrCandidates(
@@ -128,12 +159,12 @@ function instrCandidates(
     return [];
   }
   const conditions = terms.map(() => "instr(lower(text), ?) > 0").join(" AND ");
-  const rows = db
+  const ids = db
     .prepare(
-      `SELECT ${SELECT_COLUMNS} FROM turns WHERE ${conditions}${harnessClause(harness)} ORDER BY timestamp DESC LIMIT 50`,
+      `SELECT rowid AS rowid FROM turns WHERE ${conditions}${harnessClause(harness)} ORDER BY timestamp DESC LIMIT ${CANDIDATE_LIMIT}`,
     )
     .all(...terms, ...harnessArgs(harness));
-  return collectRecords(rows);
+  return collectRecords(fetchOrdered(db, ids as readonly unknown[]));
 }
 
 function carriesFallbackSignals(keywords: readonly string[]): boolean {

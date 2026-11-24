@@ -1,54 +1,77 @@
-# Review — this session (fresh 2026-11-24 ~18:45 +07)
+# Review — this session (fresh 2026-11-24 ~19:45 +07)
 
-Session work: Phase 2 OpenCode sqlite adapter for cross-session recall
-(helper `opencode.ts` + `store.ts`, query/index wiring, opencode-v2 tool
-pair, fixture tests), two review-battery fix rounds, live proof against the
-real 18GB store, local commit `7f0e47f`. Gate `bun run check` exit 0
-(71 files, 616 tests) + `lint:md` 0 issues.
+Session work: Phase 3 verification tail — blind-benchmark-driven
+candidate-cap fix in the recall query path. The approved one-line cap
+raise (50 → 500) deterministically crashed (SQLITE_CANTOPEN temp spill
+on wide-row sorts under the sandbox); fixed via narrow-then-fetch.
+`bun run check packages/helper` EXIT 0 (137/137); `lint:md` 0 issues.
+Commit lands Phase 3 (docs from the prior artifact + this fix) as one unit.
 
-## Scope — every changed file, literally
+## Scope — every changed file
 
-Product code (full specialist battery; reports reused below — no product
-file changed since the confirm round except the 2-line double-DELETE
-removal, which the green gate covers):
+Product code (full battery below):
 
-- `packages/helper/src/commands/recall-cross/opencode.ts` — NEW. v2-table ingest, read-only open, delta sync, tombstones, expiry. Fix rounds: ordinal-keyed tool parts, `:tool:<ordinal>` pointer suffix, 500-chunked IN batches, sticky forget, hashed sourceKey segment, expiry on fast path, read-only cold probe.
-- `packages/helper/src/commands/recall-cross/store.ts` — NEW. Shared sqlite kernel (coercion, insert batch with DELETE, opener, retention, tombstone reader). One-way dependency.
-- `packages/helper/src/commands/recall-cross/index.ts` — MODIFIED: store reuse, DSH orphan sweep excludes `opencode:` keys, forgotten-id filtering, dual-sync `recallCrossIndex`.
-- `packages/helper/src/commands/recall-cross/query.ts` — MODIFIED: `syncOpencodeForQuery` cold rule, prefix-directed recall sync, home/dbPaths plumbing.
-- `packages/helper/src/commands/recall-cross/dsh.ts` — MODIFIED: `RECALL_TOOL_NAMES` export, `readNumber` → shared `coerceNumber` (`readString` stays local, commented).
-- `packages/helper/test/recall-cross-opencode.test.ts` — NEW: 13 tests, incl. second-tool-part pin, forget stickiness, hasParts=false, EXPLAIN plan-shape.
-- `packages/helper/test/recall-cross-index.test.ts` — MODIFIED: DSH forget stickiness assertion.
-- `packages/helper/test/recall-cross-query.test.ts` — MODIFIED: home-arg plumbing only.
-- `packages/opencode-v2/src/tool.ts` — MODIFIED: `registerSearchSessionsTool` + `registerRecallSessionTool`, helper-subprocess backing.
-- `packages/opencode-v2/src/index.ts` — MODIFIED: registers both tools.
-- `packages/opencode-v2/test/tool.test.ts` — MODIFIED: hoisted builtin import, 6 new tests.
-- `packages/opencode-v2/test/index.test.ts` — MODIFIED: toolTransform count 4 → 6.
-- `packages/deepseek/src/tool.ts` — MODIFIED: both id prefixes in descriptions.
+- `packages/helper/src/commands/recall-cross/query.ts` — MODIFIED:
+  `CANDIDATE_LIMIT = 500` (measured: benchmark flat 7–25ms at every
+  LIMIT 50→5000 on the real 22k-turn corpus; 500 ≈ 3x worst observed
+  burial depth 149) + `fetchOrdered` narrow-then-fetch (narrow rowid
+  sort in memory, point-fetch winners, JS re-sort to candidate order;
+  core keeps the single final ranking) + both candidate functions
+  rewired through it. Follow-up fix inside the fix: key-type-safe
+  `position` lookup (`Number()` coercion, `MAX_SAFE_INTEGER` fallback)
+  + caller-cap guard comment.
+- `packages/helper/src/templates/project/index-setup.ts` — MODIFIED
+  (prior artifact, unchanged since): Phase 5 recall bullet (tail-trimmed
+  per style) + Phase 6 summary bullet. Guide text only, no control flow.
 
-Docs (docs cadence: `lint:md` on the files, 0 issues — no specialists):
+Docs-only (lint:md cadence, repo-wide 0 issues — no specialists):
 
-- `docs/dev/cross-session-recall-build-plan.md` — UNTRACKED, from prior spans; NOT modified this session. Lint clean.
-- `docs/dev/cross-session-recall-build-plan.md.review.md` — same; lint clean.
-- `docs/dev/cross-session-recall-need-audit.md` — same; lint clean.
-- `docs/dev/rule-verbatim-survival-audit.md` — same; lint clean.
+- `.vcc-brain-shared/specs/deepseek/implementation.md`,
+  `.vcc-brain-shared/specs/opencode-v2/implementation.md` — Cross-Session
+  Recall sections, helper-subprocess pathway wording, Last Updated
+  bumps, two pre-existing blank-line lint fixes.
+- `docs/dev/cross-session-recall-build-plan.md` — A4 re-run rounds 1+2,
+  benchmark, crash diagnosis, narrow-fetch fix, sampler-bug note.
+  (Untracked working doc; the other three `docs/dev/*.md` files and
+  `.dev-framework.yml` are untouched since the prior artifact — the yml
+  line remains pre-existing and uncommitted.)
 
-Meta / non-changes:
+## Battery (product scope: query.ts + template)
 
-- `.dev-framework.yml` — MODIFIED in tree, pre-existing, NOT mine: one added line (`lint_changed: true`) predating this session (last commit `bc5a2a2` framework activation; recorded as pre-existing in the prior review artifact). Untouched by me; left as-is.
-- `"2"` (gate file list entry) — no such file exists in the tree; gate-list noise, nothing to review.
-- `.dev-framework/review.md` — THIS ARTIFACT, rewritten fresh.
+- pattern-guardian (fresh): Blocking none. `fetchOrdered` duplicates
+  nothing (`collectRecords`/`rowToRecord` reused; opencode's chunked-IN
+  is a different concern); 500-vs-500 coincidence must stay separate
+  consts. Should-fix (minor): uncapped-future-caller guard → APPLIED as
+  a comment (no code change needed).
+- style-enforcer (fresh): Blocking none, Should-fix none. Naming,
+  const-only, typing, comment necessity all conform. Two notes left as
+  lead's call (terse `at` param; loose sqlite-boundary casts mirroring
+  file idiom) — no change.
+- code-reviewer (fresh): one Should-fix — lookup key-type mismatch
+  (`order` keys coerced, comparator raw) + `?? 0` collapsing misses to
+  the front → APPLIED (`position` with `Number()` + `MAX_SAFE_INTEGER`
+  fallback). Verified OK: order preserved for unique integer keys,
+  `rowToRecord` ignores the extra rowid column, empty-set behavior
+  identical, 500-placeholder IN-list safe (bound args, constant-only
+  interpolation), fallback/union untouched. Other notes (silent
+  non-integer drop, duplicate-rowid last-wins) accepted as dead-code
+  realities, documented.
+- test-grounder (genuine fail-before/pass-after on this change):
+  BEFORE — the approved naive cap raise deterministically crashed the
+  real CLI path (`recall-cross query ... implementation documentation
+  fragmentation` → `Error: unable to open database file` at
+  `instrCandidates`, reproduced manually 2x and via the blind run;
+  SQL-level proof: wide-row `LIMIT 50` ok / `LIMIT 500` throws, narrow
+  `LIMIT 5000` ok). AFTER — `bun run check packages/helper` EXIT 0
+  (14 files, 137/137), former crash query returns ranked hits, full
+  20-trial blind run completes with zero crashes and all 20 miss/hit
+  origins verified in-pool. No new unit test added: the crash is a
+  sandbox-temp environmental (passes unsandboxed either way); the blind
+  end-to-end run is the covering evidence.
 
-## Findings and resolutions (specialist reports reused)
+## Gates (final tree)
 
-Round 1 (pattern-guardian / style-enforcer / code-reviewer, parallel subagents):
-
-- Pattern-guardian — 2 blocking FIXED (dead `opencode_state` table dropped; retention single-sourced in `store.ts`); 4 should-fix FIXED (store kernel; descriptions synced). Residual double-DELETE FIXED post-confirm (outer DELETEs removed; single DELETE in `store.insertTurns` verified present before trusting the removal).
-- Style-enforcer — 0 blocking. Import-order violation FIXED (hoisted static import, `vi.mock` hoisting relied upon); `?`-convention kept (pre-existing Phase-1 helper style); adapter duplication accepted (third copy promotes to core).
-- Code-reviewer — 4 blocking FIXED (ordinal-keyed parts; pointer suffix with integer-seq restore; chunked IN; sticky forget in both syncs); 3 should-fix FIXED (hashed sourceKey; fast-path expiry; read-only cold probe, catch→cold).
-
-Round 2 (confirm-only re-runs on final code): both clean — tombstone/files round-trip, pointer-vs-CAST interplay, per-batch lookup locality, probe safety, import direction all verified; no remaining blocking/should-fix. The post-confirm 2-line DELETE removal is behavior-preserving (idempotent statement) and covered by the green gate, not a re-review trigger.
-
-Test-grounder role: fail-before evidence — CR1/CR2/CR4 fixes each have pinning tests (second tool part, pointer-suffix restore, forget+resync-zero-rows); new files grounded by construction (12/12 + hasParts test green, suite 616/616). Commands run: `bun run check` (exit 0), `bun run typecheck` (caught + fixed one readonly regression), `bun run lint:md` (0 issues), live `recall-cross index`/`query` proofs (cold ~10 min one-time, delta 1s, query 1s with ranked hits).
-
-Blocking findings: none open.
+- `bun run check packages/helper` EXIT 0 (137/137, post-fix).
+- `bun run lint:md` 0 issues in 0 files (repo-wide).
+- odf post-execute lint on both edited files: passed.
+- dist rebuilt from final source; former crash query verified against it.

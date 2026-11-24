@@ -152,6 +152,7 @@ Main agent after subagents return:
 
 - Run \`vcc-brain-helper index stamp\` to record the current tree hash in each main index, then run \`vcc-brain-helper index lint\` and fix reported issues
 - Re-read written files for broken subindex links, empty required sections, or wrong partition
+- Cross-session recall: run \`vcc-brain-helper recall-cross index\` so past sessions become searchable through the \`vcc-brain-search-sessions\` / \`vcc-brain-recall-session\` tools, then report the sync result (sources read, turns indexed) in the Phase 6 summary
 
 ## Phase 6: Confirm
 
@@ -162,6 +163,7 @@ Give the user a concise summary:
 - Dual split (if any)
 - Intentional depth limits or coverage gaps
 - Tree hash stamped (\`stamped_at\` per main index) and lint result
+- Cross-session recall sync result (sources read, turns indexed)
 
 Ask whether anything is incorrect, missing, or improperly private/shared. Do not use the \`question\` tool for this free-response confirmation.
 

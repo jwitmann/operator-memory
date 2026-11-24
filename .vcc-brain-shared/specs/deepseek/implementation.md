@@ -1,6 +1,6 @@
 # DeepSeek Harness Adapter Implementation
 
-Last Updated: November 20, 2026
+Last Updated: November 24, 2026
 
 How `@jwitmann/vcc-brain-deepseek` binds the general adapter contract to DeepSeek Harness. Command meaning and setup workflows stay in [`commands.md`](../commands.md) and [`../reference/implementation.md`](../reference/implementation.md).
 
@@ -41,6 +41,12 @@ DSH exposes no prompt-shaping hook on the compaction seam, so an `llm/stream` wa
 ## Brain Updates And Preamble Refresh
 
 Completed tool work counts from the durable `tool/call` + `tool/result` join (paired by callId, VCC Brain tools excluded), feeding Core's `evaluateBrainUpdateActivity` for a once-per-fingerprint-era reminder appended in the assemble hook. Preamble refresh re-renders on Brain fingerprint moves under the host-measured cold-cache and estimate-floor gates, bypassed post-compaction; refresh receipts use Core's shapes. Both gate on per-session Brain availability tracked from preamble loads and fail closed.
+
+## Cross-Session Recall
+
+The adapter registers `vcc-brain-search-sessions` (keyword search over OTHER sessions, scoped to the calling session's project plus mutual peers) and `vcc-brain-recall-session` (restore one indexed session's turns by stored id like `dsh:<uuid>` or `opencode:ses_...`, optional single turn by seq). Same-conversation lookup stays on `vcc-brain-search` / `vcc-brain-recall` over the durable log; the cross-session pair never reads the live session.
+
+Both tools are thin: all sqlite FTS5 work lives in the helper (`recall-cross index|query|recall|forget` under `~/.vcc-brain/state/recall-index/`, 0700 dir / 0600 file, 30-day retention plus explicit `forget`). Each tool shells `vcc-brain-helper` with a 60s cooperative timeout, pins the session-cwd project scope on search, validates keywords, harness, sessionId, and seq without spawning, and degrades to plain text when the helper is missing. OpenCode results require one `vcc-brain-helper recall-cross index` run on the machine first.
 
 ## Commands
 
@@ -84,6 +90,7 @@ Port deviations, each with the host-imposed reason:
 - Push-as-own-message delivery instead of in-place instruction extension: merging created competing output schemas and returned empty summaries in live A/B runs.
 - Warn-and-skip on render failure instead of rejecting assembly: keeps the Agent working with a diagnostic while the cache entry is evicted for retry.
 - Dual trigger evaluation at `turn/end` instead of opencode's per-request hook plus completion signal: DSH exposes no per-request seam to plugins; turn-end totals only grow within a turn so detection loses nothing, and enforcement is pre-step either way.
+- Tool-time Helper subprocess for cross-session recall: the recall tools shell `vcc-brain-helper recall-cross ...` instead of bundling sqlite — the published bundle cannot carry `node:sqlite`, so this extends the accepted Helper-subprocess pathway from preamble rendering to recall tools. The command-handoff rule (never execute Helper on behalf of the agent) still holds: the tools run Helper as their own implementation, while `/vcc-brain-*` commands only instruct the agent.
 - No trim port: agent-loop requests arrive deep-frozen at the `llm/stream` waterfall by host contract (mutation throws; content must stay a pure function of the session log for replay), and the session log is append-only for plugins. The only earlier seam, `agent/request`, admits call-config proposals only (a changed provider/model/effort after step preparation throws) before `buildRequest` derives the frozen request from the admitted surface — so no content-reduction seam exists anywhere in the pipeline. Reduction belongs to the host backend; `keepRecentTurns` is parsed-but-reserved and no omission store or recovery tools are registered.
 
 ## Verification

@@ -1,6 +1,6 @@
 # OpenCode V2 Adapter Implementation
 
-Last Updated: November 19, 2026
+Last Updated: November 24, 2026
 
 How `@jwitmann/vcc-brain-opencode-v2` binds the general adapter contract as the default OpenCode integration. V2 is an incompatible plugin platform and therefore remains a separate package; the unversioned npm package and source directory still belong to legacy V1. Behavioral deviations are recorded against [`../reference/implementation.md`](../reference/implementation.md), not other bindings.
 
@@ -110,13 +110,19 @@ Opt-in nudge to record durable knowledge, never an automatic Brain writer. Disab
 
 The adapter counts distinct completed tool calls since the last Brain fingerprint move — error results count, pending or unpaired calls and VCC Brain's own helper calls do not — and appends one static reminder on the first request crossing `toolCallThreshold` (a positive integer, 25 by default). The reminder names no content and requires no edit: when nothing durable emerged, the agent makes none. A Brain change resets the baseline without reminding, and later crossings stay quiet until the Brain moves again. The feature stays inert when disabled, Brainless, stale, or when the fingerprint cannot be read.
 
+## Cross-Session Recall
+
+The adapter registers `vcc-brain-search-sessions` (keyword search over OTHER sessions, scoped to the setup-time project directory plus mutual peers) and `vcc-brain-recall-session` (restore one indexed session's turns by stored id like `dsh:<uuid>` or `opencode:ses_...`, optional single turn by seq). Same-conversation lookup stays on the context-management `vcc-brain-recall` / `vcc-brain-search` snapshot tools; the cross-session pair never reads the live session.
+
+Both tools are thin: all sqlite FTS5 work lives in the helper (`recall-cross index|query|recall|forget` under `~/.vcc-brain/state/recall-index/`, 0700 dir / 0600 file, 30-day retention plus explicit `forget`). Each tool shells `vcc-brain-helper` with a 60s cooperative timeout, validates keywords, harness, sessionId, and seq without spawning, and degrades to plain text when the helper is missing. OpenCode results require one `vcc-brain-helper recall-cross index` run on the machine first; a cold index with an explicit OpenCode scope reports that instead of guessing.
+
 ## Per-Project Override
 
 A session project may override the `opencode.json` config with an optional `<project>/.vcc-brain/config.json`, using the same block and key names without the `vcc-brain` wrapper. Present fields merge over the parsed `opencode.json` values; absent file or blocks inherit them. Precedence, lowest first: defaults, global `opencode.json`, project `opencode.json`, `.vcc-brain/config.json`. Unparsable content or a non-object root warns with an error toast and keeps everything; an invalid block warns and keeps that block while valid siblings still merge; absent or unreadable files fall back silently. Resolution is setup-time (one setup per project directory), unlike the DSH adapter's per-session resolution — DSH hosts many sessions with different cwds in one process, opencode does not.
 
 ## Differences From Reference
 
-Pathway selections: bundled-core resolution, transform injection as an appended system text part, slash commands, status UI, and harness-native updates. All are accepted reference pathways; there are no behavioral deviations. The appended system part versus a prepended synthetic user message is a documented placement choice within the transform pathway.
+Pathway selections: bundled-core resolution, transform injection as an appended system text part, slash commands, status UI, and harness-native updates. All are accepted reference pathways. Tool-time Helper subprocess for cross-session recall extends the accepted Helper-subprocess pathway from preamble rendering to recall tools: the adapter bundle cannot carry `node:sqlite`, so the recall tools shell `vcc-brain-helper recall-cross ...` as their own implementation. The command-handoff rule still holds: `/vcc-brain:*` commands only instruct the agent, never execute Helper for it. The appended system part versus a prepended synthetic user message is a documented placement choice within the transform pathway.
 
 ## Harness Notes
 
