@@ -39,6 +39,12 @@ Give the agent normal development work: features, fixes, refactors. VCC Brain or
 
 If using on an existing project, expect a sparse Brain at first. Due to inertia, agents may hesitate to write their first documents; you should ask directly to write the first specifications or research for particular modules or systems as you work on them. Once documents exist, later sessions become more comfortable maintaining and adding documents as part of ordinary work.
 
+#### Past sessions are searchable
+
+The curated Brain is not the only memory. Every session can also search the raw text of past sessions: ask the agent to find when something was discussed or decided, and it uses the `vcc-brain-search-sessions` tool (keywords over other sessions) and `vcc-brain-recall-session` (restore one session's full turns) to pull the verbatim history back in. Results stay scoped to the current project plus mutual peers.
+
+Ask the agent to run `vcc-brain-helper recall-cross index` once on each machine so OpenCode history is indexed; DeepSeek history syncs on demand. The index lives local-only under `~/.vcc-brain/state/recall-index/` with 30-day retention. Sessions you never want indexed opt out by carrying exactly the title `[no-recall]`.
+
 ---
 
 #### Example: existing project

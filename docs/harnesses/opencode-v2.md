@@ -173,6 +173,12 @@ Opt-in nudge to record durable knowledge — never an automatic Brain writer. Di
 
 The adapter counts distinct completed tool calls since the last Brain change and appends one static reminder on the first request crossing the threshold. The reminder names no content and requires no edit: when nothing durable emerged, the agent makes none. A Brain change resets the baseline without reminding, and later crossings stay quiet until the Brain moves again.
 
+### Cross-Session Recall
+
+Beyond the curated Brain, the agent can search the raw text of past sessions. `vcc-brain-search-sessions` takes keywords and returns matching turns with their stored session ids; `vcc-brain-recall-session` restores one indexed session's full turns by id, optionally a single turn by sequence number. Same-conversation lookup stays on the `vcc-brain-recall` / `vcc-brain-search` snapshot tools; the cross-session pair never reads the live session.
+
+Search scope is the setup-time project directory plus mutual peers; out-of-scope sessions are excluded, not downranked. OpenCode results require one `vcc-brain-helper recall-cross index` run on the machine first — ask the agent to run it; a cold index reports that instead of guessing. The index lives local-only under `~/.vcc-brain/state/recall-index/` (directory `0700`, file `0600`) with 30-day retention, and the agent can explicitly forget a superseded session. Sessions carrying exactly the title `[no-recall]` are never indexed.
+
 ### Update
 
 OpenCode V2 owns plugin updates:

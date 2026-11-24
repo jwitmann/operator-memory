@@ -70,6 +70,12 @@ Configuration is per project via `<project>/.vcc-brain/config.json`, using the s
 
 Present fields merge over the profile defaults, so a project can flip one knob and inherit the rest. Invalid blocks warn once and fall back; unreadable files fall back silently. Brain-update reminders and preamble refreshes follow the same gates as the OpenCode adapter (fingerprint-era quiet, cold-cache timing) and fail closed without a Brain.
 
+### Cross-Session Recall
+
+Beyond the curated Brain, the agent can search the raw text of past sessions. `vcc-brain-search-sessions` takes keywords and returns matching turns with their stored session ids; `vcc-brain-recall-session` restores one indexed session's full turns by id, optionally a single turn by sequence number. Use `vcc-brain-search` for the current conversation; the cross-session pair never reads the live session.
+
+Search scope is the calling session's project plus mutual peers; out-of-scope sessions are excluded, not downranked. History syncs on demand at query time; ask the agent to run `vcc-brain-helper recall-cross index` once to warm the machine-wide index. The index lives local-only under `~/.vcc-brain/state/recall-index/` (directory `0700`, file `0600`) with 30-day retention, and the agent can explicitly forget a superseded session. Sessions carrying exactly the title `[no-recall]` are never indexed. The tools work wherever the plugin is active, independent of the command service.
+
 ### Update
 
 Rerun `vcc-brain-helper install deepseek`, or update a specific profile through DeepSeek:

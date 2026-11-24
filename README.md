@@ -22,6 +22,7 @@ Originally forked from [aerovato/operator-memory](https://github.com/aerovato/op
 - **Deterministic Context Management** — Reduce what a session resends to the model through deterministic rules (never model judgment), with per-session receipts for everything it does — and compactions shaped so your rules survive them: summaries must reference Brain paths instead of paraphrasing them. Off by default and Brain-gated. [OpenCode](docs/harnesses/opencode-v2.md#context-management) · [DeepSeek](docs/harnesses/deepseek.md#context-management).
 - **Cache-Aware Preamble Refresh** — Re-render the preamble mid-session when the Brain changes, timed to cold prompt-cache moments so it costs nothing. [How it works](docs/harnesses/opencode-v2.md#preamble-refresh).
 - **Brain-Update Nudges** — A quiet reminder to record durable knowledge during long sessions; never an automatic writer. [How it works](docs/harnesses/opencode-v2.md#brain-updates).
+- **Cross-Session Recall** — Search past sessions by keyword and restore full turns, scoped to the current project plus mutual peers. The index is local-only with 30-day retention; title a session `[no-recall]` to opt out. [OpenCode](docs/harnesses/opencode-v2.md#cross-session-recall) · [DeepSeek](docs/harnesses/deepseek.md#cross-session-recall).
 
 ### Installation
 
