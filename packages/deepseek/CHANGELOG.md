@@ -5,6 +5,14 @@
 Generated from conventional commits (`scripts/changelog.sh`).
 Human-readable record of what shipped, per package.
 
+## [v0.7.0] - 2026-11-24
+
+### Features
+
+- Phase 1 DSH cross-session recall (core ranking, helper FTS5 index/query, DSH tools) ([`7890e04`](https://github.com/jwitmann/vcc-brain/commit/7890e04dda7b50c010f05d96b54fbc1c0ecd3162))
+- Phase 2 OpenCode sqlite adapter (v2 tables, delta sync, tools) ([`7f0e47f`](https://github.com/jwitmann/vcc-brain/commit/7f0e47fcd20318f3dd6e86fcd918aaae850571ff))
+- mutual peer declarations with live proof ([`fa89b1e`](https://github.com/jwitmann/vcc-brain/commit/fa89b1e7dcaab69a304ca604ae6a8981abebde2d))
+
 ## [v0.6.0] - 2026-11-22
 
 ### Features

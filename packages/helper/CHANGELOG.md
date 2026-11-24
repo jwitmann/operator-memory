@@ -5,6 +5,16 @@
 Generated from conventional commits (`scripts/changelog.sh`).
 Human-readable record of what shipped, per package.
 
+## [v1.14.0] - 2026-11-24
+
+### Features
+
+- auto-migrate legacy operator.md on init ([`9201dbf`](https://github.com/jwitmann/vcc-brain/commit/9201dbfe7e76bc8bcdb9351a240037ccd8beccca))
+- Phase 1 DSH cross-session recall (core ranking, helper FTS5 index/query, DSH tools) ([`7890e04`](https://github.com/jwitmann/vcc-brain/commit/7890e04dda7b50c010f05d96b54fbc1c0ecd3162))
+- Phase 2 OpenCode sqlite adapter (v2 tables, delta sync, tools) ([`7f0e47f`](https://github.com/jwitmann/vcc-brain/commit/7f0e47fcd20318f3dd6e86fcd918aaae850571ff))
+- measured candidate cap with narrow-fetch ([`1390fbe`](https://github.com/jwitmann/vcc-brain/commit/1390fbeba09fb31e687308c96236d1db20b79e33))
+- mutual peer declarations with live proof ([`fa89b1e`](https://github.com/jwitmann/vcc-brain/commit/fa89b1e7dcaab69a304ca604ae6a8981abebde2d))
+
 ## [v1.13.0] - 2026-11-22
 
 ### Features

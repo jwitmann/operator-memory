@@ -1,6 +1,6 @@
 {
   "name": "@jwitmann/vcc-brain-deepseek",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "VCC Brain adapter for DeepSeek Harness.",
   "license": "BSD-3-Clause",
   "author": "jwitmann",
