@@ -45,6 +45,14 @@ The curated Brain is not the only memory. Every session can also search the raw 
 
 Ask the agent to run `vcc-brain-helper recall-cross index` once on each machine so OpenCode history is indexed; DeepSeek history syncs on demand. The index lives local-only under `~/.vcc-brain/state/recall-index/` with 30-day retention. Sessions you never want indexed opt out by carrying exactly the title `[no-recall]`.
 
+To share recall across checkouts, declare peers in each project's `.vcc-brain/config.json`:
+
+```json
+{ "peers": ["/home/jerome/checkouts/other-project"] }
+```
+
+Sharing is mutual: the other project must list this one back. Without a mutual declaration, recall stays scoped to the current project.
+
 ---
 
 #### Example: existing project
