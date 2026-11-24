@@ -17,6 +17,8 @@
     "./context/recall": "./src/context/recall.ts",
     "./context/search": "./src/context/search.ts",
     "./context/session-compat": "./src/context/session-compat.ts",
+    "./recall-cross/ranking": "./src/recall-cross/ranking.ts",
+    "./recall-cross/types": "./src/recall-cross/types.ts",
     "./utils": "./src/utils.ts",
     "./memory/frontmatter": "./src/memory/frontmatter.ts",
     "./memory/load": "./src/memory/load.ts",

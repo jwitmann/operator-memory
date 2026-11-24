@@ -16,6 +16,8 @@ import { memoryCheck } from "./commands/memory/check.ts";
 import { preamble } from "./commands/preamble.ts";
 import { projectInit } from "./commands/project/init.ts";
 import { projectStatus } from "./commands/project/status.ts";
+import { recallCrossForget, recallCrossIndex } from "./commands/recall-cross/index.ts";
+import { recallCrossQuery, recallCrossRecall } from "./commands/recall-cross/query.ts";
 import { upgrade } from "./commands/upgrade.ts";
 import { userInit } from "./commands/user/init.ts";
 import { userStatus } from "./commands/user/status.ts";
@@ -53,6 +55,10 @@ ${renderTable([
   ["index lint", "Check Project Index structure and frontmatter"],
   ["index stamp", "Stamp Project Index with the current tree hash"],
   ["memory check", "Check that all VCC Brain memory can be loaded"],
+  ["recall-cross index", "Sync the cross-session recall index"],
+  ["recall-cross forget", "Forget a session from the recall index"],
+  ["recall-cross query", "Search past sessions for keywords"],
+  ["recall-cross recall", "Restore a past session's turns"],
   ["preamble", "Render the VCC Brain preamble"],
 ])}`;
 
@@ -80,6 +86,208 @@ export function runCli(
     }
     if (arguments_.length === 1 && arguments_[0] === "upgrade") {
       return yield* upgrade(context);
+    }
+    if (arguments_[0] === "recall-cross") {
+      if (arguments_[1] === "index") {
+        const rootFlag = arguments_.indexOf("--root");
+        if (
+          rootFlag >= 0
+          && (arguments_[rootFlag + 1] === undefined
+            || (arguments_[rootFlag + 1] as string).startsWith("--"))
+        ) {
+          return { exitCode: 2, output: "Usage: recall-cross index [--root <path>]" };
+        }
+        const root =
+          rootFlag >= 0 ? ((arguments_[rootFlag + 1] as string | undefined) ?? null) : null;
+        const positional = arguments_.filter(
+          (argument, at) =>
+            at > 1
+            && argument !== "--root"
+            && (rootFlag < 0 || (at !== rootFlag && at !== rootFlag + 1)),
+        );
+        if (positional.length > 0) {
+          return { exitCode: 2, output: "Usage: recall-cross index [--root <path>]" };
+        }
+        return yield* recallCrossIndex(context, root, Date.now());
+      }
+      if (arguments_[1] === "forget") {
+        const harnessFlag = arguments_.indexOf("--harness");
+        if (
+          harnessFlag >= 0
+          && (arguments_[harnessFlag + 1] === undefined
+            || (arguments_[harnessFlag + 1] as string).startsWith("--"))
+        ) {
+          return {
+            exitCode: 2,
+            output: "Usage: recall-cross forget [--harness dsh|opencode] <session-id>",
+          };
+        }
+        const harness =
+          harnessFlag >= 0 ? (arguments_[harnessFlag + 1] as string | undefined) : undefined;
+        const positional = arguments_.filter(
+          (argument, at) =>
+            at > 1
+            && argument !== "--harness"
+            && (harnessFlag < 0 || (at !== harnessFlag && at !== harnessFlag + 1)),
+        );
+        const id = positional[0];
+        if (id === undefined || positional.length > 1) {
+          return {
+            exitCode: 2,
+            output: "Usage: recall-cross forget [--harness dsh|opencode] <session-id>",
+          };
+        }
+        return yield* recallCrossForget(context, id, harness, Date.now());
+      }
+      if (arguments_[1] === "query") {
+        const harnessFlag = arguments_.indexOf("--harness");
+        if (
+          harnessFlag >= 0
+          && (arguments_[harnessFlag + 1] === undefined
+            || (arguments_[harnessFlag + 1] as string).startsWith("--"))
+        ) {
+          return {
+            exitCode: 2,
+            output: "Usage: recall-cross query [--harness dsh|opencode|all] <keywords>",
+          };
+        }
+        const harness =
+          harnessFlag >= 0 ? (arguments_[harnessFlag + 1] as string | undefined) : undefined;
+        const rootFlag = arguments_.indexOf("--root");
+        if (
+          rootFlag >= 0
+          && (arguments_[rootFlag + 1] === undefined
+            || (arguments_[rootFlag + 1] as string).startsWith("--"))
+        ) {
+          return {
+            exitCode: 2,
+            output:
+              "Usage: recall-cross query [--harness dsh|opencode|all] [--root <path>] <keywords>",
+          };
+        }
+        const root =
+          rootFlag >= 0 ? ((arguments_[rootFlag + 1] as string | undefined) ?? null) : null;
+        const projectFlag = arguments_.indexOf("--project");
+        if (
+          projectFlag >= 0
+          && (arguments_[projectFlag + 1] === undefined
+            || (arguments_[projectFlag + 1] as string).startsWith("--"))
+        ) {
+          return {
+            exitCode: 2,
+            output:
+              "Usage: recall-cross query [--harness dsh|opencode|all] [--project <name>] <keywords>",
+          };
+        }
+        const project =
+          projectFlag >= 0 ? (arguments_[projectFlag + 1] as string | undefined) : undefined;
+        const topFlag = arguments_.indexOf("--top");
+        if (
+          topFlag >= 0
+          && (arguments_[topFlag + 1] === undefined
+            || (arguments_[topFlag + 1] as string).startsWith("--"))
+        ) {
+          return {
+            exitCode: 2,
+            output: "Usage: recall-cross query [--top <n>] <keywords>",
+          };
+        }
+        let topN: number | undefined;
+        if (topFlag >= 0) {
+          const parsed = Number.parseInt(arguments_[topFlag + 1] as string, 10);
+          if (!Number.isInteger(parsed) || parsed <= 0) {
+            return {
+              exitCode: 2,
+              output: "Usage: recall-cross query [--top <n>] <keywords>",
+            };
+          }
+          topN = parsed;
+        }
+        const peers: string[] = [];
+        for (let at = 0; at < arguments_.length; at += 1) {
+          if (arguments_[at] === "--peer") {
+            const value = arguments_[at + 1];
+            if (value === undefined || (value as string).startsWith("--")) {
+              return {
+                exitCode: 2,
+                output: "Usage: recall-cross query [--peer <name>] <keywords>",
+              };
+            }
+            peers.push(value as string);
+          }
+        }
+        const keywords = arguments_.filter(
+          (argument, at) =>
+            at > 1
+            && argument !== "--harness"
+            && argument !== "--root"
+            && argument !== "--project"
+            && argument !== "--peer"
+            && argument !== "--top"
+            && (harnessFlag < 0 || (at !== harnessFlag && at !== harnessFlag + 1))
+            && (rootFlag < 0 || (at !== rootFlag && at !== rootFlag + 1))
+            && (projectFlag < 0 || (at !== projectFlag && at !== projectFlag + 1))
+            && (topFlag < 0 || (at !== topFlag && at !== topFlag + 1))
+            && (at === 0 || arguments_[at - 1] !== "--peer"),
+        );
+        return yield* recallCrossQuery(context, keywords, {
+          harness,
+          project,
+          peers,
+          root,
+          topN,
+          now: Date.now(),
+        });
+      }
+      if (arguments_[1] === "recall") {
+        const seqFlag = arguments_.indexOf("--seq");
+        if (
+          seqFlag >= 0
+          && (arguments_[seqFlag + 1] === undefined
+            || (arguments_[seqFlag + 1] as string).startsWith("--"))
+        ) {
+          return { exitCode: 2, output: "Usage: recall-cross recall <session-id> [--seq N]" };
+        }
+        let seq: number | null = null;
+        if (seqFlag >= 0) {
+          const parsed = Number.parseInt(arguments_[seqFlag + 1] as string, 10);
+          if (!Number.isInteger(parsed) || parsed < 0) {
+            return { exitCode: 2, output: "Usage: recall-cross recall <session-id> [--seq N]" };
+          }
+          seq = parsed;
+        }
+        const rootFlag = arguments_.indexOf("--root");
+        if (
+          rootFlag >= 0
+          && (arguments_[rootFlag + 1] === undefined
+            || (arguments_[rootFlag + 1] as string).startsWith("--"))
+        ) {
+          return {
+            exitCode: 2,
+            output: "Usage: recall-cross recall <session-id> [--root <path>] [--seq N]",
+          };
+        }
+        const root =
+          rootFlag >= 0 ? ((arguments_[rootFlag + 1] as string | undefined) ?? null) : null;
+        const positional = arguments_.filter(
+          (argument, at) =>
+            at > 1
+            && argument !== "--seq"
+            && argument !== "--root"
+            && (seqFlag < 0 || (at !== seqFlag && at !== seqFlag + 1))
+            && (rootFlag < 0 || (at !== rootFlag && at !== rootFlag + 1)),
+        );
+        const id = positional[0];
+        if (id === undefined || positional.length > 1) {
+          return { exitCode: 2, output: "Usage: recall-cross recall <session-id> [--seq N]" };
+        }
+        return yield* recallCrossRecall(context, id, seq, root, Date.now());
+      }
+      return {
+        exitCode: 2,
+        output:
+          "Usage: recall-cross index [--root <path>] | recall-cross forget [--harness dsh|opencode] <session-id> | recall-cross query [--harness dsh|opencode|all] <keywords> | recall-cross recall <session-id> [--seq N]",
+      };
     }
     if (arguments_.length !== 2) {
       return { exitCode: 2, output: HELP };

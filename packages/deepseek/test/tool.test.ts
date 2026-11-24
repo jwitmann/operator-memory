@@ -1,6 +1,20 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { apply, defineRecallTool, defineSearchTool, inject, name } from "../src/tool.ts";
+vi.mock("node:child_process", () => ({ execFile: vi.fn() }));
+
+import { execFile } from "node:child_process";
+
+import {
+  apply,
+  defineRecallSessionTool,
+  defineRecallTool,
+  defineSearchSessionsTool,
+  defineSearchTool,
+  inject,
+  name,
+} from "../src/tool.ts";
+
+const execFileMock = vi.mocked(execFile);
 
 // DSH-shaped durable log fixtures: the host log is append-only and readable
 // directly, so the tools take the calling agent's session as-is. The fake
@@ -50,6 +64,9 @@ function execWith(session: unknown) {
 
 beforeEach(() => {
   vi.restoreAllMocks();
+  // The module mock above has no original implementation to restore to:
+  // reset call history + implementations so each test starts clean.
+  execFileMock.mockReset();
 });
 
 test("tool row exposes the agent-scoped composition identity", () => {
@@ -57,8 +74,8 @@ test("tool row exposes the agent-scoped composition identity", () => {
   expect(inject).toEqual(["tools"]);
 });
 
-test("apply registers recall and search and disposes both", () => {
-  const disposers = [vi.fn(), vi.fn()];
+test("apply registers all four tools and disposes them", () => {
+  const disposers = [vi.fn(), vi.fn(), vi.fn(), vi.fn()];
   const register = vi.fn(() => disposers[register.mock.calls.length - 1]);
   let dispose: (() => void) | undefined;
   apply({
@@ -68,16 +85,24 @@ test("apply registers recall and search and disposes both", () => {
     tools: { register },
   } as never);
 
-  expect(register).toHaveBeenCalledTimes(2);
+  expect(register).toHaveBeenCalledTimes(4);
   expect(register.mock.calls[0]?.[0]).toEqual(
     expect.objectContaining({ name: "vcc-brain-recall" }),
   );
   expect(register.mock.calls[1]?.[0]).toEqual(
     expect.objectContaining({ name: "vcc-brain-search" }),
   );
+  expect(register.mock.calls[2]?.[0]).toEqual(
+    expect.objectContaining({ name: "vcc-brain-search-sessions" }),
+  );
+  expect(register.mock.calls[3]?.[0]).toEqual(
+    expect.objectContaining({ name: "vcc-brain-recall-session" }),
+  );
   dispose?.();
   expect(disposers[0]).toHaveBeenCalledOnce();
   expect(disposers[1]).toHaveBeenCalledOnce();
+  expect(disposers[2]).toHaveBeenCalledOnce();
+  expect(disposers[3]).toHaveBeenCalledOnce();
 });
 
 test("recall restores a seq selection from the durable log", async () => {
@@ -207,4 +232,98 @@ test("recall falls back to raw payloads for log-only events", async () => {
 
   expect(out.recalled).toBe(1);
   expect(out.text).toContain("compactionId");
+});
+
+function sessionWithCwd(cwd: string): unknown {
+  return {
+    header: { cwd },
+    events: [],
+    deriveEventMessage: () => null,
+  };
+}
+
+function succeedWith(stdout: string) {
+  execFileMock.mockImplementation((_bin, _args, _opts, callback) => {
+    (callback as (error: null, stdout: string, stderr: string) => void)(null, stdout, "");
+    return undefined as never;
+  });
+}
+
+test("search-sessions shells to the helper with project scope", async () => {
+  const tool = defineSearchSessionsTool();
+  expect(tool.name).toBe("vcc-brain-search-sessions");
+  succeedWith("helper output here");
+  const out = (await tool.execute(
+    { keywords: "deploy decision" },
+    { agent: { session: sessionWithCwd("/home/u/checkouts/operator-memory") } },
+  )) as { text: string; exitCode: number };
+  expect(out.exitCode).toBe(0);
+  expect(out.text).toBe("helper output here");
+  expect(execFileMock).toHaveBeenCalledOnce();
+  const [bin, invocation] = execFileMock.mock.calls[0] as [string, string[]];
+  expect(bin).toBe("vcc-brain-helper");
+  expect(invocation.slice(0, 2)).toEqual(["recall-cross", "query"]);
+  expect(invocation).toContain("--project");
+  expect(invocation).toContain("/home/u/checkouts/operator-memory");
+  expect(invocation.slice(-2)).toEqual(["deploy", "decision"]);
+});
+
+test("search-sessions validates input without spawning", async () => {
+  const tool = defineSearchSessionsTool();
+  const blank = (await tool.execute({ keywords: "  " }, execWith(LOG))) as { text: string };
+  expect(blank.text).toContain("Missing required input: keywords.");
+  const dashy = (await tool.execute({ keywords: "--project" }, execWith(LOG))) as { text: string };
+  expect(dashy.text).toContain("must not start with '-'.");
+  const noAgent = (await tool.execute({ keywords: "deploy" }, { agent: undefined })) as {
+    text: string;
+  };
+  expect(noAgent.text).toContain("requires a calling agent with a session.");
+  expect(execFileMock).not.toHaveBeenCalled();
+});
+
+test("recall-session restores by id with an optional seq", async () => {
+  const tool = defineRecallSessionTool();
+  expect(tool.name).toBe("vcc-brain-recall-session");
+  succeedWith("full turns here");
+  const out = (await tool.execute(
+    { sessionId: "dsh:abc", seq: "2" },
+    { agent: { session: sessionWithCwd("/proj") } },
+  )) as { text: string; exitCode: number };
+  expect(out.exitCode).toBe(0);
+  expect(out.text).toBe("full turns here");
+  const [, invocation] = execFileMock.mock.calls[0] as [string, string[]];
+  expect(invocation).toEqual(["recall-cross", "recall", "dsh:abc", "--seq", "2"]);
+});
+
+test("recall-session validates input without spawning", async () => {
+  const tool = defineRecallSessionTool();
+  const blank = (await tool.execute({ sessionId: "  " }, execWith(LOG))) as { text: string };
+  expect(blank.text).toContain("Missing required input: sessionId.");
+  const badSeq = (await tool.execute({ sessionId: "dsh:abc", seq: "x" }, execWith(LOG))) as {
+    text: string;
+  };
+  expect(badSeq.text).toContain("seq must be a non-negative integer");
+  const dashy = (await tool.execute({ sessionId: "--help" }, execWith(LOG))) as { text: string };
+  expect(dashy.text).toContain("must not start with '-'.");
+  const noAgent = (await tool.execute({ sessionId: "dsh:abc" }, { agent: undefined })) as {
+    text: string;
+  };
+  expect(noAgent.text).toContain("requires a calling agent with a session.");
+  expect(execFileMock).not.toHaveBeenCalled();
+});
+
+test("session tools degrade to text when the helper is missing", async () => {
+  execFileMock.mockImplementation(() => {
+    throw new Error("spawn ENOENT");
+  });
+  const search = (await defineSearchSessionsTool().execute(
+    { keywords: "deploy" },
+    { agent: { session: sessionWithCwd("/proj") } },
+  )) as { text: string };
+  expect(search.text).toContain("vcc-brain-helper");
+  const recall = (await defineRecallSessionTool().execute(
+    { sessionId: "dsh:abc" },
+    { agent: { session: sessionWithCwd("/proj") } },
+  )) as { text: string };
+  expect(recall.text).toContain("vcc-brain-helper");
 });
