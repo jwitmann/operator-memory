@@ -116,8 +116,6 @@ Sometimes agents hesitate to create, consolidate, or split documents. In that ca
 
 **VCC Brain is under active development.** More features are on the way. Each will come with an explicit on/off switch in case you prefer the vanilla VCC Brain experience.
 
-- **Observation Engine** — Learn durable user observations over time, kept separate from explicit User Instructions.
-
 ### VS Other Memory Plugins
 
 Snippet capture, RAG retrieval, and context compression all fail the same way.
