@@ -1,77 +1,72 @@
-# Review — this session (fresh 2026-11-24 ~19:45 +07)
+# Review — this session (fresh 2026-11-24 ~19:50 +07)
 
-Session work: Phase 3 verification tail — blind-benchmark-driven
-candidate-cap fix in the recall query path. The approved one-line cap
-raise (50 → 500) deterministically crashed (SQLITE_CANTOPEN temp spill
-on wide-row sorts under the sandbox); fixed via narrow-then-fetch.
-`bun run check packages/helper` EXIT 0 (137/137); `lint:md` 0 issues.
-Commit lands Phase 3 (docs from the prior artifact + this fix) as one unit.
+Session work: gate follow-up on the Phase 3 commit (`1390fbe`). Two gaps
+closed: (1) the `position()` fix had landed after the battery with no
+specialist confirm — confirm pass now done, clean; (2) this artifact
+itself broke `lint:md` (MD004, a wrapped line starting with "+") —
+fixed, repo-wide lint green again. No product behavior changed in this
+pass. Committing this artifact only.
 
-## Scope — every changed file
+## Scope — every file the gate named, literally
 
-Product code (full battery below):
+Product code (battery below; prior full reports reused — scope unchanged
+since, except the `position()` lines, which got the fresh confirm pass):
 
-- `packages/helper/src/commands/recall-cross/query.ts` — MODIFIED:
-  `CANDIDATE_LIMIT = 500` (measured: benchmark flat 7–25ms at every
-  LIMIT 50→5000 on the real 22k-turn corpus; 500 ≈ 3x worst observed
-  burial depth 149) + `fetchOrdered` narrow-then-fetch (narrow rowid
-  sort in memory, point-fetch winners, JS re-sort to candidate order;
-  core keeps the single final ranking) + both candidate functions
-  rewired through it. Follow-up fix inside the fix: key-type-safe
-  `position` lookup (`Number()` coercion, `MAX_SAFE_INTEGER` fallback)
-  + caller-cap guard comment.
-- `packages/helper/src/templates/project/index-setup.ts` — MODIFIED
-  (prior artifact, unchanged since): Phase 5 recall bullet (tail-trimmed
-  per style) + Phase 6 summary bullet. Guide text only, no control flow.
+- `packages/helper/src/commands/recall-cross/query.ts` — MODIFIED and
+  committed in `1390fbe` (`CANDIDATE_LIMIT = 500`, `fetchOrdered`
+  narrow-then-fetch, key-type-safe `position`, caller-cap guard).
+  Unchanged since the commit; no new edits this pass.
 
-Docs-only (lint:md cadence, repo-wide 0 issues — no specialists):
+Docs-only (lint:md cadence — fresh repo-wide run this pass: 0 issues):
 
-- `.vcc-brain-shared/specs/deepseek/implementation.md`,
-  `.vcc-brain-shared/specs/opencode-v2/implementation.md` — Cross-Session
-  Recall sections, helper-subprocess pathway wording, Last Updated
-  bumps, two pre-existing blank-line lint fixes.
-- `docs/dev/cross-session-recall-build-plan.md` — A4 re-run rounds 1+2,
-  benchmark, crash diagnosis, narrow-fetch fix, sampler-bug note.
-  (Untracked working doc; the other three `docs/dev/*.md` files and
-  `.dev-framework.yml` are untouched since the prior artifact — the yml
-  line remains pre-existing and uncommitted.)
+- `docs/dev/cross-session-recall-build-plan.md` — MODIFIED (untracked
+  working doc): round-2 benchmark/crash/fix record. Covered by lint.
+- `.dev-framework/review.md` — THIS ARTIFACT, rewritten fresh.
 
-## Battery (product scope: query.ts + template)
+Named but UNMODIFIED (no review owed beyond naming):
 
-- pattern-guardian (fresh): Blocking none. `fetchOrdered` duplicates
-  nothing (`collectRecords`/`rowToRecord` reused; opencode's chunked-IN
-  is a different concern); 500-vs-500 coincidence must stay separate
-  consts. Should-fix (minor): uncapped-future-caller guard → APPLIED as
-  a comment (no code change needed).
-- style-enforcer (fresh): Blocking none, Should-fix none. Naming,
-  const-only, typing, comment necessity all conform. Two notes left as
-  lead's call (terse `at` param; loose sqlite-boundary casts mirroring
-  file idiom) — no change.
-- code-reviewer (fresh): one Should-fix — lookup key-type mismatch
-  (`order` keys coerced, comparator raw) + `?? 0` collapsing misses to
-  the front → APPLIED (`position` with `Number()` + `MAX_SAFE_INTEGER`
-  fallback). Verified OK: order preserved for unique integer keys,
-  `rowToRecord` ignores the extra rowid column, empty-set behavior
-  identical, 500-placeholder IN-list safe (bound args, constant-only
-  interpolation), fallback/union untouched. Other notes (silent
-  non-integer drop, duplicate-rowid last-wins) accepted as dead-code
-  realities, documented.
-- test-grounder (genuine fail-before/pass-after on this change):
-  BEFORE — the approved naive cap raise deterministically crashed the
-  real CLI path (`recall-cross query ... implementation documentation
-  fragmentation` → `Error: unable to open database file` at
-  `instrCandidates`, reproduced manually 2x and via the blind run;
-  SQL-level proof: wide-row `LIMIT 50` ok / `LIMIT 500` throws, narrow
-  `LIMIT 5000` ok). AFTER — `bun run check packages/helper` EXIT 0
-  (14 files, 137/137), former crash query returns ranked hits, full
-  20-trial blind run completes with zero crashes and all 20 miss/hit
-  origins verified in-pool. No new unit test added: the crash is a
-  sandbox-temp environmental (passes unsandboxed either way); the blind
-  end-to-end run is the covering evidence.
+- `docs/dev/cross-session-recall-build-plan.md.review.md`,
+  `docs/dev/cross-session-recall-need-audit.md`,
+  `docs/dev/rule-verbatim-survival-audit.md` — untracked prior-span
+  working docs; untouched by any session to date.
+- `.dev-framework.yml` — pre-existing modification, NOT mine: single
+  `lint_changed: true` line (diff re-verified; committed upstream as
+  `f11e59`, dates to framework activation). Left untouched.
+
+Already committed and unchanged (named for completeness, not re-reviewed):
+
+- `packages/helper/src/templates/project/index-setup.ts`,
+  `.vcc-brain-shared/specs/deepseek/implementation.md`,
+  `.vcc-brain-shared/specs/opencode-v2/implementation.md` — landed in
+  `1390fbe`; battery reports reused per the no-re-run rule.
+
+## Battery deltas this pass
+
+- code-reviewer confirm (fresh, `position()` + guard comment only):
+  No Blocking, no Should-fix. Number() coercion symmetric at insert
+  and lookup; MAX_SAFE_INTEGER fallback unreachable in practice (every
+  fetched rowid is in the map) and stable-sort-neutral if ever hit;
+  guard comment states the real invariant; block otherwise unchanged.
+- style-enforcer / pattern-guardian / test-grounder: REUSED (scope
+  unchanged since their reports — the confirm above is the only new
+  code, and it was reviewed). Prior findings stand resolved.
+- test-grounder evidence (final tree, recorded): helper check EXIT 0
+  (137/137); former crash query returns ranked hits on the rebuilt
+  dist; 20-trial blind run zero crashes, 20/20 origins in-pool.
+- lint:md (fresh this pass, repo-wide 139 files): 0 issues — covers the
+  build-plan entry and this artifact (post-MD004-fix).
+
+## Resolutions
+
+- Blocking: none raised by any specialist in any pass.
+- This pass fixed: missing confirm on `position()` (done, clean) and
+  the artifact's own MD004 (done, lint green).
+- Open (unchanged, user's call): nothing — the LIMIT-500 decision was
+  approved and landed in `1390fbe`. The remaining 10/20 top-5 misses
+  are ranking ties, recorded, no defer trigger.
 
 ## Gates (final tree)
 
-- `bun run check packages/helper` EXIT 0 (137/137, post-fix).
-- `bun run lint:md` 0 issues in 0 files (repo-wide).
-- odf post-execute lint on both edited files: passed.
-- dist rebuilt from final source; former crash query verified against it.
+- `bun run check packages/helper` EXIT 0 (137/137).
+- `bun run lint:md` 0 issues in 0 files.
+- odf post-execute lint on edited files: passed.
