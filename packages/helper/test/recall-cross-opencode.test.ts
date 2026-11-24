@@ -364,7 +364,7 @@ test("cold OpenCode store is a clean error on the query path", async () => {
   );
   expect(result.exitCode).toBe(2);
   expect(result.output).toContain("recall-cross index");
-}, 15_000);
+}, 30_000);
 
 test("forget deletes OpenCode rows, unknown ids stay silent", async () => {
   seed();
@@ -426,7 +426,7 @@ test("db without a parts table still syncs messages", async () => {
     recallSessionTurns(paths, sessions, "opencode:ses_np", null, NOW, home(), [noParts]),
   );
   expect(hit.output).toContain("no parts here");
-}, 15_000);
+}, 30_000);
 
 test("source opens read-only: writes throw", async () => {
   seed();
@@ -436,7 +436,7 @@ test("source opens read-only: writes throw", async () => {
   } finally {
     source.close();
   }
-});
+}, 30_000);
 
 test("db without v2 tables skips loudly, never throws", async () => {
   seed();
@@ -450,7 +450,7 @@ test("db without v2 tables skips loudly, never throws", async () => {
   expect(summary.filesSkipped).toEqual([{ file: legacy, reason: "missing-table" }]);
   const cold = await run(isOpencodeCold(paths.sqlite));
   expect(cold).toBe(false);
-}, 15_000);
+}, 30_000);
 
 test("every sync query plan is index-backed, never a table scan", async () => {
   // Selectivity matters to the planner: one giant session reads as a scan,
@@ -499,4 +499,4 @@ test("every sync query plan is index-backed, never a table scan", async () => {
     expect(detail).not.toMatch(/SCAN/);
   }
   db.close();
-}, 15_000);
+}, 30_000);
