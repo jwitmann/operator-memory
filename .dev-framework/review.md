@@ -1,23 +1,24 @@
-# Review — docs(readme): drop inherited blog and benchmark links
+# Review — docs(readme): drop shipped observation engine from roadmap
 
 Scope: docs-only. No product code changed.
 Files: `README.md`, `.dev-framework/review.md` (this artifact).
 
 ## Change
 
-- Removed two lines under "VS Other Memory Plugins": the liao.gg blog
-  link (someone else's post, inherited from the fork) and the
-  `issues/48` benchmark-comment link (dead). The local
-  `docs/comparison.md` link remains; the same blog URL stays cited
-  inside `comparison.md` as an attributed external reference.
+- Removed the Observation Engine bullet from the README Roadmap
+  section. The engine shipped (core `observations.md` loading and
+  preamble rendering, helper `user-init` rubric template, public
+  coverage in getting-started and architecture, pilot tally logged),
+  so listing it as future work was false. The section keeps its
+  header and intro sentence; no replacement bullet — the deferred
+  items in `decisions.md` are tripwire-gated, not promises.
 
 ## Cadence (docs-only)
 
 - `bun run lint:md`: 0 issues in 135 files. Pass.
-- Specialists not run: two-line deletion of external links, no product
-  code in scope; per gate, lint:md is the entire docs cadence.
+- Specialists not run: two-line deletion, no product code in scope;
+  per gate, lint:md is the entire docs cadence.
 
 ## Findings
 
-- None. No other `liao.gg` / `issues/48` links remain outside the
-  attributed citation in `comparison.md` (verified by grep).
+- None.
