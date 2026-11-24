@@ -1,72 +1,41 @@
-# Review — this session (fresh 2026-11-24 ~19:50 +07)
+# Review — this session (fresh 2026-11-24 ~20:10 +07)
 
-Session work: gate follow-up on the Phase 3 commit (`1390fbe`). Two gaps
-closed: (1) the `position()` fix had landed after the battery with no
-specialist confirm — confirm pass now done, clean; (2) this artifact
-itself broke `lint:md` (MD004, a wrapped line starting with "+") —
-fixed, repo-wide lint green again. No product behavior changed in this
-pass. Committing this artifact only.
+Session work: docs-only follow-up — recorded the adaptive-fetching
+decision in the build plan (DECIDED not-now, with revisit triggers and
+the synthetic-metric caveat). No product code touched, no behavior
+changed. Per the framework cadence, docs-only changes get markdown
+lint instead of specialists: fresh repo-wide `bun run lint:md`,
+0 issues. That is the entire docs cadence.
 
 ## Scope — every file the gate named, literally
 
-Product code (battery below; prior full reports reused — scope unchanged
-since, except the `position()` lines, which got the fresh confirm pass):
-
-- `packages/helper/src/commands/recall-cross/query.ts` — MODIFIED and
-  committed in `1390fbe` (`CANDIDATE_LIMIT = 500`, `fetchOrdered`
-  narrow-then-fetch, key-type-safe `position`, caller-cap guard).
-  Unchanged since the commit; no new edits this pass.
-
-Docs-only (lint:md cadence — fresh repo-wide run this pass: 0 issues):
-
 - `docs/dev/cross-session-recall-build-plan.md` — MODIFIED (untracked
-  working doc): round-2 benchmark/crash/fix record. Covered by lint.
-- `.dev-framework/review.md` — THIS ARTIFACT, rewritten fresh.
-
-Named but UNMODIFIED (no review owed beyond naming):
-
+  working doc): this session appended the adaptive-fetching DECIDED
+  entry (restored the adjacent index-freshness bullet the first edit
+  accidentally replaced — caught immediately, restored verbatim) to
+  the open-questions section, on top of the earlier A4 rounds 1+2 /
+  benchmark / crash-diagnosis entries. Covered by the lint run below.
 - `docs/dev/cross-session-recall-build-plan.md.review.md`,
   `docs/dev/cross-session-recall-need-audit.md`,
-  `docs/dev/rule-verbatim-survival-audit.md` — untracked prior-span
-  working docs; untouched by any session to date.
-- `.dev-framework.yml` — pre-existing modification, NOT mine: single
-  `lint_changed: true` line (diff re-verified; committed upstream as
-  `f11e59`, dates to framework activation). Left untouched.
+  `docs/dev/rule-verbatim-survival-audit.md` — UNMODIFIED untracked
+  prior-span working docs; named only because the gate lists them.
+  No review owed.
 
-Already committed and unchanged (named for completeness, not re-reviewed):
+No product files changed this session. Prior batteries (template
+bullets; `query.ts` cap + narrow-then-fetch + `position` confirm) are
+reused untouched per the no-re-run rule — their scopes did not move.
 
-- `packages/helper/src/templates/project/index-setup.ts`,
-  `.vcc-brain-shared/specs/deepseek/implementation.md`,
-  `.vcc-brain-shared/specs/opencode-v2/implementation.md` — landed in
-  `1390fbe`; battery reports reused per the no-re-run rule.
+## Battery
 
-## Battery deltas this pass
-
-- code-reviewer confirm (fresh, `position()` + guard comment only):
-  No Blocking, no Should-fix. Number() coercion symmetric at insert
-  and lookup; MAX_SAFE_INTEGER fallback unreachable in practice (every
-  fetched rowid is in the map) and stable-sort-neutral if ever hit;
-  guard comment states the real invariant; block otherwise unchanged.
-- style-enforcer / pattern-guardian / test-grounder: REUSED (scope
-  unchanged since their reports — the confirm above is the only new
-  code, and it was reviewed). Prior findings stand resolved.
-- test-grounder evidence (final tree, recorded): helper check EXIT 0
-  (137/137); former crash query returns ranked hits on the rebuilt
-  dist; 20-trial blind run zero crashes, 20/20 origins in-pool.
-- lint:md (fresh this pass, repo-wide 139 files): 0 issues — covers the
-  build-plan entry and this artifact (post-MD004-fix).
-
-## Resolutions
-
-- Blocking: none raised by any specialist in any pass.
-- This pass fixed: missing confirm on `position()` (done, clean) and
-  the artifact's own MD004 (done, lint green).
-- Open (unchanged, user's call): nothing — the LIMIT-500 decision was
-  approved and landed in `1390fbe`. The remaining 10/20 top-5 misses
-  are ranking ties, recorded, no defer trigger.
+- Docs cadence: `bun run lint:md` (fresh this pass, repo-wide 139
+  files): 0 issues in 0 files. Covers the build-plan edit.
+- Specialists: none run — docs-only session, nothing to ground or
+  drift-check. No Blocking, no Should-fix, nothing to resolve.
 
 ## Gates (final tree)
 
-- `bun run check packages/helper` EXIT 0 (137/137).
-- `bun run lint:md` 0 issues in 0 files.
-- odf post-execute lint on edited files: passed.
+- `bun run lint:md` 0 issues.
+- `bun run check packages/helper` not re-run: no product file moved
+  since its EXIT 0 (137/137) on the final tree.
+- Working tree otherwise unchanged: four untracked `docs/dev/` files
+  remain untracked; everything else committed.
