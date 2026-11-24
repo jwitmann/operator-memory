@@ -5,6 +5,7 @@ Files: `packages/helper/test/recall-cross-opencode.test.ts`,
 `.dev-framework/review.md` (this artifact).
 
 ## Change
+
 - Five timeout bumps, nothing else: the four disk-touching async tests on
   `15_000` (cold-path error, no-parts sync, legacy skip, query-plan) go to
   `30_000`, matching the four sibling tests already on 30s; `source opens
@@ -14,6 +15,7 @@ Files: `packages/helper/test/recall-cross-opencode.test.ts`,
   pure unit tests keep no timeout.
 
 ## Battery (scoped to a test-only change)
+
 - test-grounder: fail-before is the gate's own full-workspace run (2
   timeouts: `source opens read-only` at the 5s default, no-parts sync at
   15s under parallel I/O). Pass-after: file alone 13/13, full helper
@@ -26,5 +28,6 @@ Files: `packages/helper/test/recall-cross-opencode.test.ts`,
   them to re-read.
 
 ## Findings
+
 - None. The flake's mechanism (parallel-load I/O contention vs 5s/15s
   budgets) is removed by uniform 30s budgets; suites confirm.
