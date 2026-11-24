@@ -140,6 +140,15 @@ test("forget deletes rows with a log line, unknowns stay silent, mismatches fail
   const { readFileSync } = await import("node:fs");
   const log = readFileSync(paths.forgetLog, "utf8");
   expect(log).toContain('"sessionId":"dsh:abc"');
+  // Stickiness: a resync after forget must not resurrect the session.
+  await run(syncDshIndex(paths, sessions, NOW));
+  const resynced = new sqlite.DatabaseSync(paths.sqlite);
+  try {
+    const rows = resynced.prepare("SELECT * FROM turns").all() as unknown[];
+    expect(rows).toEqual([]);
+  } finally {
+    resynced.close();
+  }
   const unknown = await run(forgetSession(paths, "dsh:nope", { now: NOW }));
   expect(unknown.exitCode).toBe(0);
   expect(unknown.output).toBe("not-found");

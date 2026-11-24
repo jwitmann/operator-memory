@@ -35,6 +35,9 @@
 // builtin is the only call path. Failure degrades to text (exit code carried
 // in the value); nothing thrown past `defineTool` validation.
 
+import { execFile } from "node:child_process";
+import type { Context } from "@deepseek-ai/cordis";
+import { defineTool } from "@deepseek-ai/dsh-tools";
 import {
   DEFAULT_MAX_RECALL_TOKENS,
   recallSession,
@@ -45,11 +48,7 @@ import {
   InvalidSearchPatternError,
   searchSession,
 } from "@jwitmann/vcc-brain-core/context/search";
-import { execFile } from "node:child_process";
-
 import { isRecord } from "@jwitmann/vcc-brain-core/utils";
-import type { Context } from "@deepseek-ai/cordis";
-import { defineTool } from "@deepseek-ai/dsh-tools";
 
 /** Stable Loader identity for the bundle row. */
 export const name = "tool-recall";
@@ -293,12 +292,13 @@ export function defineSearchTool() {
 
 const SEARCH_SESSIONS_DESCRIPTION =
   "Search OTHER sessions (cross-session recall) for keywords, scoped to this project plus mutual peers. "
-  + "Returns matching turns with their stored session ids (like dsh:<uuid>), sequence numbers, and fetch paths. "
+  + "Returns matching turns with their stored session ids (like dsh:<uuid> or opencode:ses_...), sequence numbers, and fetch paths. "
   + "Then call vcc-brain-recall-session with a session id to restore that session's full turns. "
-  + "Use vcc-brain-search (not this tool) for the current conversation.";
+  + "Use vcc-brain-search (not this tool) for the current conversation. "
+  + "OpenCode results require one `vcc-brain-helper recall-cross index` run on this machine first.";
 
 const RECALL_SESSION_DESCRIPTION =
-  "Restore the full turns of one indexed past session by its stored session id (like dsh:<uuid>), "
+  "Restore the full turns of one indexed past session by its stored session id (like dsh:<uuid> or opencode:ses_...), "
   + "optionally a single turn by sequence number. "
   + "Use vcc-brain-recall (not this tool) for the current conversation.";
 
@@ -425,7 +425,7 @@ export function defineRecallSessionTool() {
       sessionId: {
         type: "string",
         required: true,
-        description: "Stored session id, like dsh:<uuid>.",
+        description: "Stored session id, like dsh:<uuid> or opencode:ses_....",
       },
       seq: {
         type: "string",

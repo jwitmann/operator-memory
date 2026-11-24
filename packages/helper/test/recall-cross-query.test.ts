@@ -68,12 +68,17 @@ test("MATCH hits return ranked excerpts with the header", async () => {
   const paths = recallIndexPaths(join(directory, "home"));
   await run(syncDshIndex(paths, sessions, NOW));
   const result = await run(
-    queryRecall(paths, sessions, {
-      keywords: ["deploy", "blue-green"],
-      project: "proj",
-      peers: [],
-      now: NOW,
-    }),
+    queryRecall(
+      paths,
+      sessions,
+      {
+        keywords: ["deploy", "blue-green"],
+        project: "proj",
+        peers: [],
+        now: NOW,
+      },
+      join(directory, "home"),
+    ),
   );
   expect(result.exitCode).toBe(0);
   expect(result.hits).toHaveLength(1);
@@ -89,12 +94,17 @@ test("punctuation queries fall back to instr and still hit", async () => {
   const paths = recallIndexPaths(join(directory, "home"));
   await run(syncDshIndex(paths, sessions, NOW));
   const result = await run(
-    queryRecall(paths, sessions, {
-      keywords: ["(debug=true)"],
-      project: "proj",
-      peers: [],
-      now: NOW,
-    }),
+    queryRecall(
+      paths,
+      sessions,
+      {
+        keywords: ["(debug=true)"],
+        project: "proj",
+        peers: [],
+        now: NOW,
+      },
+      join(directory, "home"),
+    ),
   );
   expect(result.exitCode).toBe(0);
   expect(result.hits).toHaveLength(1);
@@ -108,12 +118,17 @@ test("out-of-scope projects report cleanly", async () => {
   const paths = recallIndexPaths(join(directory, "home"));
   await run(syncDshIndex(paths, sessions, NOW));
   const result = await run(
-    queryRecall(paths, sessions, {
-      keywords: ["lonely"],
-      project: "elsewhere",
-      peers: [],
-      now: NOW,
-    }),
+    queryRecall(
+      paths,
+      sessions,
+      {
+        keywords: ["lonely"],
+        project: "elsewhere",
+        peers: [],
+        now: NOW,
+      },
+      join(directory, "home"),
+    ),
   );
   expect(result.exitCode).toBe(0);
   expect(result.output).toBe("No matching turns in scope.");
@@ -122,12 +137,17 @@ test("out-of-scope projects report cleanly", async () => {
 test("missing index is a clean error, not a stack trace", async () => {
   const paths = recallIndexPaths(join(directory, "home"));
   const result = await run(
-    queryRecall(paths, sessions, {
-      keywords: ["anything"],
-      project: "proj",
-      peers: [],
-      now: NOW,
-    }),
+    queryRecall(
+      paths,
+      sessions,
+      {
+        keywords: ["anything"],
+        project: "proj",
+        peers: [],
+        now: NOW,
+      },
+      join(directory, "home"),
+    ),
   );
   expect(result.exitCode).toBe(2);
   expect(result.output).toContain("recall-cross index");
@@ -141,15 +161,21 @@ test("recall restores a session's turns and filters by seq", async () => {
   ]);
   const paths = recallIndexPaths(join(directory, "home"));
   await run(syncDshIndex(paths, sessions, NOW));
-  const full = await run(recallSessionTurns(paths, sessions, "dsh:abc", null, NOW));
+  const full = await run(
+    recallSessionTurns(paths, sessions, "dsh:abc", null, NOW, join(directory, "home")),
+  );
   expect(full.exitCode).toBe(0);
   expect(full.output).toContain("first decision");
   expect(full.output).toContain("second decision");
-  const single = await run(recallSessionTurns(paths, sessions, "dsh:abc", 2, NOW));
+  const single = await run(
+    recallSessionTurns(paths, sessions, "dsh:abc", 2, NOW, join(directory, "home")),
+  );
   expect(single.exitCode).toBe(0);
   expect(single.output).not.toContain("first decision");
   expect(single.output).toContain("second decision");
-  const missing = await run(recallSessionTurns(paths, sessions, "dsh:nope", null, NOW));
+  const missing = await run(
+    recallSessionTurns(paths, sessions, "dsh:nope", null, NOW, join(directory, "home")),
+  );
   expect(missing.exitCode).toBe(0);
   expect(missing.output).toBe("not-found");
 }, 15_000);

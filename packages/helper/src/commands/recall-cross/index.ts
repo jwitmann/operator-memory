@@ -12,12 +12,25 @@ import { Effect, FileSystem } from "effect";
 import { ensurePrivateDirectory, listFiles } from "../../filesystem.ts";
 import { type CliContext, isRecord } from "../../utils.ts";
 import { DshSessionError, ingestDshFile } from "./dsh.ts";
+import { defaultOpencodeDbPaths, syncOpencodeIndex } from "./opencode.ts";
+import {
+  coerceNumber,
+  coerceText,
+  insertTurns,
+  openDatabase,
+  RECALL_RETENTION_MS,
+  readForgottenIds,
+  type SqliteDatabase,
+} from "./store.ts";
+
+// Re-exported so existing importers (`query.ts`, fixture tests) keep one
+// import site while the implementation lives in `store.ts`.
+export type { SqliteDatabase };
+export { coerceNumber, coerceText, insertTurns, openDatabase, RECALL_RETENTION_MS };
 
 export const RECALL_INDEX_DIR_NAME = "recall-index";
 export const RECALL_INDEX_FILE_NAME = "index.sqlite";
 export const RECALL_FORGET_LOG_NAME = "forget.log";
-
-export const RECALL_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
 export type RecallIndexPaths = {
   readonly dir: string;
@@ -38,21 +51,6 @@ export function fingerprintBytes(raw: Uint8Array): string {
   return createHash("sha256").update(raw).digest("hex");
 }
 
-export type SqliteDatabase = {
-  readonly exec: (sql: string) => void;
-  readonly prepare: (sql: string) => {
-    readonly get: (...params: unknown[]) => unknown;
-    readonly all: (...params: unknown[]) => unknown[];
-    readonly run: (...params: unknown[]) => unknown;
-  };
-  readonly close: () => void;
-};
-
-export async function openDatabase(path: string): Promise<SqliteDatabase> {
-  const sqlite = await import("node:sqlite");
-  return new sqlite.DatabaseSync(path) as unknown as SqliteDatabase;
-}
-
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS files (
   path TEXT PRIMARY KEY,
@@ -64,14 +62,6 @@ CREATE VIRTUAL TABLE IF NOT EXISTS turns USING fts5(
   tokenize = 'trigram'
 );
 `;
-
-function readFieldText(value: unknown): string {
-  return typeof value === "string" ? value : "";
-}
-
-function readFieldNumber(value: unknown): number {
-  return typeof value === "number" ? value : 0;
-}
 
 // Enforce 0700 dir / 0600 file at every entry, before any read or write.
 // Creation mode does not repair pre-existing looser perms, so the entry
@@ -108,22 +98,22 @@ export function rowToRecord(value: unknown): SessionRecord | null {
   if (!isRecord(value)) {
     return null;
   }
-  const sessionId = readFieldText(value.session_id);
+  const sessionId = coerceText(value.session_id);
   if (sessionId === "") {
     return null;
   }
   // Defensive coercion is intentional: a corrupt row must never crash sync.
-  const kindText = readFieldText(value.kind);
+  const kindText = coerceText(value.kind);
   return {
-    harness: readFieldText(value.harness) === "opencode" ? "opencode" : "dsh",
+    harness: coerceText(value.harness) === "opencode" ? "opencode" : "dsh",
     sessionId,
-    project: readFieldText(value.project),
-    timestamp: readFieldNumber(value.timestamp),
-    seq: readFieldNumber(value.seq),
+    project: coerceText(value.project),
+    timestamp: coerceNumber(value.timestamp),
+    seq: coerceNumber(value.seq),
     kind: kindText === "tool" ? "tool" : kindText === "assistant" ? "assistant" : "user",
-    text: readFieldText(value.text),
-    pointer: readFieldText(value.pointer),
-    howToPull: readFieldText(value.how_to_pull),
+    text: coerceText(value.text),
+    pointer: coerceText(value.pointer),
+    howToPull: coerceText(value.how_to_pull),
   };
 }
 
@@ -148,32 +138,8 @@ function storedHash(db: SqliteDatabase, path: string): string | null {
   if (!isRecord(row)) {
     return null;
   }
-  const hash = readFieldText(row.hash);
+  const hash = coerceText(row.hash);
   return hash === "" ? null : hash;
-}
-
-function insertTurns(
-  db: SqliteDatabase,
-  turns: readonly SessionRecord[],
-  sourceFile: string,
-): void {
-  const insert = db.prepare(
-    "INSERT INTO turns (harness, session_id, project, timestamp, seq, kind, text, pointer, how_to_pull, source_file) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-  );
-  for (const turn of turns) {
-    insert.run(
-      turn.harness,
-      turn.sessionId,
-      turn.project,
-      turn.timestamp,
-      turn.seq,
-      turn.kind,
-      turn.text,
-      turn.pointer,
-      turn.howToPull,
-      sourceFile,
-    );
-  }
 }
 
 // Full sync over a DSH sessions root. Fingerprint is sha256 of file bytes
@@ -198,6 +164,11 @@ export const syncDshIndex = Effect.fn("syncDshIndex")(function* (
     let filesRead = 0;
     let turnsIndexed = 0;
     const filesSkipped: { file: string; reason: string }[] = [];
+    // Forget tombstones: a forgotten session stays forgotten — the sync
+    // filters its turns instead of resurrecting them (see `readForgottenIds`
+    // in `store.ts`). The fingerprint is still recorded so the file is not
+    // re-ingested on every sync.
+    const forgotten = yield* readForgottenIds(paths.forgetLog);
     for (const entry of entries) {
       seen.add(entry.path);
       const raw = yield* fileSystem.readFile(entry.path);
@@ -216,11 +187,11 @@ export const syncDshIndex = Effect.fn("syncDshIndex")(function* (
         continue;
       }
       filesRead += 1;
-      turnsIndexed += result.success.records.length;
+      const kept = result.success.records.filter(record => !forgotten.has(record.sessionId));
+      turnsIndexed += kept.length;
       db.exec("BEGIN");
       try {
-        db.prepare("DELETE FROM turns WHERE source_file = ?").run(entry.path);
-        insertTurns(db, result.success.records, entry.path);
+        insertTurns(db, kept, entry.path);
         db.prepare("INSERT OR REPLACE INTO files (path, hash, indexed_at) VALUES (?, ?, ?)").run(
           entry.path,
           hash,
@@ -236,14 +207,18 @@ export const syncDshIndex = Effect.fn("syncDshIndex")(function* (
         throw error;
       }
     }
-    // Orphan sweep: indexed source files no longer on disk.
-    const known = db.prepare("SELECT path FROM files").all() as unknown[];
+    // Orphan sweep: indexed DSH source files no longer on disk lose their
+    // rows. OpenCode rows (`opencode:…` source keys, owned by the OpenCode
+    // sync) are excluded here and swept there.
+    const known = db
+      .prepare("SELECT path FROM files WHERE path NOT LIKE 'opencode:%'")
+      .all() as unknown[];
     let filesRemoved = 0;
     for (const row of known) {
       if (!isRecord(row)) {
         continue;
       }
-      const path = readFieldText(row.path);
+      const path = coerceText(row.path);
       if (path !== "" && !seen.has(path)) {
         db.prepare("DELETE FROM turns WHERE source_file = ?").run(path);
         db.prepare("DELETE FROM files WHERE path = ?").run(path);
@@ -254,7 +229,7 @@ export const syncDshIndex = Effect.fn("syncDshIndex")(function* (
     const cutoff = now - RECALL_RETENTION_MS;
     db.prepare("DELETE FROM turns WHERE CAST(timestamp AS INTEGER) < ?").run(cutoff);
     const expired = db.prepare("SELECT changes() AS n").get();
-    const rowsExpired = isRecord(expired) ? readFieldNumber(expired.n) : 0;
+    const rowsExpired = isRecord(expired) ? coerceNumber(expired.n) : 0;
     return {
       filesRead,
       filesSkipped,
@@ -278,12 +253,13 @@ export const recallCrossIndex = Effect.fn("recallCrossIndex")(function* (
 ) {
   const root = sessionsRoot ?? `${context.home}/.dsh/sessions`;
   const paths = recallIndexPaths(context.home);
-  const summary = yield* syncDshIndex(paths, root, now);
+  const dsh = yield* syncDshIndex(paths, root, now);
+  const opencode = yield* syncOpencodeIndex(paths, defaultOpencodeDbPaths(context.home), now);
   const lines = [
-    `Indexed ${summary.turnsIndexed} turns from ${summary.filesRead} files.`,
-    `Skipped ${summary.filesSkipped.length}, removed ${summary.filesRemoved} orphans, expired ${summary.rowsExpired}.`,
+    `Indexed ${dsh.turnsIndexed + opencode.turnsIndexed} turns from ${dsh.filesRead + opencode.filesRead} sources (dsh: ${dsh.turnsIndexed}/${dsh.filesRead}, opencode: ${opencode.turnsIndexed}/${opencode.filesRead}).`,
+    `Skipped ${dsh.filesSkipped.length + opencode.filesSkipped.length}, removed ${dsh.filesRemoved + opencode.filesRemoved} orphans, expired ${dsh.rowsExpired + opencode.rowsExpired}.`,
   ];
-  for (const skip of summary.filesSkipped) {
+  for (const skip of [...dsh.filesSkipped, ...opencode.filesSkipped]) {
     lines.push(`skip ${skip.file}: ${skip.reason}`);
   }
   return { exitCode: 0, output: lines.join("\n") };
@@ -350,7 +326,7 @@ export const forgetSession = Effect.fn("forgetSession")(function* (
     const existing = db
       .prepare("SELECT COUNT(*) AS n FROM turns WHERE session_id = ?")
       .get(parsed.id);
-    const count = isRecord(existing) ? readFieldNumber(existing.n) : 0;
+    const count = isRecord(existing) ? coerceNumber(existing.n) : 0;
     if (count === 0) {
       return {
         result: { status: "not-found" } satisfies ForgetResult,
@@ -363,14 +339,14 @@ export const forgetSession = Effect.fn("forgetSession")(function* (
       if (!isRecord(row)) {
         continue;
       }
-      const sourceFile = readFieldText(row.sourceFile);
+      const sourceFile = coerceText(row.sourceFile);
       if (sourceFile === "") {
         continue;
       }
       const remaining = db
         .prepare("SELECT COUNT(*) AS n FROM turns WHERE source_file = ?")
         .get(sourceFile);
-      if (isRecord(remaining) && readFieldNumber(remaining.n) === 0) {
+      if (isRecord(remaining) && coerceNumber(remaining.n) === 0) {
         db.prepare("DELETE FROM files WHERE path = ?").run(sourceFile);
       }
     }

@@ -7,6 +7,7 @@ import { Data, Effect, FileSystem, type Path } from "effect";
 
 import { listFiles } from "../../filesystem.ts";
 import { isRecord } from "../../utils.ts";
+import { coerceNumber } from "./store.ts";
 
 // DSH session ingest (Step 2). Reads `session.v4.jsonl.zstd` files under a
 // sessions root, decompresses with the `node:zlib` stdlib, and converges
@@ -26,7 +27,10 @@ const NO_RECALL_TITLE = "[no-recall]";
 
 // Adapter tool traffic that must never re-enter the index (self-pollution
 // guard). Matches the tool names registered in `packages/deepseek/src/tool.ts`.
-const RECALL_TOOL_NAMES: ReadonlySet<string> = new Set([
+// Shared with `opencode.ts`: the same tool names must never re-enter the
+// index from either harness, so the guard set lives here next to the DSH
+// ingest that first defined it.
+export const RECALL_TOOL_NAMES: ReadonlySet<string> = new Set([
   "vcc-brain-search-sessions",
   "vcc-brain-recall-session",
 ]);
@@ -150,14 +154,11 @@ export function normalizeProject(cwd: string | null, slug: string): string {
   return parts.length > 0 ? (parts[parts.length - 1] as string) : slug;
 }
 
+// Nullable string reader stays local: call sites distinguish missing from
+// empty, unlike the shared non-null `coerceText` in `store.ts`.
 function readString(record: Record<string, unknown>, key: string): string | null {
   const value = record[key];
   return typeof value === "string" ? value : null;
-}
-
-function readNumber(record: Record<string, unknown>, key: string): number {
-  const value = record[key];
-  return typeof value === "number" ? value : 0;
 }
 
 // Ingest one session file. Corrupt JSONL lines skip with a count; any
@@ -198,13 +199,13 @@ export const ingestDshFile = Effect.fn("ingestDshFile")(function* (file: string,
       continue;
     }
     const type = readString(event, "type");
-    const seq = readNumber(event, "seq");
-    const time = readNumber(event, "time");
+    const seq = coerceNumber(event.seq);
+    const time = coerceNumber(event.time);
     const data = event.data;
     const body: Record<string, unknown> = isRecord(data) ? data : event;
 
     if (type === "session") {
-      if (readNumber(event, "version") !== SESSION_FORMAT_VERSION) {
+      if (coerceNumber(event.version) !== SESSION_FORMAT_VERSION) {
         return yield* new DshSessionError({ file, reason: "unsupported-version" });
       }
       if (sessionId === null) {

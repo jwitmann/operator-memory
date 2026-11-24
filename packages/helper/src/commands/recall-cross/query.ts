@@ -10,13 +10,14 @@ import {
   rankRecall,
 } from "@jwitmann/vcc-brain-core/recall-cross/ranking";
 import type {
-  RecallHit,
   RecallHarness,
+  RecallHit,
   SessionRecord,
 } from "@jwitmann/vcc-brain-core/recall-cross/types";
 import { Effect, FileSystem } from "effect";
 
 import type { CliContext } from "../../utils.ts";
+import { normalizeProject } from "./dsh.ts";
 import {
   ensureRecallIndexPaths,
   openDatabase,
@@ -26,7 +27,7 @@ import {
   type SqliteDatabase,
   syncDshIndex,
 } from "./index.ts";
-import { normalizeProject } from "./dsh.ts";
+import { defaultOpencodeDbPaths, isOpencodeCold, syncOpencodeIndex } from "./opencode.ts";
 
 export type RecallQueryOptions = {
   readonly keywords: readonly string[];
@@ -35,7 +36,38 @@ export type RecallQueryOptions = {
   readonly harness?: RecallHarness | "all";
   readonly topN?: number;
   readonly now: number;
+  readonly opencodeDbPaths?: readonly string[];
 };
+
+// Cold backfill (first run over hundreds of thousands of foreign rows)
+// runs only in the explicit `recall-cross index` step, never on the query
+// path: a missing/never-indexed store is a clean error directing the user
+// to index first, never a silent latency ambush. `wantsOpencode` scopes
+// the work — an explicit `--harness dsh` skips OpenCode entirely.
+function opencodeWants(harness: RecallHarness | "all" | undefined): boolean {
+  return harness === undefined || harness === "all" || harness === "opencode";
+}
+
+const syncOpencodeForQuery = Effect.fn("syncOpencodeForQuery")(function* (
+  paths: RecallIndexPaths,
+  home: string,
+  harness: RecallHarness | "all" | undefined,
+  now: number,
+  opencodeDbPaths: readonly string[] | undefined,
+) {
+  if (!opencodeWants(harness)) {
+    return null;
+  }
+  const cold = yield* isOpencodeCold(paths.sqlite);
+  if (cold) {
+    if (harness === "opencode") {
+      return "No OpenCode recall index yet. Run: vcc-brain-helper recall-cross index";
+    }
+    return null;
+  }
+  yield* syncOpencodeIndex(paths, opencodeDbPaths ?? defaultOpencodeDbPaths(home), now);
+  return null;
+});
 
 const SELECT_COLUMNS =
   "harness, session_id, project, timestamp, seq, kind, text, pointer, how_to_pull";
@@ -151,6 +183,7 @@ export const queryRecall = Effect.fn("queryRecall")(function* (
   paths: RecallIndexPaths,
   sessionsRoot: string,
   options: RecallQueryOptions,
+  home: string,
 ) {
   const fileSystem = yield* FileSystem.FileSystem;
   const exists = yield* fileSystem.stat(paths.sqlite).pipe(
@@ -165,6 +198,16 @@ export const queryRecall = Effect.fn("queryRecall")(function* (
     };
   }
   yield* syncDshIndex(paths, sessionsRoot, options.now);
+  const opencodeError = yield* syncOpencodeForQuery(
+    paths,
+    home,
+    options.harness,
+    options.now,
+    options.opencodeDbPaths,
+  );
+  if (opencodeError !== null) {
+    return { exitCode: 2 as const, output: opencodeError, hits: [] as const };
+  }
   const db = yield* Effect.promise(() => openDatabase(paths.sqlite));
   try {
     const { records } = searchCandidates(db, options.keywords, options.harness);
@@ -199,6 +242,8 @@ export const recallSessionTurns = Effect.fn("recallSessionTurns")(function* (
   sessionId: string,
   seq: number | null,
   now: number,
+  home: string,
+  opencodeDbPaths?: readonly string[],
 ) {
   const fileSystem = yield* FileSystem.FileSystem;
   const exists = yield* fileSystem.stat(paths.sqlite).pipe(
@@ -212,6 +257,18 @@ export const recallSessionTurns = Effect.fn("recallSessionTurns")(function* (
     };
   }
   yield* syncDshIndex(paths, sessionsRoot, now);
+  if (sessionId.startsWith("opencode:") || !sessionId.startsWith("dsh:")) {
+    const opencodeError = yield* syncOpencodeForQuery(
+      paths,
+      home,
+      sessionId.startsWith("opencode:") ? "opencode" : undefined,
+      now,
+      opencodeDbPaths,
+    );
+    if (opencodeError !== null) {
+      return { exitCode: 2 as const, output: opencodeError };
+    }
+  }
   const db = yield* Effect.promise(() => openDatabase(paths.sqlite));
   try {
     const rows = db
@@ -244,6 +301,7 @@ export const recallCrossQuery = Effect.fn("recallCrossQuery")(function* (
     readonly peers?: readonly string[];
     readonly root?: string | null;
     readonly topN?: number;
+    readonly opencodeDbPaths?: readonly string[];
     readonly now: number;
   },
 ) {
@@ -268,14 +326,20 @@ export const recallCrossQuery = Effect.fn("recallCrossQuery")(function* (
   }
   const paths = recallIndexPaths(context.home);
   yield* ensureRecallIndexPaths(paths);
-  return yield* queryRecall(paths, options.root ?? `${context.home}/.dsh/sessions`, {
-    keywords,
-    project: normalizeProject(options.project ?? context.cwd, "home"),
-    peers: options.peers ?? [],
-    harness: options.harness as RecallHarness | "all" | undefined,
-    topN: options.topN,
-    now: options.now,
-  });
+  return yield* queryRecall(
+    paths,
+    options.root ?? `${context.home}/.dsh/sessions`,
+    {
+      keywords,
+      project: normalizeProject(options.project ?? context.cwd, "home"),
+      peers: options.peers ?? [],
+      harness: options.harness as RecallHarness | "all" | undefined,
+      topN: options.topN,
+      now: options.now,
+      opencodeDbPaths: options.opencodeDbPaths,
+    },
+    context.home,
+  );
 });
 
 export const recallCrossRecall = Effect.fn("recallCrossRecall")(function* (
@@ -284,6 +348,7 @@ export const recallCrossRecall = Effect.fn("recallCrossRecall")(function* (
   seq: number | null,
   root: string | null,
   now: number,
+  opencodeDbPaths?: readonly string[],
 ) {
   if (sessionId.trim() === "") {
     return { exitCode: 2 as const, output: "Usage: recall-cross recall <session-id> [--seq N]" };
@@ -296,5 +361,7 @@ export const recallCrossRecall = Effect.fn("recallCrossRecall")(function* (
     sessionId,
     seq,
     now,
+    context.home,
+    opencodeDbPaths,
   );
 });

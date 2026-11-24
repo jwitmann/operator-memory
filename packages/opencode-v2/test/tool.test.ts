@@ -1,14 +1,21 @@
 import { storeOmission } from "@jwitmann/vcc-brain-core/context/store";
 import { vol } from "memfs";
+import { execFile } from "node:child_process";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { writeCompactionSnapshot } from "../src/compaction-snapshot.ts";
 import {
   registerPruneTool,
   registerReadOmittedTool,
+  registerRecallSessionTool,
   registerRecallTool,
+  registerSearchSessionsTool,
   registerSearchTool,
 } from "../src/tool.ts";
+
+vi.mock("node:child_process", () => ({ execFile: vi.fn() }));
+
+const execFileMock = vi.mocked(execFile);
 
 vi.mock("node:fs/promises", async () => {
   const { fs: memoryFileSystem } = await import("memfs");
@@ -47,6 +54,7 @@ async function addedTool() {
 
 beforeEach(() => {
   vol.reset();
+  execFileMock.mockReset();
 });
 
 test("registers under a flat hyphenated name", async () => {
@@ -272,4 +280,134 @@ test("search validates input and reports a missing snapshot", async () => {
 
   const unsafe = await tool.execute({ pattern: "login" }, { sessionID: "../evil" });
   expect(unsafe.content).toBe("Could not read compaction snapshot for this session.");
+});
+
+async function addedSearchSessionsTool() {
+  const editor = { namespace: vi.fn(), add: vi.fn() };
+  const context = {
+    tool: { transform: vi.fn(async (callback: (editor: unknown) => void) => callback(editor)) },
+  } as never;
+  await registerSearchSessionsTool(context, { projectDirectory: "/proj" });
+  return { editor, tool: editor.add.mock.calls[0]?.[0] as AddedTool };
+}
+
+async function addedRecallSessionTool() {
+  const editor = { namespace: vi.fn(), add: vi.fn() };
+  const context = {
+    tool: { transform: vi.fn(async (callback: (editor: unknown) => void) => callback(editor)) },
+  } as never;
+  await registerRecallSessionTool(context);
+  return { editor, tool: editor.add.mock.calls[0]?.[0] as AddedTool };
+}
+
+function succeedStdout(stdout: string) {
+  execFileMock.mockImplementation((_bin, _args, _options, callback) => {
+    (callback as (error: null, stdout: string, stderr: string) => void)(null, stdout, "");
+    return undefined as never;
+  });
+}
+
+test("search-sessions registers flat and shells the helper with --project", async () => {
+  const { editor, tool } = await addedSearchSessionsTool();
+
+  expect(editor.namespace).not.toHaveBeenCalled();
+  expect(tool.name).toBe("vcc-brain-search-sessions");
+  expect(tool.options).toEqual({ codemode: false });
+
+  succeedStdout("hits");
+  const result = await tool.execute({ keywords: "deploy blue-green" }, { sessionID: SESSION });
+
+  expect(result.content).toBe("hits");
+  expect(execFileMock).toHaveBeenCalledOnce();
+  const [bin, args] = execFileMock.mock.calls[0] as [string, string[]];
+  expect(bin).toBe("vcc-brain-helper");
+  expect(args).toEqual(["recall-cross", "query", "--project", "/proj", "deploy", "blue-green"]);
+});
+
+test("search-sessions validates keywords, harness, and dash words", async () => {
+  const { tool } = await addedSearchSessionsTool();
+
+  expect((await tool.execute({}, { sessionID: SESSION })).content).toBe(
+    "Missing required input: keywords.",
+  );
+  expect((await tool.execute({ keywords: "  " }, { sessionID: SESSION })).content).toBe(
+    "Missing required input: keywords.",
+  );
+  expect((await tool.execute({ keywords: "--top" }, { sessionID: SESSION })).content).toBe(
+    "Invalid input: keywords must not start with '-'.",
+  );
+  expect(
+    (await tool.execute({ keywords: "x", harness: "slack" }, { sessionID: SESSION })).content,
+  ).toBe("Invalid input: harness must be one of dsh, opencode, all.");
+  expect(execFileMock).not.toHaveBeenCalled();
+});
+
+test("search-sessions passes a valid harness through", async () => {
+  const { tool } = await addedSearchSessionsTool();
+  succeedStdout("opencode hits");
+
+  const result = await tool.execute(
+    { keywords: "atlas", harness: "opencode" },
+    { sessionID: SESSION },
+  );
+
+  expect(result.content).toBe("opencode hits");
+  const [, args] = execFileMock.mock.calls[0] as [string, string[]];
+  expect(args).toEqual([
+    "recall-cross",
+    "query",
+    "--project",
+    "/proj",
+    "--harness",
+    "opencode",
+    "atlas",
+  ]);
+});
+
+test("search-sessions degrades when the helper is missing", async () => {
+  const { tool } = await addedSearchSessionsTool();
+  execFileMock.mockImplementation(() => {
+    throw new Error("spawn ENOENT");
+  });
+
+  const result = await tool.execute({ keywords: "atlas" }, { sessionID: SESSION });
+
+  expect(result.content).toBe("Could not run the recall index. Is vcc-brain-helper installed?");
+});
+
+test("recall-session registers flat and shells the helper by id", async () => {
+  const { tool } = await addedRecallSessionTool();
+
+  expect(tool.name).toBe("vcc-brain-recall-session");
+  succeedStdout("turns");
+  const result = await tool.execute({ sessionId: "opencode:ses_abc" }, { sessionID: SESSION });
+
+  expect(result.content).toBe("turns");
+  const [, args] = execFileMock.mock.calls[0] as [string, string[]];
+  expect(args).toEqual(["recall-cross", "recall", "opencode:ses_abc"]);
+});
+
+test("recall-session validates id and seq", async () => {
+  const { tool } = await addedRecallSessionTool();
+
+  expect((await tool.execute({}, { sessionID: SESSION })).content).toBe(
+    "Missing required input: sessionId.",
+  );
+  expect((await tool.execute({ sessionId: "--seq" }, { sessionID: SESSION })).content).toBe(
+    "Invalid input: sessionId must not start with '-'.",
+  );
+  expect(
+    (await tool.execute({ sessionId: "opencode:ses_abc", seq: "x" }, { sessionID: SESSION }))
+      .content,
+  ).toBe("Invalid input: seq must be a non-negative integer.");
+  expect(execFileMock).not.toHaveBeenCalled();
+
+  succeedStdout("one turn");
+  const result = await tool.execute(
+    { sessionId: "opencode:ses_abc", seq: "2" },
+    { sessionID: SESSION },
+  );
+  expect(result.content).toBe("one turn");
+  const [, args] = execFileMock.mock.calls[0] as [string, string[]];
+  expect(args).toEqual(["recall-cross", "recall", "opencode:ses_abc", "--seq", "2"]);
 });

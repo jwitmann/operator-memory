@@ -1,12 +1,13 @@
+import { execFile } from "node:child_process";
+import { join } from "node:path";
+import { InvalidSearchPatternError } from "@jwitmann/vcc-brain-core/context/search";
 import {
   DEFAULT_RETENTION,
   pruneOmissions,
   readOmission,
 } from "@jwitmann/vcc-brain-core/context/store";
-import { InvalidSearchPatternError } from "@jwitmann/vcc-brain-core/context/search";
 import { isRecord } from "@jwitmann/vcc-brain-core/utils";
 import type { Context } from "@opencode/plugin/promise/plugin";
-import { join } from "node:path";
 
 import {
   classifySnapshotStore,
@@ -290,6 +291,171 @@ export async function registerSearchTool(context: Context, deps: ReadOmittedDeps
             return { content: `Invalid search pattern: ${error.source}.` };
           }
           throw error;
+        }
+      },
+    });
+  });
+}
+
+export type SearchSessionsDeps = {
+  // Setup-time project directory (one setup per project directory):
+  // passed as `--project` so scope ordering matches this project.
+  readonly projectDirectory: string;
+};
+
+/** Helper CLI binary invoked for cross-session recall (thin adapter: all sqlite lives in the helper). */
+export const HELPER_BIN = "vcc-brain-helper";
+
+/** Cooperative timeout for one helper invocation. */
+export const HELPER_TIMEOUT_MS = 60_000;
+
+export type HelperRunResult = {
+  readonly exitCode: number;
+  readonly output: string;
+};
+
+/** Spawn the helper CLI and capture its output. Stderr wins on failure; stdout wins on success. Exported for tests. */
+export function runHelperBinary(argument_: readonly string[]): Promise<HelperRunResult> {
+  return new Promise(resolve => {
+    execFile(
+      HELPER_BIN,
+      [...argument_],
+      { timeout: HELPER_TIMEOUT_MS },
+      (error, stdout, stderr) => {
+        if (error === null) {
+          resolve({ exitCode: 0, output: stdout });
+          return;
+        }
+        const exitCode = typeof error.code === "number" ? error.code : 2;
+        if (exitCode !== 0 && stderr !== "") {
+          resolve({ exitCode, output: stderr });
+          return;
+        }
+        resolve({ exitCode, output: stdout !== "" ? stdout : error.message });
+      },
+    );
+  });
+}
+
+// Registers vcc-brain-search-sessions: keyword search over OTHER sessions
+// (cross-session recall), scoped to this project plus mutual peers. Backed
+// by a helper-subprocess query call: the same tool-time binding deviation
+// the DSH adapter uses, keeping sqlite and session-store access out of the
+// plugin bundle. OpenCode results require one
+// `vcc-brain-helper recall-cross index` run on this machine first.
+export async function registerSearchSessionsTool(
+  context: Context,
+  deps: SearchSessionsDeps,
+): Promise<void> {
+  await context.tool.transform(editor => {
+    editor.add({
+      name: "vcc-brain-search-sessions",
+      options: { codemode: false },
+      description:
+        "Search OTHER sessions (cross-session recall) for keywords, scoped to this project plus mutual peers. "
+        + "Returns matching turns with stored session ids (like opencode:ses_... or dsh:<uuid>); "
+        + "call vcc-brain-recall-session to restore a session's full turns. "
+        + "Use vcc-brain-search (not this tool) for the current conversation. "
+        + "OpenCode results require one `vcc-brain-helper recall-cross index` run on this machine first.",
+      input: {
+        type: "object",
+        properties: {
+          keywords: {
+            type: "string",
+            description: "Space-separated keywords to search past sessions for.",
+          },
+          harness: {
+            type: "string",
+            description: "Limit results to one harness.",
+            enum: ["dsh", "opencode", "all"],
+          },
+        },
+        required: ["keywords"],
+      },
+      execute: async input => {
+        if (
+          !isRecord(input)
+          || typeof input.keywords !== "string"
+          || input.keywords.trim() === ""
+        ) {
+          return { content: "Missing required input: keywords." };
+        }
+        const words = input.keywords.trim().split(/\s+/);
+        if (words.some(word => word.startsWith("-"))) {
+          return { content: "Invalid input: keywords must not start with '-'." };
+        }
+        const invocation = ["recall-cross", "query", "--project", deps.projectDirectory];
+        if (input.harness !== undefined && input.harness !== "") {
+          if (input.harness !== "dsh" && input.harness !== "opencode" && input.harness !== "all") {
+            return { content: "Invalid input: harness must be one of dsh, opencode, all." };
+          }
+          invocation.push("--harness", input.harness as string);
+        }
+        invocation.push(...words);
+        try {
+          const result = await runHelperBinary(invocation);
+          return { content: result.output };
+        } catch {
+          return { content: "Could not run the recall index. Is vcc-brain-helper installed?" };
+        }
+      },
+    });
+  });
+}
+
+// Registers vcc-brain-recall-session: restore the full turns of one indexed
+// past session by stored id, optionally a single turn by seq. Same
+// helper-subprocess backing as the search companion above.
+export async function registerRecallSessionTool(context: Context): Promise<void> {
+  await context.tool.transform(editor => {
+    editor.add({
+      name: "vcc-brain-recall-session",
+      options: { codemode: false },
+      description:
+        "Restore the full turns of one indexed past session by its stored session id "
+        + "(like opencode:ses_... or dsh:<uuid>), optionally a single turn by sequence number. "
+        + "Use vcc-brain-recall (not this tool) for the current conversation.",
+      input: {
+        type: "object",
+        properties: {
+          sessionId: {
+            type: "string",
+            description: "Stored session id, like opencode:ses_... or dsh:<uuid>.",
+          },
+          seq: {
+            type: "string",
+            description: "Optional single turn sequence number to restore.",
+          },
+        },
+        required: ["sessionId"],
+      },
+      execute: async input => {
+        if (
+          !isRecord(input)
+          || typeof input.sessionId !== "string"
+          || input.sessionId.trim() === ""
+        ) {
+          return { content: "Missing required input: sessionId." };
+        }
+        if (input.sessionId.trim().startsWith("-")) {
+          return { content: "Invalid input: sessionId must not start with '-'." };
+        }
+        let sequence: string | null = null;
+        if (input.seq !== undefined && input.seq !== null && String(input.seq) !== "") {
+          if (!/^\d+$/.test(String(input.seq).trim())) {
+            return { content: "Invalid input: seq must be a non-negative integer." };
+          }
+          sequence = String(input.seq).trim();
+        }
+        const invocation = ["recall-cross", "recall", input.sessionId.trim()];
+        if (sequence !== null) {
+          invocation.push("--seq", sequence);
+        }
+        try {
+          const result = await runHelperBinary(invocation);
+          return { content: result.output };
+        } catch {
+          return { content: "Could not run the recall index. Is vcc-brain-helper installed?" };
         }
       },
     });

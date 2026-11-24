@@ -1,31 +1,27 @@
-# Review — Step 5 DSH tool wiring + helper recall command (fresh 2026-11-24 ~16:55 +07)
+# Review — Phase 2 OpenCode sqlite adapter (fresh 2026-11-24 ~18:35 +07)
 
 ## Scope — every gated path, literally
 
 Product code:
 
-- `packages/deepseek/src/tool.ts` — MODIFIED: `vcc-brain-search-sessions` + `vcc-brain-recall-session` (helper-subprocess backed via `node:child_process` `execFile`, argv array, 60s `HELPER_TIMEOUT_MS`), `readSessionCwd` reusing `readSession`, harness allow-list + dash-guards in execute, stderr-wins-on-failure output, header comment justifying the raw builtin. Full battery (below).
-- `packages/deepseek/test/tool.test.ts` — MODIFIED: apply test now 4 tools + 4 disposers; 5 new tests (search shells with `--project` scope, validation no-spawn, recall by id+seq, recall validation, helper-missing degrade); `vi.mock("node:child_process")` + commented `mockReset`; dash-guard pins. 15/15.
-- `packages/core/package.json` — UNCHANGED; stands.
-- `packages/core/src/recall-cross/` — directory; files below unchanged this session.
-- `packages/core/src/recall-cross/types.ts` — UNCHANGED; stands.
-- `packages/core/src/recall-cross/ranking.ts` — UNCHANGED; stands.
-- `packages/core/src/recall-cross/ranking.test.ts` — UNCHANGED; stands.
-- `packages/helper/src/commands/recall-cross/` — directory; files below.
-- `packages/helper/src/commands/recall-cross/dsh.ts` — MODIFIED (one line): `normalizeProject` exported for query reuse; ingest behavior untouched.
-- `packages/helper/src/commands/recall-cross/index.ts` — UNCHANGED behaviorally (exports reused by query recall); stands.
-- `packages/helper/src/commands/recall-cross/query.ts` — MODIFIED: `recallSessionTurns` (SELECT by session_id, optional `CAST(seq)` filter, LIMIT 200, `not-found`) + `recallCrossRecall` (blank-id usage error) via shared `collectRecords`; `normalizeProject` replaces removed `projectForCwd` (explicit `--project` normalized, raw session cwd safe); stale header fixed.
-- `packages/helper/src/cli.ts` — MODIFIED: `recall-cross recall <session-id> [--seq N] [--root]` branch (missing-value/surplus-positional usage errors, integer-validated seq), `--topN` renamed `--top` (lowercase flag idiom), help row, canonical usage line.
-- `packages/helper/test/recall-cross-dsh.test.ts` — UNCHANGED; 8/8 stands.
-- `packages/helper/test/recall-cross-index.test.ts` — UNCHANGED (timeouts from Step 4); stands.
-- `packages/helper/test/recall-cross-query.test.ts` — MODIFIED: +1 recall test (full restore, seq filter, `not-found`).
+- `packages/helper/src/commands/recall-cross/opencode.ts` — NEW (~700 lines): v2-table ingest (`session_v2` + `session_message` + `session_part`), read-only open, JS-fold fingerprint, per-db transaction, `data_version` gate, cold/backfill + query-delta split, forget tombstones, orphan sweep, expiry. Two fix rounds (below).
+- `packages/helper/src/commands/recall-cross/store.ts` — NEW: shared sqlite kernel (`coerceText`/`coerceNumber`, `insertTurns` with DELETE, `openDatabase`, `SqliteDatabase`, `RECALL_RETENTION_MS`, `readForgottenIds`). One-way dependency (syncs → store).
+- `packages/helper/src/commands/recall-cross/index.ts` — MODIFIED: store reuse (coercion/insert/opener/retention), DSH orphan sweep excludes `opencode:` keys, `syncDshIndex` filters forgotten ids (fingerprint still recorded), `recallCrossIndex` runs both syncs.
+- `packages/helper/src/commands/recall-cross/query.ts` — MODIFIED: `syncOpencodeForQuery` (cold → clean error for explicit opencode, silent DSH-only for all/dsh), `queryRecall`/`recallSessionTurns`/`recallCrossQuery`/`recallCrossRecall` carry home + opencodeDbPaths; prefix-directed recall sync.
+- `packages/helper/src/commands/recall-cross/dsh.ts` — MODIFIED: `RECALL_TOOL_NAMES` exported (shared guard), `readNumber` → shared `coerceNumber` (`readString` stays local, nullable contract, commented).
+- `packages/helper/test/recall-cross-opencode.test.ts` — NEW: 13 tests (parsers, sync, no-change, delta, recall+pointers, cold error, forget+stickiness, read-only proof, missing-table, no-parts, plan-shape EXPLAIN).
+- `packages/helper/test/recall-cross-query.test.ts` — MODIFIED: home-arg plumbing only.
+- `packages/helper/test/recall-cross-index.test.ts` — MODIFIED: forget test asserts resync yields zero rows (stickiness).
+- `packages/opencode-v2/src/tool.ts` — MODIFIED: `registerSearchSessionsTool` + `registerRecallSessionTool` (helper-subprocess, `--project` from setup-time directory, dash/enum/seq validation, `{content}` returns) + `runHelperBinary`/`HELPER_*`.
+- `packages/opencode-v2/src/index.ts` — MODIFIED: registers both tools with project directory.
+- `packages/opencode-v2/test/tool.test.ts` — MODIFIED: hoisted `node:child_process` import (no eslint-disable), 6 new tests (registration, invocation shapes, validation no-spawn pins, degrade).
+- `packages/opencode-v2/test/index.test.ts` — MODIFIED: toolTransform count 4 → 6.
+- `packages/deepseek/src/tool.ts` — MODIFIED: descriptions list both id prefixes; inline sessionId description synced.
 
 Docs (unchanged; `bun run lint:md` via root gate, 139 files, 0 issues):
 
-- `docs/dev/cross-session-recall-build-plan.md` — UNCHANGED; Step 5 implemented as specified.
-- `docs/dev/cross-session-recall-build-plan.md.review.md` — UNCHANGED; reused.
-- `docs/dev/cross-session-recall-need-audit.md` — UNCHANGED; reused.
-- `docs/dev/rule-verbatim-survival-audit.md` — UNCHANGED; reused.
+- `docs/dev/cross-session-recall-build-plan.md` — UNCHANGED this round (Phase 2 implemented per its delta-over-indexes design; v2-table pivot recorded here: legacy tables frozen, v2 live).
+- Others — UNCHANGED; reused.
 
 Meta:
 
@@ -34,19 +30,24 @@ Meta:
 
 ## Findings and resolutions
 
-Step 5 battery (this session):
+Round 1 battery (pattern-guardian / style-enforcer / code-reviewer, parallel):
 
-- Style — 3 blocking FIXED: `node:child_process` import reordered first; nested ternary rewritten as if/else with stderr-wins rule; `./dsh.ts` import sorted before `./index.ts`. Should-fix applied: query header mentions recall; `HELPER_TIMEOUT_MS` const; `readSessionCwd` reuses `readSession`; mockReset commented. Deferred with reason: branch-specific CLI usage lines kept (more helpful than one canonical line); `let topN/let seq` kept (integer validation needs early-return statements, const-ternary cannot reject); `(args.harness as string)` cast kept (removing it reintroduces TS2367 — the framework enum type has no `""` member); `String(args.seq)` kept (optional-param type is not narrowed to string).
-- Code-reviewer — no blocking. 2 should-fix applied: harness allow-list re-validated in execute (defense-in-depth past `defineTool` enum validation, which throws before execute for invalid values — verified live, so the in-execute path is untestable via `tool.execute` and intentionally unpinned); dash-prefixed keywords/sessionId rejected (no `--` separator support in the helper CLI; argv array already rules out shell injection). Notes accepted: `error.code` mapping covers string codes/timeout-kill; try/catch around the never-rejecting runner kept as belt-and-braces; recall-by-ID intentionally unscoped (ID-addressed pull needs no project); malformed IDs yield `not-found`, not usage errors (parameterized, no injection).
-- Pattern-guardian — no blocking. 4 should-fix applied: `readSessionCwd` reuses `readSession`; `recallSessionTurns` routes through `collectRecords` (one row→record path); `--topN` renamed `--top` (helper CLI keeps `topN` option field; DSH tool has no limit passthrough — intentional, model gets default top 5, humans narrow via CLI); execFile justification recorded in the file header. Notes accepted: `empty*` trio and `formatRecallReply` fork are intentional (different result types); `vi.mock("node:child_process")` is the only builtin mock, justified alongside the spawn.
-- Test-grounder — GROUNDED with stated limitation (new files, no pre-fix tree, no live mutants): 20/20 observed green (deepseek 15 + helper query 5), per-test mutant mapping by inspection (invocation shape, no-spawn pins, `--seq` passthrough, degrade path, seq-filter/`not-found` pins).
+- Pattern-guardian — 2 blocking FIXED: dropped dead `opencode_state` table; `RECALL_RETENTION_MS` single-sourced in `store.ts` (both syncs use it). 4 should-fix FIXED: store.ts kernel (coercion/insert/opener shared; `readString` intentionally local); deepseek description synced to two-prefix form. Note accepted: `runHelperBinary` duplication across adapters (independent bundles; promote to core only on third copy). Residual (double DELETE) FIXED in round 2.
+- Style — 0 blocking. Should-fix: import-order eslint-disable FIXED (hoisted static import); `?`-convention kept (established Phase-1 helper style, pre-existing); duplication note same as above. Notes accepted (dynamic sqlite import intentional; header/operator conventions kept).
+- Code-reviewer — 4 blocking FIXED: (1) tool parts re-keyed `mid#ordinal` with ordinal in SQL — second fixture part pins it; (2) tool pointers suffixed `:tool:<ordinal>` (seq column still parent int, `--seq` restores message+tools); (3) IN batches chunked at 500; (4) forget made sticky via `forget.log` tombstones consulted by both syncs (fingerprint recorded, zero rows). 3 should-fix FIXED: (5) sourceKey hashes full path; (6) expiry runs on fast path; (7) cold probe read-only, catch→cold. Notes accepted: unprefixed-recall double sync (correct, explicit path); `--harness all` cold silence (documented in tool descriptions); cold_done-with-zero-dbs (harmless); sweep non-atomic (self-healing).
 
-Timeouts: all 15s closings retained (FTS5-trigram load flake class, proven earlier).
+Round 2 (confirm-only re-runs): code-reviewer — no remaining blocking/should-fix (tombstone/files round-trip, pointer/suffix vs CAST filter, per-batch seqById, expiry-on-fast-path, no import cycle all verified; one cosmetic note: search labels render `[id#seq=N]` without suffix — deferred). Pattern-guardian — no remaining blocking (residual double-DELETE fixed by removing outer DELETEs; store owns the single DELETE).
+
+Timeouts: heaviest opencode tests at 30s (full-suite contention class); hook flake fixed structurally (seed-on-demand; parser tests pay no sqlite setup; fixture transactions single-commit); plan-shape fixture mirrors live selectivity (many small sessions).
+
+Live proof (scratch HOME, symlinked stores, removed after): cold backfill 586s (~10 min, one-time, explicit step only; 2810 opencode sources → 199k turns, 184k expired by the 30-day backstop) + DSH 87s (438 sources → 22k turns, 0 skips); second `index` run 1s no-op (`data_version` gate); live `query --harness opencode --project finnomena` returns ranked excerpts with pointers in 1s.
+
 Blocking findings: none open.
 
 ## Verification (commands actually run)
 
-- `bun run check packages/deepseek` — green, 9 files, 77/77 (one transient exit-1 was an edit racing the gate; per-stage rerun FMT/LINT/TSC/VITEST all 0, wrapper rerun exit 0).
-- `bun run check packages/helper` — green, 13 files, 124/124.
-- `bun run check packages/core` — green, 177/177.
-- `bun run check` (root) — green, 70 files, 598/598, exit 0 (includes `lint:md` 139 files, 0 issues).
+- `bun run check packages/helper` — green, 14 files, 137/137.
+- `bun run check packages/opencode-v2` — green, 19 files, 174/174.
+- `bun run check packages/deepseek` + `packages/core` — green (root covers).
+- `bun run check` (root) — green, 71 files, 616/616, exit 0 (includes `lint:md` 139 files, 0 issues).
+- `bun run typecheck` — clean (caught the readonly-accumulator regression mid-round, fixed with local lets).

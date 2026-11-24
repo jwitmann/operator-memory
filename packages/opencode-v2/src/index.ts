@@ -1,17 +1,16 @@
 import { homedir } from "node:os";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-
+import type { TriggerKind } from "@jwitmann/vcc-brain-core/context/triggers";
 import {
   loadMemorySnapshot,
   type MemoryStatusSnapshot,
 } from "@jwitmann/vcc-brain-core/memory/load";
 import { resolveStateDirectory } from "@jwitmann/vcc-brain-core/memory/roots";
-import type { TriggerKind } from "@jwitmann/vcc-brain-core/context/triggers";
 import { Plugin } from "@opencode/plugin";
-import { pluginId } from "./id.ts";
-
 import packageJson from "../package.json" with { type: "json" };
+import { maybeAppendBrainUpdateReminder } from "./brain-updates.ts";
+import { DEFAULT_BRAIN_UPDATES_CONFIG, parseBrainUpdatesConfig } from "./brain-updates-config.ts";
 import { registerCommands } from "./commands.ts";
 import { DEFAULT_BRAIN_PATHS, registerCompactionHook } from "./compaction.ts";
 import { registerContextHook } from "./context.ts";
@@ -24,25 +23,26 @@ import {
   registerStepTracking,
   requestSessionCompaction,
 } from "./events.ts";
+import { pluginId } from "./id.ts";
+import {
+  type PartitionStatus,
+  VccBrainNotifications,
+  type VccBrainStatus,
+  type VccBrainToast,
+} from "./notifications.ts";
 import { loadPreamble } from "./preamble.ts";
 import { resolveProjectConfig } from "./project-config.ts";
 import { refreshPreambleContent } from "./refresh.ts";
 import { DEFAULT_PREAMBLE_REFRESH_CONFIG, parsePreambleRefreshConfig } from "./refresh-config.ts";
-import { maybeAppendBrainUpdateReminder } from "./brain-updates.ts";
-import { DEFAULT_BRAIN_UPDATES_CONFIG, parseBrainUpdatesConfig } from "./brain-updates-config.ts";
 import { sharedContextRuntime } from "./runtime.ts";
 import {
   registerPruneTool,
   registerReadOmittedTool,
+  registerRecallSessionTool,
   registerRecallTool,
+  registerSearchSessionsTool,
   registerSearchTool,
 } from "./tool.ts";
-import {
-  VccBrainNotifications,
-  type VccBrainStatus,
-  type VccBrainToast,
-  type PartitionStatus,
-} from "./notifications.ts";
 
 // Live setup generation. A teardown/reload without disposal leaves the old
 // event loop and old hook closures alive; they capture their own generation
@@ -278,6 +278,10 @@ const VccBrainPlugin = Plugin.define({
         await registerPruneTool(context, { stateDirectory });
         await registerRecallTool(context, { stateDirectory });
         await registerSearchTool(context, { stateDirectory });
+        await registerSearchSessionsTool(context, {
+          projectDirectory: context.location.directory,
+        });
+        await registerRecallSessionTool(context);
       } else {
         // Refresh-only telemetry: step anchoring without triggers.
         registerStepTracking(
