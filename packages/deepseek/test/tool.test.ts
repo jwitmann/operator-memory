@@ -264,6 +264,7 @@ test("search-sessions shells to the helper with project scope", async () => {
   expect(bin).toBe("vcc-brain-helper");
   expect(invocation.slice(0, 2)).toEqual(["recall-cross", "query"]);
   expect(invocation).toContain("--project");
+  expect(invocation).toContain("--project-dir");
   expect(invocation).toContain("/home/u/checkouts/operator-memory");
   expect(invocation.slice(-2)).toEqual(["deploy", "decision"]);
 });

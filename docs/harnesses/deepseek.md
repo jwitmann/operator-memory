@@ -76,6 +76,14 @@ Beyond the curated Brain, the agent can search the raw text of past sessions. `v
 
 Search scope is the calling session's project plus mutual peers; out-of-scope sessions are excluded, not downranked. History syncs on demand at query time; ask the agent to run `vcc-brain-helper recall-cross index` once to warm the machine-wide index. The index lives local-only under `~/.vcc-brain/state/recall-index/` (directory `0700`, file `0600`) with 30-day retention, and the agent can explicitly forget a superseded session. Sessions carrying exactly the title `[no-recall]` are never indexed. The tools work wherever the plugin is active, independent of the command service.
 
+Declare peers in the project's `.vcc-brain/config.json`:
+
+```jsonc
+{ "peers": ["/home/jerome/checkouts/other-project"] }
+```
+
+Sharing is mutual: the other project must list this one back. Without a mutual declaration, recall stays scoped to the current project.
+
 ### Update
 
 Rerun `vcc-brain-helper install deepseek`, or update a specific profile through DeepSeek:

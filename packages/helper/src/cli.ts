@@ -181,6 +181,22 @@ export function runCli(
         }
         const project =
           projectFlag >= 0 ? (arguments_[projectFlag + 1] as string | undefined) : undefined;
+        const projectDirFlag = arguments_.indexOf("--project-dir");
+        if (
+          projectDirFlag >= 0
+          && (arguments_[projectDirFlag + 1] === undefined
+            || (arguments_[projectDirFlag + 1] as string).startsWith("--"))
+        ) {
+          return {
+            exitCode: 2,
+            output:
+              "Usage: recall-cross query [--harness dsh|opencode|all] [--project <name>] [--project-dir <path>] <keywords>",
+          };
+        }
+        const projectDir =
+          projectDirFlag >= 0
+            ? ((arguments_[projectDirFlag + 1] as string | undefined) ?? null)
+            : null;
         const topFlag = arguments_.indexOf("--top");
         if (
           topFlag >= 0
@@ -222,11 +238,13 @@ export function runCli(
             && argument !== "--harness"
             && argument !== "--root"
             && argument !== "--project"
+            && argument !== "--project-dir"
             && argument !== "--peer"
             && argument !== "--top"
             && (harnessFlag < 0 || (at !== harnessFlag && at !== harnessFlag + 1))
             && (rootFlag < 0 || (at !== rootFlag && at !== rootFlag + 1))
             && (projectFlag < 0 || (at !== projectFlag && at !== projectFlag + 1))
+            && (projectDirFlag < 0 || (at !== projectDirFlag && at !== projectDirFlag + 1))
             && (topFlag < 0 || (at !== topFlag && at !== topFlag + 1))
             && (at === 0 || arguments_[at - 1] !== "--peer"),
         );
@@ -236,6 +254,7 @@ export function runCli(
           peers,
           root,
           topN,
+          projectDir,
           now: Date.now(),
         });
       }

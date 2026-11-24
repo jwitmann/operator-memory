@@ -384,7 +384,14 @@ export async function registerSearchSessionsTool(
         if (words.some(word => word.startsWith("-"))) {
           return { content: "Invalid input: keywords must not start with '-'." };
         }
-        const invocation = ["recall-cross", "query", "--project", deps.projectDirectory];
+        const invocation = [
+          "recall-cross",
+          "query",
+          "--project",
+          deps.projectDirectory,
+          "--project-dir",
+          deps.projectDirectory,
+        ];
         if (input.harness !== undefined && input.harness !== "") {
           if (input.harness !== "dsh" && input.harness !== "opencode" && input.harness !== "all") {
             return { content: "Invalid input: harness must be one of dsh, opencode, all." };

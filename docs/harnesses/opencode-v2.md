@@ -179,6 +179,14 @@ Beyond the curated Brain, the agent can search the raw text of past sessions. `v
 
 Search scope is the setup-time project directory plus mutual peers; out-of-scope sessions are excluded, not downranked. OpenCode results require one `vcc-brain-helper recall-cross index` run on the machine first — ask the agent to run it; a cold index reports that instead of guessing. The index lives local-only under `~/.vcc-brain/state/recall-index/` (directory `0700`, file `0600`) with 30-day retention, and the agent can explicitly forget a superseded session. Sessions carrying exactly the title `[no-recall]` are never indexed.
 
+Declare peers in the project's `.vcc-brain/config.json`:
+
+```jsonc
+{ "peers": ["/home/jerome/checkouts/other-project"] }
+```
+
+Sharing is mutual: the other project must list this one back. Without a mutual declaration, recall stays scoped to the current project.
+
 ### Update
 
 OpenCode V2 owns plugin updates:

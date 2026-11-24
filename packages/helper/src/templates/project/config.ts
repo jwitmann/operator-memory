@@ -1,9 +1,8 @@
 // Optional per-project VCC Brain config: `<project>/.vcc-brain/config.json` (legacy `<project>/.operator/config.json` also checked).
-// Same flat block names the opencode-v2 and deepseek adapters parse, with
-// stock thresholds and everything disabled — absent config behaves
-// identically, so scaffolding this file changes no runtime behavior. The
-// agent flips `enabled` flags during Project Setup when the user opts in;
-// `project init` itself never overwrites an existing file.
+// Scaffolds stock thresholds with everything disabled — absent config
+// behaves identically. `peers` declares cross-session recall sharing by
+// project directory; empty keeps recall project-scoped. Sharing is mutual:
+// a peer counts only when its own config lists this project back.
 export const PROJECT_CONFIG_TEMPLATE = `{
   "contextManagement": {
     "enabled": false,
@@ -19,6 +18,7 @@ export const PROJECT_CONFIG_TEMPLATE = `{
   },
   "preambleRefresh": {
     "enabled": false
-  }
+  },
+  "peers": []
 }
 `;

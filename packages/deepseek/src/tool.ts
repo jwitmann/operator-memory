@@ -391,7 +391,7 @@ export function defineSearchSessionsTool() {
       const invocation = ["recall-cross", "query"];
       const cwd = readSessionCwd(exec.agent);
       if (cwd !== null) {
-        invocation.push("--project", cwd);
+        invocation.push("--project", cwd, "--project-dir", cwd);
       }
       if (args.harness !== undefined && (args.harness as string) !== "") {
         if (args.harness !== "dsh" && args.harness !== "opencode" && args.harness !== "all") {

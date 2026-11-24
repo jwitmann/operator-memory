@@ -321,7 +321,16 @@ test("search-sessions registers flat and shells the helper with --project", asyn
   expect(execFileMock).toHaveBeenCalledOnce();
   const [bin, args] = execFileMock.mock.calls[0] as [string, string[]];
   expect(bin).toBe("vcc-brain-helper");
-  expect(args).toEqual(["recall-cross", "query", "--project", "/proj", "deploy", "blue-green"]);
+  expect(args).toEqual([
+    "recall-cross",
+    "query",
+    "--project",
+    "/proj",
+    "--project-dir",
+    "/proj",
+    "deploy",
+    "blue-green",
+  ]);
 });
 
 test("search-sessions validates keywords, harness, and dash words", async () => {
@@ -357,6 +366,8 @@ test("search-sessions passes a valid harness through", async () => {
     "recall-cross",
     "query",
     "--project",
+    "/proj",
+    "--project-dir",
     "/proj",
     "--harness",
     "opencode",

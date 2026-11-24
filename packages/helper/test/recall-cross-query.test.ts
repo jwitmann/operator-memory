@@ -9,7 +9,11 @@ import { Effect, type FileSystem, Layer, type Path } from "effect";
 import { afterEach, beforeEach, expect, test } from "vitest";
 
 import { recallIndexPaths, syncDshIndex } from "../src/commands/recall-cross/index.ts";
-import { queryRecall, recallSessionTurns } from "../src/commands/recall-cross/query.ts";
+import {
+  queryRecall,
+  recallCrossQuery,
+  recallSessionTurns,
+} from "../src/commands/recall-cross/query.ts";
 
 const services = Layer.merge(NodeFileSystem.layer, NodePath.layer);
 
@@ -152,6 +156,59 @@ test("missing index is a clean error, not a stack trace", async () => {
   expect(result.exitCode).toBe(2);
   expect(result.output).toContain("recall-cross index");
 });
+
+test("mutual peers widen scope across projects via projectDir", async () => {
+  const alphaDir = join(directory, "alpha");
+  const betaDir = join(directory, "beta");
+  for (const dir of [alphaDir, betaDir]) {
+    mkdirSync(join(dir, ".vcc-brain"), { recursive: true });
+  }
+  const link = (from: string, to: string): void => {
+    writeFileSync(join(from, ".vcc-brain", "config.json"), JSON.stringify({ peers: [to] }));
+  };
+  link(alphaDir, betaDir);
+  link(betaDir, alphaDir);
+  writeSession("s", "aaaaaaaa-1111-2222-3333-444444444444", [
+    header("aaa", alphaDir),
+    userMessage(1, NOW - DAY, "quasarfalcon migration plan"),
+  ]);
+  writeSession("s", "bbbbbbbb-1111-2222-3333-444444444444", [
+    header("bbb", betaDir),
+    userMessage(1, NOW - DAY, "quasarfalcon rollback plan"),
+  ]);
+  const paths = recallIndexPaths(join(directory, "home"));
+  await run(syncDshIndex(paths, sessions, NOW));
+  const context = {
+    cwd: alphaDir,
+    home: join(directory, "home"),
+    xdgConfigHome: null,
+    version: "test",
+  };
+  const mutual = await run(
+    recallCrossQuery(context, ["quasarfalcon"], {
+      project: "alpha",
+      projectDir: alphaDir,
+      root: sessions,
+      now: NOW,
+    }),
+  );
+  expect(mutual.exitCode).toBe(0);
+  expect(mutual.output).toContain("dsh:aaa");
+  expect(mutual.output).toContain("dsh:bbb");
+
+  writeFileSync(join(betaDir, ".vcc-brain", "config.json"), JSON.stringify({ peers: [] }));
+  const oneSided = await run(
+    recallCrossQuery(context, ["quasarfalcon"], {
+      project: "alpha",
+      projectDir: alphaDir,
+      root: sessions,
+      now: NOW,
+    }),
+  );
+  expect(oneSided.exitCode).toBe(0);
+  expect(oneSided.output).toContain("dsh:aaa");
+  expect(oneSided.output).not.toContain("dsh:bbb");
+}, 15_000);
 
 test("recall restores a session's turns and filters by seq", async () => {
   writeSession("s", "11111111-2222-3333-4444-555555555555", [

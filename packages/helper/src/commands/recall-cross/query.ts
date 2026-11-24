@@ -28,6 +28,7 @@ import {
   syncDshIndex,
 } from "./index.ts";
 import { defaultOpencodeDbPaths, isOpencodeCold, syncOpencodeIndex } from "./opencode.ts";
+import { resolveMutualPeers } from "./peers.ts";
 
 export type RecallQueryOptions = {
   readonly keywords: readonly string[];
@@ -332,6 +333,7 @@ export const recallCrossQuery = Effect.fn("recallCrossQuery")(function* (
     readonly peers?: readonly string[];
     readonly root?: string | null;
     readonly topN?: number;
+    readonly projectDir?: string | null;
     readonly opencodeDbPaths?: readonly string[];
     readonly now: number;
   },
@@ -357,13 +359,14 @@ export const recallCrossQuery = Effect.fn("recallCrossQuery")(function* (
   }
   const paths = recallIndexPaths(context.home);
   yield* ensureRecallIndexPaths(paths);
+  const peers = yield* resolveMutualPeers(options.projectDir ?? null, options.peers ?? []);
   return yield* queryRecall(
     paths,
     options.root ?? `${context.home}/.dsh/sessions`,
     {
       keywords,
       project: normalizeProject(options.project ?? context.cwd, "home"),
-      peers: options.peers ?? [],
+      peers,
       harness: options.harness as RecallHarness | "all" | undefined,
       topN: options.topN,
       now: options.now,
