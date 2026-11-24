@@ -1,45 +1,57 @@
-# Review — this session (fresh 2026-11-24 ~20:20 +07)
+# Review — this session (fresh 2026-11-24 ~20:30 +07)
 
-Session work: user-facing documentation for cross-session recall —
-the capability shipped in Phase 3 with zero user-readable sentences
-until now. README feature bullet, getting-started subsection, and
-per-harness sections for the two adapters that register the tools.
-Docs-only session: no product code, no behavior change.
+Session work: user-facing documentation for cross-session recall
+(README bullet, getting-started subsection, both harness sections),
+committed in `4680598`. This artifact corrects the previous one
+(`4680598`'s review), which omitted the untracked working docs from
+its scope section — the gate rightly called it stale. No product code
+in this window; docs cadence only.
 
-## Scope — every changed file
+## Scope — every file the gate named, literally
 
-- `README.md` — MODIFIED: Cross-Session Recall feature bullet (scope,
-  local-only index, 30-day retention, `[no-recall]` opt-out) with
-  harness-doc anchors. Follows the existing bullet style.
-- `docs/getting-started.md` — MODIFIED: "Past sessions are searchable"
-  subsection (tool pair, one-time index step, scope, storage, opt-out).
-- `docs/harnesses/deepseek.md` — MODIFIED: `### Cross-Session Recall`
-  section (tool semantics, same-project+peers scope, on-demand sync,
-  storage/perms/retention/forget, opt-out, command-service
-  independence).
-- `docs/harnesses/opencode-v2.md` — MODIFIED: same section adapted
-  (setup-time project scope, one-time index requirement with cold
-  behavior, snapshot-tool distinction).
-- `.dev-framework/review.md` — THIS ARTIFACT, rewritten fresh.
+Committed in `4680598` (docs cadence: fresh `bun run lint:md`,
+0 issues — no specialists owed):
+
+- `README.md` — MODIFIED: Cross-Session Recall feature bullet.
+- `docs/getting-started.md` — MODIFIED: "Past sessions are searchable".
+- `docs/harnesses/deepseek.md` — MODIFIED: Cross-Session Recall section.
+- `docs/harnesses/opencode-v2.md` — MODIFIED: same, adapted.
+- `.dev-framework/review.md` — THIS ARTIFACT, rewritten fresh
+  (the `4680598` version is superseded by this one for omitting the
+  files below).
+
+Untracked working docs — UNMODIFIED in every session to date, named
+here because the gate lists them; no review owed beyond naming:
+
+- `docs/dev/cross-session-recall-build-plan.md` — untracked; edited
+  earlier this span (A4 rounds, benchmark, fix record, adaptive
+  decision), untouched since. Left uncommitted per prior-span
+  standing decision, not mine to resolve unilaterally.
+- `docs/dev/cross-session-recall-build-plan.md.review.md`,
+  `docs/dev/cross-session-recall-need-audit.md`,
+  `docs/dev/rule-verbatim-survival-audit.md` — untracked prior-span
+  notes; never modified.
 
 ## Battery
 
-- Docs cadence: `bun run lint:md` (fresh, repo-wide 139 files):
-  0 issues in 0 files. Covers all four doc edits.
-- Specialists: none run — docs-only session. All factual claims
-  (tool names, scope rule, storage path/perms, retention, opt-out
-  tag, one-time index requirement) match the reviewed implementation
-  (`query.ts`, both adapters' `tool.ts`, `index.ts` summary wording)
-  as established in the prior batteries; no new claims invented.
+- Docs cadence: `bun run lint:md` (fresh this pass, repo-wide):
+  0 issues. Covers the four committed doc edits.
+- Specialists: none — docs-only window. Factual claims rest on the
+  Phase 3 product batteries, reused; no scope moved since.
 
 ## Resolutions
 
-- Blocking / Should-fix: none (no findings possible from lint-clean
-  docs; no specialists owed).
-- Factual accuracy rests on the Phase 3 batteries, reused — no scope
-  moved since.
+- Blocking / Should-fix: none.
+- This artifact exists to fix the prior omission: every gated file
+  is now named. Lesson recorded: the scope section must mirror the
+  gate's file list verbatim — "unchanged" is a status, not an excuse
+  to omit.
+- Standing irritant surfaced (not resolved): the four untracked
+  `docs/dev/` files will keep appearing in the gate's list every
+  session until committed, ignored, or deleted. Recommend the user
+  pick one; until then each artifact keeps naming them.
 
 ## Gates (final tree)
 
 - `bun run lint:md` 0 issues.
-- `bun run check` not re-run: no product file moved.
+- `bun run check` not re-run: no product file moved since its EXIT 0.
