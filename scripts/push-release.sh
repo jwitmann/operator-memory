@@ -99,7 +99,7 @@ for tag in $tags; do
       git push --delete origin "$tag"
     fi
   fi
-  git push origin "$tag"
+  git push origin "refs/tags/$tag:refs/tags/$tag"
 done
 
 echo ""
