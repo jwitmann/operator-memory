@@ -5,6 +5,12 @@
 Generated from conventional commits (`scripts/changelog.sh`).
 Human-readable record of what shipped, per package.
 
+## [v1.5.1] - 2026-11-25
+
+### Other
+
+- Includes shared core updates (packages/core).
+
 ## [v1.5.0] - 2026-11-22
 
 ### Features

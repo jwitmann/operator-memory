@@ -1,6 +1,6 @@
 {
   "name": "@jwitmann/vcc-brain-pi",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "VCC Brain adapter for Pi.",
   "license": "BSD-3-Clause",
   "author": "jwitmann",

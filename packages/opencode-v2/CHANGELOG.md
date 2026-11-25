@@ -5,6 +5,16 @@
 Generated from conventional commits (`scripts/changelog.sh`).
 Human-readable record of what shipped, per package.
 
+## [v2.7.1] - 2026-11-25
+
+### Documentation
+
+- full-shape npm README with recall and update ([`8c2a998`](https://github.com/jwitmann/vcc-brain/commit/8c2a9988f7ea5e339ab33592d5f7da9f2e513492))
+
+### Other
+
+- remove unsupported OpenCode V1 adapter ([`9e4e010`](https://github.com/jwitmann/vcc-brain/commit/9e4e0107fb3ac96d9e6c840147b83a9fe69ea5d0))
+
 ## [v2.7.0] - 2026-11-24
 
 ### Features

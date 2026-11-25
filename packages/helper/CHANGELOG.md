@@ -5,6 +5,21 @@
 Generated from conventional commits (`scripts/changelog.sh`).
 Human-readable record of what shipped, per package.
 
+## [v1.14.1] - 2026-11-25
+
+### Fixes
+
+- raise sqlite test timeouts to survive parallel load ([`80f6244`](https://github.com/jwitmann/vcc-brain/commit/80f6244b30d3aaec86724e590d40917ca411da9c))
+
+### Documentation
+
+- drop broken v1 route, list all six adapters ([`694c89e`](https://github.com/jwitmann/vcc-brain/commit/694c89ed832a802feb6b2d9a50a7624e40ba9fd8))
+
+### Other
+
+- remove unsupported OpenCode V1 adapter ([`9e4e010`](https://github.com/jwitmann/vcc-brain/commit/9e4e0107fb3ac96d9e6c840147b83a9fe69ea5d0))
+- cut Kiro + Antigravity, re-tier Pi/Codex/Claude to memory-only ([`163b243`](https://github.com/jwitmann/vcc-brain/commit/163b243405c7ae8b44e27f360ebe9f6494657267))
+
 ## [v1.14.0] - 2026-11-24
 
 ### Features
