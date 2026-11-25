@@ -70,7 +70,6 @@ test("routes help, version, and invalid commands", async () => {
   expect(help.output).toMatch(/^install opencode\s+Install or update the OpenCode plugin/m);
   expect(help.output).not.toMatch(/^install opencode-v2\s/m);
   expect(help.output).toMatch(/^install pi\s+Install or update the Pi plugin/m);
-  expect(help.output).toMatch(/^install kiro\s+Install or update the Kiro adapter/m);
   expect(help.output).not.toContain("templates index");
   expect((await executeCli(["--help"], context)).exitCode).toBe(2);
   expect((await executeCli(["-h"], context)).exitCode).toBe(2);

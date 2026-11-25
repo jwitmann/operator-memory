@@ -38,26 +38,20 @@ Repository-wide VCC Brain product knowledge published with the project.
   - Description: Default OpenCode V2 binding — installation aliases, global local-build installation, context-hook injection, commands, RPC-backed TUI status, and native update.
   - Read If: Implementing or changing the OpenCode V2 adapter.
 - `pi/implementation.md`
-  - Description: Pi binding — synthetic-message injection, commands, footer status, and native package updates.
+  - Description: Pi binding (Tier 2, memory only) — synthetic-message injection, commands, footer status, and native package updates.
   - Read If: Implementing or changing the Pi adapter.
 - `codex/implementation.md`
-  - Description: Codex binding — lifecycle-hook persisted injection, the immutability exception, skills for commands, hook trust, and marketplace installation.
+  - Description: Codex binding (Tier 2, memory only) — lifecycle-hook persisted injection, the immutability exception, skills for commands, hook trust, and marketplace installation.
   - Read If: Implementing or changing the Codex adapter.
 - `deepseek/implementation.md`
   - Description: DeepSeek Harness binding — system-prompt assembly injection, commands, Web indicator, and profile installation.
   - Read If: Implementing or changing the DeepSeek Harness adapter.
 - `claude-code/implementation.md`
-  - Description: Claude Code binding — Helper-subprocess compose injection, spawn rewriting, command skills, and marketplace installation.
+  - Description: Claude Code binding (Tier 2, memory only) — Helper-subprocess compose injection, spawn rewriting, command skills, and marketplace installation.
   - Read If: Implementing or changing the Claude Code adapter.
-- `kiro/implementation.md`
-  - Description: Kiro binding — Helper hook injection, steering-based subagent loading, skills, and plugin-owned file installation.
-  - Read If: Implementing or changing the Kiro adapter.
 
 ### `guides/`
 
-- `antigravity/`
-  - Description: Google Antigravity native reference guides — packaging/install, hook API/runtime/identity, dedicated injection/compaction guide, delegation, and workflow skills; authoritative behavior first, verification notes below.
-  - Read If: Preparing or implementing Antigravity support, assessing model/subagent injection, or checking native plugin installation and command behavior.
 - `effect.md`
   - Description: Effect v4 and effect-smol source, implementation, and testing guidance.
   - Read If: Working with Effect v4 or effect-smol TypeScript code.
@@ -70,9 +64,6 @@ Repository-wide VCC Brain product knowledge published with the project.
 - `deepseek/`
   - Description: DeepSeek Harness research on runtime, preamble injection, commands, installation, and validation.
   - Read If: Planning or implementing the DeepSeek Harness adapter.
-- `kiro/`
-  - Description: Kiro research — surfaces, hooks, steering, skills, powers, agents, and verified V3 injection behavior (`injection.md`).
-  - Read If: Researching or implementing the Kiro adapter or checking verified Kiro V3 behavior.
 - `opencode-v2/`
   - Description: Canonical OpenCode plugin, hook, session, TUI, and installation guides, targeting V2.
   - Read If: Researching or implementing an OpenCode integration.

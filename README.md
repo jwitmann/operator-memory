@@ -40,14 +40,15 @@ bun add --global --minimum-release-age 0 @jwitmann/vcc-brain-helper@latest
 
 Then install the VCC Brain adapter for your harness. Click each link for harness-specific information.
 
-| Harness                                                      | Status                  | Install                                |
-| ------------------------------------------------------------ | ----------------------- | -------------------------------------- |
-| [Claude Code (CLI + Desktop)](docs/harnesses/claude-code.md) | 🟢 Fully Supported      | `vcc-brain-helper install claude-code` |
-| [Codex (CLI + Desktop)](docs/harnesses/codex.md)             | 🟢 Fully Supported      | `vcc-brain-helper install codex`       |
-| [OpenCode](docs/harnesses/opencode-v2.md)                    | 🟢 Fully Supported (V2) | `vcc-brain-helper install opencode`    |
-| [Pi](docs/harnesses/pi.md)                                   | 🟢 Fully Supported      | `vcc-brain-helper install pi`          |
-| [DeepSeek Harness](docs/harnesses/deepseek.md)               | 🟢 Fully Supported      | `vcc-brain-helper install deepseek`    |
-| [Kiro](docs/harnesses/kiro.md)                               | 🟡 Supported            | `vcc-brain-helper install kiro`        |
+| Harness                                                      | Status                                             | Install                                |
+| ------------------------------------------------------------ | -------------------------------------------------- | -------------------------------------- |
+| [OpenCode](docs/harnesses/opencode-v2.md)                    | 🟢 Fully Supported (V2)                            | `vcc-brain-helper install opencode`    |
+| [DeepSeek Harness](docs/harnesses/deepseek.md)               | 🟢 Fully Supported                                 | `vcc-brain-helper install deepseek`    |
+| [Claude Code (CLI + Desktop)](docs/harnesses/claude-code.md) | 🟡 Memory only — no compaction, recall, or status  | `vcc-brain-helper install claude-code` |
+| [Codex (CLI + Desktop)](docs/harnesses/codex.md)             | 🟡 Memory only — no compaction, recall, or status  | `vcc-brain-helper install codex`       |
+| [Pi](docs/harnesses/pi.md)                                   | 🟡 Memory only — no compaction, recall, or status  | `vcc-brain-helper install pi`          |
+
+Tier 1 (🟢) is the full system: memory, deterministic compaction, cross-session recall, and status. Tier 2 (🟡) injects memory plus the setup commands only.
 
 Setup is a conversation with your agent. Run each command in a new conversation.
 

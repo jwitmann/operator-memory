@@ -205,69 +205,6 @@ test.runIf(process.platform !== "win32")(
   },
 );
 
-test.runIf(process.platform !== "win32")(
-  "installs the Kiro SessionStart hook, steering, and skills",
-  async () => {
-    executable("vcc-brain-helper", 'printf "helper|%s\\n" "$*" >> "$VCC_BRAIN_TEST_RECORD"');
-    const kiroHome = join(directory, ".kiro");
-    const skill = join(kiroHome, "skills", "vcc-brain-index", "SKILL.md");
-    fs.mkdirSync(dirname(skill), { recursive: true });
-    fs.writeFileSync(skill, "stale");
-    const retiredSkill = join(kiroHome, "skills", "vcc-brain-repair", "SKILL.md");
-    const legacyRetiredSkill = join(kiroHome, "skills", "operator-repair", "SKILL.md");
-    const retainedFile = join(dirname(retiredSkill), "user-content.md");
-    fs.mkdirSync(dirname(retiredSkill), { recursive: true });
-    fs.writeFileSync(retiredSkill, "retired repair skill");
-    fs.mkdirSync(dirname(legacyRetiredSkill), { recursive: true });
-    fs.writeFileSync(legacyRetiredSkill, "pre-rename retired repair skill");
-    fs.writeFileSync(retainedFile, "preserve unrelated content");
-
-    const result = await execute(["install", "kiro"], "4.5.6");
-
-    expect(result).toEqual({
-      exitCode: 0,
-      output: `✓ Kiro adapter installed in ${kiroHome}\nStart a new Kiro session.`,
-    });
-    expect(fs.readFileSync(record, "utf8")).toBe("helper|help\n");
-    expect(JSON.parse(fs.readFileSync(join(kiroHome, "hooks", "vcc-brain.json"), "utf8"))).toEqual({
-      version: "v1",
-      hooks: [
-        {
-          name: "VCC Brain preamble",
-          trigger: "SessionStart",
-          action: { type: "command", command: "vcc-brain-helper preamble" },
-          timeout: 120,
-          enabled: true,
-        },
-      ],
-    });
-    expect(fs.readFileSync(join(kiroHome, "steering", "vcc-brain.md"), "utf8")).toBe(
-      "---\ninclusion: always\n---\n\n# VCC Brain\n\nVCC Brain is installed for Kiro. If you do not see VCC Brain's preamble guidance above wrapped within `<vcc-brain-guidance>`, manually run the `vcc-brain-helper preamble` command once from the workspace root and follow all instructions from the command output. If the command fails, report to the user and stop. Do not run if the preamble is already available.\n",
-    );
-    for (const name of ["vcc-brain-user-init", "vcc-brain-project-init", "vcc-brain-index"]) {
-      expect(fs.readFileSync(join(kiroHome, "skills", name, "SKILL.md"), "utf8")).toMatch(
-        new RegExp(`^---\\nname: ${name}\\n`),
-      );
-    }
-    expect(fs.existsSync(retiredSkill)).toBe(false);
-    expect(fs.existsSync(legacyRetiredSkill)).toBe(false);
-    expect(fs.readFileSync(retainedFile, "utf8")).toBe("preserve unrelated content");
-    expect(await execute(["install", "kiro"], "4.5.6")).toEqual(result);
-  },
-);
-
-test.runIf(process.platform !== "win32")(
-  "requires VCC Brain Helper on PATH before installing the Kiro adapter",
-  async () => {
-    executable("vcc-brain-helper", "exit 1");
-    expect(await execute(["install", "kiro"], "4.5.6")).toEqual({
-      exitCode: 1,
-      output: "VCC Brain Helper must be available on PATH",
-    });
-    expect(fs.existsSync(join(directory, ".kiro"))).toBe(false);
-  },
-);
-
 test("registers the marketplace in config.toml when the Codex CLI is unavailable", async () => {
   const codexHome = join(directory, "codex-home");
   process.env.CODEX_HOME = codexHome;

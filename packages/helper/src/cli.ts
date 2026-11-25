@@ -8,7 +8,6 @@ import { indexStamp } from "./commands/index/stamp.ts";
 import { installClaudeCode } from "./commands/install/claude-code.ts";
 import { installCodex } from "./commands/install/codex.ts";
 import { installDeepSeek } from "./commands/install/deepseek.ts";
-import { installKiro } from "./commands/install/kiro.ts";
 import { installOpenCodeV2 } from "./commands/install/opencode-v2.ts";
 import { installPi } from "./commands/install/pi.ts";
 import { memoryCheck } from "./commands/memory/check.ts";
@@ -39,7 +38,6 @@ ${renderTable([
   ["install deepseek", "Install or update the DeepSeek Harness plugin"],
   ["install pi", "Install or update the Pi plugin"],
   ["install claude-code", "Install or update the Claude Code plugin"],
-  ["install kiro", "Install or update the Kiro adapter"],
 ])}
 
 AGENT COMMANDS
@@ -340,8 +338,6 @@ export function runCli(
         return yield* installDeepSeek(context);
       case "install pi":
         return yield* installPi(context);
-      case "install kiro":
-        return yield* installKiro(context);
       case "user guide":
       case "project guide":
       case "index guide":

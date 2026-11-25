@@ -35,9 +35,6 @@ vcc-brain-helper install codex
 
 # Claude Code
 vcc-brain-helper install claude-code
-
-# Kiro
-vcc-brain-helper install kiro
 ```
 
 OpenCode V1 is not supported and its package was never published, so there is no working V1 install route. Existing plugin registrations are not migrated automatically.
@@ -58,7 +55,6 @@ vcc-brain-helper install pi
 vcc-brain-helper install deepseek
 vcc-brain-helper install codex
 vcc-brain-helper install claude-code
-vcc-brain-helper install kiro
 ```
 
 VCC Brain Helper automatically checks for and installs updates when commands run. If it cannot determine whether Bun or npm owns the global installation, it asks for a manual update using the original installation method.

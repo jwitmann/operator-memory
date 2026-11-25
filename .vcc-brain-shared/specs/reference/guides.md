@@ -2,7 +2,7 @@
 
 Last Updated: October 11, 2026
 
-Rules for `.vcc-brain-shared/guides/<harness>/` so every guide directly drives a VCC Brain adapter implementation. The Antigravity guides are the reference implementation.
+Rules for `.vcc-brain-shared/guides/<harness>/` so every guide directly drives a VCC Brain adapter implementation.
 
 ## Purpose and Prerequisites
 

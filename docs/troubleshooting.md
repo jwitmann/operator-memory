@@ -15,7 +15,6 @@ Run `vcc-brain-helper install <id>` for your harness — see the [harness docs](
 - [OpenCode](harnesses/opencode-v2.md)
 - [Pi](harnesses/pi.md)
 - [DeepSeek Harness](harnesses/deepseek.md)
-- [Kiro](harnesses/kiro.md)
 
 Restart the harness after installation or repair. Until the harness reloads the adapter, setup commands and preamble injection will not behave as expected.
 
