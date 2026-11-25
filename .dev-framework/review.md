@@ -9,7 +9,7 @@ were deleted after use.
 This session's changed files:
 Edited and committed: `README.md` (`vcc-brain-helper --help` hint; new
 "Direct harness installs (no Helper)" subsection with per-harness
-`#####` subheadings: OpenCode hand
+`#####` subheadings plus a `#### Setup` heading for the follow-up steps: OpenCode hand
 registration incl. options-object configuration and local `dist`
 install, `dsh plugin --profile <profile-name> add
 @jwitmann/vcc-brain-deepseek`, `pi install npm:@jwitmann/vcc-brain-pi`).
