@@ -63,6 +63,8 @@ jobs:
         run: npm publish
 
       - name: Create GitHub release
-        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+        run: |
+          ./scripts/release-notes.sh "$GITHUB_REF_NAME" > release-notes.md
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md
         env:
           GITHUB_TOKEN: ${{ github.token }}

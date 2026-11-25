@@ -70,8 +70,11 @@ bumps versions for packages with nothing new.
 ## Changelogs (per package)
 
 `packages/<name>/CHANGELOG.md` is the human-readable record of what
-shipped, generated from conventional commits. Tag-push CI creates the
-GitHub release with generated notes; regenerate history (idempotent):
+shipped, generated from conventional commits. Tag-push CI builds the
+GitHub release body from it via `scripts/release-notes.sh` (section for
+the version plus a compare link against the previous same-package tag —
+never GitHub's `--generate-notes`, which picks the previous tag by date
+across all packages); regenerate history (idempotent):
 
 ```bash
 ./scripts/changelog.sh --backfill <package>

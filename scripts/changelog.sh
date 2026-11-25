@@ -2,10 +2,10 @@
 # Per-package changelog generator.
 #
 # Record of what shipped, per package: packages/<name>/CHANGELOG.md
-# ships in the repo (and the npm tarball) as the human-readable history.
-# Tag-push CI creates the GitHub release with generated notes; this file
-# is the durable record, not the release body. Bash-native, no
-# dependencies, fully offline.
+# ships in the repo as the human-readable history (npm tarballs carry
+# `dist` only). Tag-push CI builds the GitHub release body from this file
+# via scripts/release-notes.sh, with the compare link pinned to the
+# previous same-package tag. Bash-native, no dependencies, fully offline.
 #
 # Adapted from the single-package flow (opencode-dev-framework,
 # opencode-vcc-port): same buckets and header shape, plus a package path
