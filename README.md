@@ -55,6 +55,39 @@ Then install the VCC Brain adapter for your harness. Click each link for harness
 
 > **Note:** Tier 2 is not on a path to Tier 1. On Codex and Claude Code the ceiling is structural: compaction stays model-owned with no substitute seam, so deterministic compaction — the VCC proposition — cannot be built there; memory injection is all these adapters will ever do. On Pi the seams exist, but the maintainer does not run it, so no upgrade is planned.
 
+The OpenCode adapter can be registered by hand without the Helper. Requires OpenCode `v2.x`:
+
+```sh
+opencode plugin add @jwitmann/vcc-brain-opencode-v2
+```
+
+Or declare it in `opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugins": ["@jwitmann/vcc-brain-opencode-v2"]
+}
+```
+
+String and object forms can mix in one `plugins` array.
+
+With options (all optional; per-project `.vcc-brain/config.json` overrides them):
+
+```jsonc
+// opencode.jsonc
+{
+  "plugins": [
+    {
+      "package": "@jwitmann/vcc-brain-opencode-v2",
+      "options": { "vcc-brain": { "contextManagement": { "enabled": true, "ratio": 0.8 } } }
+    }
+  ]
+}
+```
+
+From source instead: clone `https://github.com/jwitmann/vcc-brain`, build the plugin (`bun run build:opencode-v2`), and register the local path (`"package": "/abs/path/to/vcc-brain/packages/opencode-v2/dist"`) in the same object form.
+
 Setup is a conversation with your agent. Run each command in a new conversation.
 
 1. First time only: `/vcc-brain:user-init` — set up your global user partition.
