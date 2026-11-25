@@ -5,6 +5,12 @@
 Generated from conventional commits (`scripts/changelog.sh`).
 Human-readable record of what shipped, per package.
 
+## [v2.7.2] - 2026-11-25
+
+### Fixes
+
+- de-flake refresh failure-toast test ([`58893f0`](https://github.com/jwitmann/vcc-brain/commit/58893f0dc9a3b05470e74b76a4e6a0782fa19f7d))
+
 ## [v2.7.1] - 2026-11-25
 
 ### Documentation

@@ -5,6 +5,12 @@
 Generated from conventional commits (`scripts/changelog.sh`).
 Human-readable record of what shipped, per package.
 
+## [v1.14.2] - 2026-11-25
+
+### Documentation
+
+- badges and OpenCode plugin evidence in package README ([`89d19c6`](https://github.com/jwitmann/vcc-brain/commit/89d19c6de18486dbb7367ce91fdef9ca572206d0))
+
 ## [v1.14.1] - 2026-11-25
 
 ### Fixes
