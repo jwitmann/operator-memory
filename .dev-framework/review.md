@@ -3,7 +3,7 @@
 Scope: release-infra fix, no product behavior. The `helper@v1.14.0` GitHub release body held only a `--generate-notes` stub linking a cross-package compare (`claude-code@v0.4.0...helper@v1.14.0`); repo CHANGELOGs were correct but never reached the release.
 This session's changed files:
 New: `scripts/release-notes.sh`.
-Edited: `.github/workflows/publish-helper.yml`, `publish-deepseek.yml`, `publish-pi.yml`, `publish-codex.yml`, `publish-claude-code.yml`, `publish-opencode-v2.yml`, `scripts/changelog.sh` (comment), `docs/dev/releasing.md`.
+Edited: `.github/workflows/publish-helper.yml`, `.github/workflows/publish-deepseek.yml`, `.github/workflows/publish-pi.yml`, `.github/workflows/publish-codex.yml`, `.github/workflows/publish-claude-code.yml`, `.github/workflows/publish-opencode-v2.yml`, `scripts/changelog.sh` (comment), `docs/dev/releasing.md`.
 This artifact: `.dev-framework/review.md`.
 
 ## Change
