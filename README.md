@@ -53,40 +53,6 @@ Then install the VCC Brain adapter for your harness. Click each link for harness
 - Tier 1 (🟢) is the full system: memory, deterministic compaction, cross-session recall, and status.
 - Tier 2 (🟡) injects memory plus the setup commands only — no deterministic compaction or cross-session recall (status UI varies by adapter: Pi has a footer, Codex and Claude Code have none).
 
-The OpenCode adapter is a native plugin and can also be registered directly without the Helper. Pick one:
-
-```sh
-opencode plugin add @jwitmann/vcc-brain-opencode-v2@latest
-```
-
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "plugins": ["@jwitmann/vcc-brain-opencode-v2"]
-}
-```
-
-With options:
-
-```jsonc
-{
-  "plugins": [
-    {
-      "package": "@jwitmann/vcc-brain-opencode-v2",
-      "options": { "vcc-brain": { "contextManagement": { "enabled": true } } }
-    }
-  ]
-}
-```
-
-Local build instead of npm (a local directory entry resolves `<dir>/index.js`):
-
-```jsonc
-{
-  "plugins": [{ "package": "/abs/path/to/vcc-brain/packages/opencode-v2/dist" }]
-}
-```
-
 > **Note:** Tier 2 is not on a path to Tier 1. On Codex and Claude Code the ceiling is structural: compaction stays model-owned with no substitute seam, so deterministic compaction — the VCC proposition — cannot be built there; memory injection is all these adapters will ever do. On Pi the seams exist, but the maintainer does not run it, so no upgrade is planned.
 
 Setup is a conversation with your agent. Run each command in a new conversation.
