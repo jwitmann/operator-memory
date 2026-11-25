@@ -1,4 +1,4 @@
-# Review — docs(readme): install headings + direct-install sections
+# Review — docs(readme): install headings + per-harness subheadings
 
 Scope: docs-only. Restructures the root Installation area: a "Using
 npm (recommended)" section with help, plus direct (no-Helper) installs for OpenCode,
@@ -8,7 +8,8 @@ session used scratch files outside the repo; they are named below and
 were deleted after use.
 This session's changed files:
 Edited and committed: `README.md` (`vcc-brain-helper --help` hint; new
-"Direct harness installs (no Helper)" subsection: OpenCode hand
+"Direct harness installs (no Helper)" subsection with per-harness
+`#####` subheadings: OpenCode hand
 registration incl. options-object configuration and local `dist`
 install, `dsh plugin --profile <profile-name> add
 @jwitmann/vcc-brain-deepseek`, `pi install npm:@jwitmann/vcc-brain-pi`).
