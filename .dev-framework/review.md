@@ -1,24 +1,26 @@
-# Review — docs(readme): drop shipped observation engine from roadmap
+# Review — docs(opencode-v2): full-shape npm README
 
 Scope: docs-only. No product code changed.
-Files: `README.md`, `.dev-framework/review.md` (this artifact).
+Files: `packages/opencode-v2/README.md`,
+`.dev-framework/review.md` (this artifact).
 
 ## Change
 
-- Removed the Observation Engine bullet from the README Roadmap
-  section. The engine shipped (core `observations.md` loading and
-  preamble rendering, helper `user-init` rubric template, public
-  coverage in getting-started and architecture, pilot tally logged),
-  so listing it as future work was false. The section keeps its
-  header and intro sentence; no replacement bullet — the deferred
-  items in `decisions.md` are tripwire-gated, not promises.
+- Rewrote the npm package README to the release-spec shape (what it
+  is, install, verify, commands, update, harness-guide link), mirroring
+  the Claude and DeepSeek pages. Adds the missing verify step, the
+  `opencode plugin check/update` flow, the recall tool pair with the
+  `recall-cross index` warm-up note, and the guide link. Kept the
+  local-development note and the V1-frozen lede.
 
 ## Cadence (docs-only)
 
 - `bun run lint:md`: 0 issues in 135 files. Pass.
-- Specialists not run: two-line deletion, no product code in scope;
+- Specialists not run: prose-only change, no product code in scope;
   per gate, lint:md is the entire docs cadence.
 
 ## Findings
 
-- None.
+- None. All added claims trace to `docs/harnesses/opencode-v2.md`
+  (verify wording, update commands, recall section) or the registered
+  tool/command names in `src/`.
