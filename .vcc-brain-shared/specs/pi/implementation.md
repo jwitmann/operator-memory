@@ -64,7 +64,13 @@ Pathway selections: bundled-core resolution (bundled into the package with Pi's 
 
 - The adapter ships no deterministic engine port; Tier 2 scope above stands. If compaction support is ever wanted, the candidate is third-party `pi-tuck` (`pi install npm:pi-tuck`, source `github.com/galyavin/pi-tuck`), which grew out of `@sting8k/pi-vcc` and pairs deterministic no-model-call cuts with exact post-cut recall (`tuck_recall` keyword lookup plus `entryId` and `#index` reads of the original entries).
 - Integration shape: the adapter registers no competing compactor and leaves `/compact` plus automatic cuts to pi-tuck; it keeps preamble injection, commands, and cross-session recall fed from the session log, attributing compact receipts to the external engine the way the DeepSeek binding attributes `vcc` versus `shaped`.
-- Status is potential only: hook coexistence, receipt attribution, and indexing against pi-tuck cuts are unprobed, and no dependency exists today.
+- Tier 1 work is pairing and probing, not an engine port:
+  - Prove `context`-handler coexistence with pi-tuck installed: chaining order, prepend idempotency across cuts, retries, and continuations.
+  - Index recall across two stores: the live append-only JSONL session plus pi-tuck's preserved originals, since post-cut sessions no longer hold the cut entries.
+  - Attribute compact receipts to the external engine.
+  - Design a refresh equivalent for the cached immutable preamble if wanted; Pi exposes no prompt-cache timing signal to ride.
+  - Repeat the Verification bar below on real Pi with pi-tuck installed.
+- Status is potential only: everything above is unprobed, no dependency exists today, and the probing plus ongoing verification needs a runner with Pi installed.
 
 ## Pi Harness Notes
 

@@ -18,6 +18,10 @@ deleted afterwards (all under `/tmp/vcc-install-test/`, none in the
 repo, none committed): `opencode.json` (README config verbatim),
 `serve-npm.log`, `serve2.log`, `serve-debug.log`, `tui-local.log`.
 This artifact: `.dev-framework/review.md`.
+Also edited: `.vcc-brain-shared/specs/pi/implementation.md` (Potential
+Compaction Source gains the Tier 1 work breakdown: coexistence probe,
+two-store recall index, receipt attribution, refresh equivalent,
+live-verification bar; still potential-only, still no dependency).
 
 ## Change
 
