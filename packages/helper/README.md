@@ -21,11 +21,8 @@ bun add --global --minimum-release-age 0 @jwitmann/vcc-brain-helper@latest
 Install an adapter:
 
 ```sh
-# OpenCode (V2)
+# OpenCode (V2, default)
 vcc-brain-helper install opencode
-
-# OpenCode 1 (legacy)
-vcc-brain-helper install opencode-v1
 
 # Pi
 vcc-brain-helper install pi
@@ -33,11 +30,17 @@ vcc-brain-helper install pi
 # DeepSeek Harness
 vcc-brain-helper install deepseek
 
+# Codex
+vcc-brain-helper install codex
+
+# Claude Code
+vcc-brain-helper install claude-code
+
 # Kiro
 vcc-brain-helper install kiro
 ```
 
-OpenCode defaults to V2; `install opencode-v1` is the explicit legacy route. Existing plugin registrations are not migrated automatically.
+Legacy OpenCode V1 is frozen and its package was never published, so there is no working V1 install route. Existing plugin registrations are not migrated automatically.
 
 Restart the harness, then run `/vcc-brain:user-init` in a new conversation to begin setup.
 
@@ -51,9 +54,10 @@ The direct user-facing Helper operation is adapter installation:
 
 ```sh
 vcc-brain-helper install opencode
-vcc-brain-helper install opencode-v1
 vcc-brain-helper install pi
 vcc-brain-helper install deepseek
+vcc-brain-helper install codex
+vcc-brain-helper install claude-code
 vcc-brain-helper install kiro
 ```
 

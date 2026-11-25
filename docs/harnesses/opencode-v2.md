@@ -12,7 +12,7 @@ vcc-brain-helper install opencode
 
 Restart OpenCode after installation. Until OpenCode reloads the plugin, commands and preamble injection will not work.
 
-The default command no longer installs V1; use `install opencode-v1` for legacy installations. Installing V2 does not remove or migrate existing plugin registrations.
+Legacy OpenCode V1 is frozen and its package was never published, so there is no working V1 install route. Installing V2 does not remove or migrate existing plugin registrations.
 
 ### Verify
 
