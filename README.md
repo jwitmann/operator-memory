@@ -55,7 +55,7 @@ Then install the VCC Brain adapter for your harness. Click each link for harness
 
 > **Note:** Tier 2 is not on a path to Tier 1. On Codex and Claude Code the ceiling is structural: compaction stays model-owned with no substitute seam, so deterministic compaction — the VCC proposition — cannot be built there; memory injection is all these adapters will ever do. On Pi the seams exist, but the maintainer does not run it, so no upgrade is planned.
 
-The OpenCode adapter can be registered by hand without the Helper. Requires OpenCode `v2.x`:
+The OpenCode adapter can be registered by hand without the Helper. Requires OpenCode `v2.x` (local install live-verified on `v2.4.1`):
 
 ```sh
 opencode plugin add @jwitmann/vcc-brain-opencode-v2
