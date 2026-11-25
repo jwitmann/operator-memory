@@ -10,15 +10,11 @@ Most have since shipped; the remaining open items are marked.
 > implementation branches in this repo's history. Items added after the
 > import are dated.
 
-### opencode-v1 installer fails gracelessly on the unpublished package — OPEN (added 2026-11-21)
+### opencode-v1 installer fails gracelessly on the unpublished package — CLOSED (removed 2026-11-25)
 
-`vcc-brain-helper install opencode-v1` resolves `@jwitmann/vcc-brain-opencode@latest`,
-which was never published (V1 frozen and excluded from all release
-machinery), so fresh installs die in the package manager with a bare E404.
-Direction: fail loudly in the installer with a frozen/unpublished
-explanation pointing at the V2 adapter, instead of leaking the registry
-error. Docs already mark V1 frozen and unpublished; this closes the
-behavior gap.
+`vcc-brain-helper install opencode-v1` resolved `@jwitmann/vcc-brain-opencode@latest`,
+which was never published, so fresh installs died in the package manager with a bare E404.
+Closed by removing the V1 package, installer, and command entirely: OpenCode V1 is not supported.
 
 ### No helper integration for the new option blocks (deliberately skipped)
 

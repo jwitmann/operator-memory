@@ -68,4 +68,4 @@ The Brain can go stale — after significant upstream changes or if the agent si
 
 ### OpenCode
 
-The default OpenCode integration targets V2 through `@jwitmann/vcc-brain-opencode-v2`. It injects session-cached context at the outgoing model boundary, exposes server-owned status through RPC to the TUI, and leaves package updates to OpenCode. The separate `@jwitmann/vcc-brain-opencode` package supports legacy V1 only.
+The OpenCode integration targets V2 through `@jwitmann/vcc-brain-opencode-v2`. It injects session-cached context at the outgoing model boundary, exposes server-owned status through RPC to the TUI, and leaves package updates to OpenCode. OpenCode V1 is not supported: no V1 package ships under this scope.

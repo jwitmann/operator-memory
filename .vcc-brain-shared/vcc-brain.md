@@ -4,12 +4,11 @@
 
 You are working directly on the VCC Brain project. VCC Brain turns agent work into lasting project knowledge. The MVP supports OpenCode and Pi and injects durable project and user context from markdown files agents own and maintain.
 
-The Bun/TypeScript monorepo has six TypeScript adapter/runtime packages plus the JavaScript Codex package:
+The Bun/TypeScript monorepo has five TypeScript adapter/runtime packages plus the JavaScript Codex package:
 
 - `@jwitmann/vcc-brain-core` — private, harness-agnostic runtime loading and preamble generation
 - `@jwitmann/vcc-brain-helper` — published setup, filesystem, Git, status, guide, and lint CLI
-- `@jwitmann/vcc-brain-opencode-v2` — default OpenCode (V2) server, RPC, and TUI plugin adapter
-- `@jwitmann/vcc-brain-opencode` — legacy OpenCode V1 plugin and harness adapter
+- `@jwitmann/vcc-brain-opencode-v2` — OpenCode server, RPC, and TUI plugin adapter
 - `@jwitmann/vcc-brain-pi` — published Pi extension adapter
 - `@jwitmann/vcc-brain-deepseek` — published DeepSeek Harness Host plugin and bundle adapter
 
@@ -60,7 +59,7 @@ Runtime code uses portable Node APIs. Bun owns workspace management, dependency 
 
 ## Harness Adapters
 
-Unqualified OpenCode support, development, and reference guidance target V2. V1 is frozen: retain its adapter contract, runtime, tests, and Helper installation/recovery route, but no development guides, indexes, or release/development plumbing. Package names and source directories remain unchanged.
+Unqualified OpenCode support, development, and reference guidance target V2. OpenCode V1 is not supported: no V1 package, adapter, or install route ships.
 
 Follow this workflow in order when implementing a harness adapter:
 

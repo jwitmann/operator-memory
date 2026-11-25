@@ -16,7 +16,7 @@ read_if: Working anywhere in the committed VCC Brain project
 ## Architecture
 
 - VCC Brain is a Bun and TypeScript monorepo for durable context and agent-driven development on coding-agent harnesses.
-- The read-only core runtime supplies shared models and preamble rendering, the helper CLI owns harness installation plus deterministic setup and validation, and thin harness adapters bind those capabilities. Unqualified OpenCode means V2; V1 remains explicitly legacy without renaming its package or source directory.
+- The read-only core runtime supplies shared models and preamble rendering, the helper CLI owns harness installation plus deterministic setup and validation, and thin harness adapters bind those capabilities. Unqualified OpenCode means V2; V1 ships nothing and keeps no package or source directory.
 - The workspace, core runtime, preamble renderer, helper CLI, OpenCode integration, Pi integration, Codex plugin packaging, DeepSeek Harness adapter, Claude Code adapter, and Helper-managed Kiro installation are implemented.
 
 ## Project Index
@@ -29,7 +29,6 @@ read_if: Working anywhere in the committed VCC Brain project
 - [`deepseek/`](deepseek.md) - Published DeepSeek Harness Host plugin and installable bundle package.
 - [`helper/`](helper.md) - Published harness installation, explicit upgrade, setup, status, guide, Git, and Project Index lint CLI.
 - [`opencode-v2/`](opencode-v2.md) - Default OpenCode adapter: context-hook preamble injection, VCC Brain commands, and RPC-backed TUI status.
-- `opencode/` - Frozen legacy adapter, runtime, and tests; directory-only coverage, no development or releases.
 - [`pi/`](pi.md) - Published Pi extension adapter package.
 
 ### `references/` - Git-ignored third-party source references

@@ -60,8 +60,7 @@ bumps versions for packages with nothing new.
   change ships all its consumers too (`opencode-v2`, `deepseek`, `pi`,
   `helper`). The changelog section notes the cascade when core alone
   forced the release.
-- **V1 excluded:** `packages/opencode` (legacy V1) is frozen,
-  superseded, and unpublished — excluded from all release machinery.
+- **No V1:** OpenCode V1 is not supported and ships nothing — excluded from all release machinery.
 - **Bootstrap:** a package with no prior tag counts as changed.
 - **Root-only changes** (`docs/`, `scripts/`, `.github/`, lockfile)
   release nothing by themselves.

@@ -34,9 +34,6 @@ Repository-wide VCC Brain product knowledge published with the project.
 - `index-staleness.md`
   - Description: Structural-drift detection for the Project Index — stamp fields, structural hash definition, Helper stamp/lint behavior, preamble warning limits, and non-goals.
   - Read If: Implementing or changing index stamping, staleness warnings, or the stamp/lint workflow.
-- `opencode/implementation.md`
-  - Description: Frozen OpenCode V1 adapter contract and retained installation/recovery behavior; no further development or releases.
-  - Read If: Checking existing OpenCode V1 behavior or recovering a legacy installation.
 - `opencode-v2/implementation.md`
   - Description: Default OpenCode V2 binding — installation aliases, global local-build installation, context-hook injection, commands, RPC-backed TUI status, and native update.
   - Read If: Implementing or changing the OpenCode V2 adapter.

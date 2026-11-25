@@ -40,7 +40,7 @@ vcc-brain-helper install claude-code
 vcc-brain-helper install kiro
 ```
 
-Legacy OpenCode V1 is frozen and its package was never published, so there is no working V1 install route. Existing plugin registrations are not migrated automatically.
+OpenCode V1 is not supported and its package was never published, so there is no working V1 install route. Existing plugin registrations are not migrated automatically.
 
 Restart the harness, then run `/vcc-brain:user-init` in a new conversation to begin setup.
 

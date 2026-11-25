@@ -9,7 +9,6 @@ import { installClaudeCode } from "./commands/install/claude-code.ts";
 import { installCodex } from "./commands/install/codex.ts";
 import { installDeepSeek } from "./commands/install/deepseek.ts";
 import { installKiro } from "./commands/install/kiro.ts";
-import { installOpenCode } from "./commands/install/opencode.ts";
 import { installOpenCodeV2 } from "./commands/install/opencode-v2.ts";
 import { installPi } from "./commands/install/pi.ts";
 import { memoryCheck } from "./commands/memory/check.ts";
@@ -36,8 +35,7 @@ ${renderTable([
   ["version", "Show the installed version and check for updates"],
   ["upgrade", "Update VCC Brain Helper to the latest release"],
   ["install codex", "Install or update the Codex plugin"],
-  ["install opencode", "Install or update the OpenCode plugin (V2)"],
-  ["install opencode-v1", "Install or update the legacy OpenCode V1 plugin"],
+  ["install opencode", "Install or update the OpenCode plugin"],
   ["install deepseek", "Install or update the DeepSeek Harness plugin"],
   ["install pi", "Install or update the Pi plugin"],
   ["install claude-code", "Install or update the Claude Code plugin"],
@@ -338,8 +336,6 @@ export function runCli(
       case "install opencode":
       case "install opencode-v2":
         return yield* installOpenCodeV2(context);
-      case "install opencode-v1":
-        return yield* installOpenCode(context);
       case "install deepseek":
         return yield* installDeepSeek(context);
       case "install pi":

@@ -1,6 +1,6 @@
 # VCC Brain for OpenCode
 
-VCC Brain gives current OpenCode (V2) durable project and user context maintained by agents as readable Markdown. Legacy OpenCode V1 is frozen and unpublished: it receives no releases and no V1 package ships under the new scope.
+VCC Brain gives current OpenCode (V2) durable project and user context maintained by agents as readable Markdown. OpenCode V1 is not supported: no V1 package ships under this scope.
 
 ## Install
 

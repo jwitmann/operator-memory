@@ -1,6 +1,6 @@
 # OpenCode
 
-OpenCode V2 is the default supported version. For legacy installations, see [OpenCode V1](opencode.md).
+OpenCode V2 is the supported version. OpenCode V1 is not supported.
 
 ### Install
 
@@ -12,7 +12,7 @@ vcc-brain-helper install opencode
 
 Restart OpenCode after installation. Until OpenCode reloads the plugin, commands and preamble injection will not work.
 
-Legacy OpenCode V1 is frozen and its package was never published, so there is no working V1 install route. Installing V2 does not remove or migrate existing plugin registrations.
+OpenCode V1 is not supported and its package was never published, so there is no working V1 install route. Installing V2 does not remove or migrate existing plugin registrations.
 
 ### Verify
 

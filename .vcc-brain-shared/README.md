@@ -26,9 +26,6 @@ vcc-brain-helper install codex
 # Install OpenCode plugin
 vcc-brain-helper install opencode
 
-# Install legacy OpenCode V1 plugin
-vcc-brain-helper install opencode-v1
-
 # Install Pi plugin
 vcc-brain-helper install pi
 

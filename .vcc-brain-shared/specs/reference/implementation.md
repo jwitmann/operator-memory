@@ -124,8 +124,7 @@ Adapters stay thin. Rendering through bundled core or the Helper subprocess are 
 
 ## Concrete Bindings
 
-- OpenCode (V2, default) — [`opencode-v2/implementation.md`](../opencode-v2/implementation.md)
-- OpenCode V1 (legacy) — [`opencode/implementation.md`](../opencode/implementation.md)
+- OpenCode (V2) — [`opencode-v2/implementation.md`](../opencode-v2/implementation.md)
 - Pi — [`pi/implementation.md`](../pi/implementation.md)
 - Codex — [`codex/implementation.md`](../codex/implementation.md)
 - DeepSeek Harness — [`deepseek/implementation.md`](../deepseek/implementation.md)

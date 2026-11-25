@@ -4,8 +4,8 @@
 # Releases ONLY packages with changes since their last tag — untouched
 # packages keep their version (no lockstep bumps). A `packages/core`
 # change cascades to its consumers (opencode-v2, deepseek, pi, helper),
-# since the built dists bundle core. Legacy V1 (`packages/opencode`)
-# is excluded: frozen, unpublished, cannot ship.
+# since the built dists bundle core. There is no V1 package: OpenCode V1
+# is not supported.
 #
 # Usage:
 #   ./scripts/release.sh [patch|minor|major|X.Y.Z] [--dry-run]
