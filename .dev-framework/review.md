@@ -1,7 +1,7 @@
-# Review — docs(readme): direct-install sections per harness
+# Review — docs(readme): install headings + direct-install sections
 
-Scope: docs-only. Restructures the root Installation area: an NPM
-section with help, plus direct (no-Helper) installs for OpenCode,
+Scope: docs-only. Restructures the root Installation area: a "Using
+npm (recommended)" section with help, plus direct (no-Helper) installs for OpenCode,
 DeepSeek Harness, and Pi. Every command verified against its source —
 nothing invented. The live OpenCode verification from earlier this
 session used scratch files outside the repo; they are named below and
