@@ -38,7 +38,7 @@ Repository-wide VCC Brain product knowledge published with the project.
   - Description: Default OpenCode V2 binding — installation aliases, global local-build installation, context-hook injection, commands, RPC-backed TUI status, and native update.
   - Read If: Implementing or changing the OpenCode V2 adapter.
 - `pi/implementation.md`
-  - Description: Pi binding (Tier 2, memory only) — synthetic-message injection, commands, footer status, and native package updates.
+  - Description: Pi binding (Tier 2 — no compaction/recall) — synthetic-message injection, commands, footer status, and native package updates.
   - Read If: Implementing or changing the Pi adapter.
 - `codex/implementation.md`
   - Description: Codex binding (Tier 2, memory only) — lifecycle-hook persisted injection, the immutability exception, skills for commands, hook trust, and marketplace installation.

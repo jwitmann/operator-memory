@@ -31,7 +31,4 @@ vcc-brain-helper install pi
 
 # Install DeepSeek Harness plugin
 vcc-brain-helper install deepseek
-
-# Install Kiro adapter
-vcc-brain-helper install kiro
 ```

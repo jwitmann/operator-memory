@@ -16,9 +16,9 @@ vcc-brain-helper install pi
 
 Helper invokes `pi install npm:@jwitmann/vcc-brain-pi`. The unversioned source participates in Pi's native package update flow. Local development registers the package root, either persistently as a local package source or per run with `-e packages/pi`; never register the npm package and local path together.
 
-## Feature Parity
+## Feature Scope (Tier 2)
 
-Pi provides the same required VCC Brain surfaces as the reference adapter:
+Pi is a Tier 2 adapter: memory injection, setup commands, footer status, and native updates. It intentionally has no deterministic context management and no cross-session recall — those are Tier 1 (OpenCode V2, DeepSeek) surfaces. Provided surfaces:
 
 - Immutable core-rendered preamble injection on every outgoing model call
 - Canonical all-or-nothing load diagnostic and visible recovery cue

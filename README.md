@@ -46,9 +46,9 @@ Then install the VCC Brain adapter for your harness. Click each link for harness
 | [DeepSeek Harness](docs/harnesses/deepseek.md)               | 🟢 Fully Supported                                 | `vcc-brain-helper install deepseek`    |
 | [Claude Code (CLI + Desktop)](docs/harnesses/claude-code.md) | 🟡 Memory only — no compaction, recall, or status  | `vcc-brain-helper install claude-code` |
 | [Codex (CLI + Desktop)](docs/harnesses/codex.md)             | 🟡 Memory only — no compaction, recall, or status  | `vcc-brain-helper install codex`       |
-| [Pi](docs/harnesses/pi.md)                                   | 🟡 Memory only — no compaction, recall, or status  | `vcc-brain-helper install pi`          |
+| [Pi](docs/harnesses/pi.md)                                   | 🟡 Memory only — no compaction or recall             | `vcc-brain-helper install pi`          |
 
-Tier 1 (🟢) is the full system: memory, deterministic compaction, cross-session recall, and status. Tier 2 (🟡) injects memory plus the setup commands only.
+Tier 1 (🟢) is the full system: memory, deterministic compaction, cross-session recall, and status. Tier 2 (🟡) injects memory plus the setup commands only — no deterministic compaction or cross-session recall (status UI varies by adapter: Pi has a footer, Codex and Claude Code have none).
 
 Setup is a conversation with your agent. Run each command in a new conversation.
 
