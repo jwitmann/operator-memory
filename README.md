@@ -28,6 +28,8 @@ Originally forked from [aerovato/operator-memory](https://github.com/aerovato/op
 
 ### Installation
 
+#### Using npm (recommended)
+
 VCC Brain is managed via the VCC Brain Helper, which also provides setup and agent instructions. Install the Helper with npm:
 
 ```sh
