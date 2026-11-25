@@ -61,7 +61,9 @@ Then install the VCC Brain adapter for your harness. Click each link for harness
 
 #### Direct harness installs (no Helper)
 
-OpenCode — requires `v2.x` (local install live-verified on `v2.4.1`):
+##### OpenCode
+
+Requires `v2.x` (local install live-verified on `v2.4.1`):
 
 ```sh
 opencode plugin add @jwitmann/vcc-brain-opencode-v2
@@ -94,13 +96,15 @@ With options (all optional; per-project `.vcc-brain/config.json` overrides them)
 
 From source instead: clone `https://github.com/jwitmann/vcc-brain`, build the plugin (`bun run build:opencode-v2`), and register the local path (`"package": "/abs/path/to/vcc-brain/packages/opencode-v2/dist"`) in the same object form.
 
-DeepSeek Harness — install into a profile with its native command:
+##### DeepSeek Harness
+
+Install into a profile with its native command:
 
 ```sh
 dsh plugin --profile <profile-name> add @jwitmann/vcc-brain-deepseek
 ```
 
-Pi:
+##### Pi
 
 ```sh
 pi install npm:@jwitmann/vcc-brain-pi
