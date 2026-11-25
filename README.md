@@ -6,6 +6,8 @@
 
 ### VCC Brain: The self-improving context engine for coding agents
 
+[![npm version](https://img.shields.io/npm/v/@jwitmann/vcc-brain-helper?color=8cdb9f)](https://www.npmjs.com/package/@jwitmann/vcc-brain-helper) [![Node.js 20+](https://img.shields.io/badge/Node.js-%3E%3D20-417e3f?logo=nodedotjs&logoColor=white)](https://nodejs.org/) [![BSD-3-Clause license](https://img.shields.io/badge/License-BSD--3--Clause-22C55E)](./LICENSE) [![CI](https://github.com/jwitmann/vcc-brain/actions/workflows/ci.yml/badge.svg)](https://github.com/jwitmann/vcc-brain/actions)
+
 VCC Brain gives your agent a brain for documenting all their work. As the agent works, it automatically documents within this brain — specs, decisions, standards, research, lessons. Every new session starts knowing everything the last one learned.
 
 #### Origin
