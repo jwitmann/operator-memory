@@ -42,7 +42,9 @@ run's change detection breaks.
 Re-pushing an unchanged tag fires no event, so a tag that reached
 the remote without triggering its workflow must be deleted first,
 then pushed again — the `--repush` mode does exactly that, one tag
-at a time. It refuses piped stdin, so only run it yourself:
+at a time. It refuses piped stdin, so only run it yourself. Re-firing
+also refreshes the GitHub release body (the workflow edits the existing
+release instead of colliding with it):
 
 ```bash
 ./scripts/push-release.sh --repush <pkg>@v<version>...
