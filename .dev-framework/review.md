@@ -1,41 +1,38 @@
-# Review — fix(opencode-v2): de-flake refresh failure-toast test
+# Review — docs(readme): hand OpenCode plugin setup mirroring gold Install
 
-Scope: test-only, one file. Fixes the CI failure
-(`refresh.test.ts > a failed render toasts once`, `reported` was `[]`,
-expected `["ses_test"]`) — a same-millisecond mtime-tick flake in the
-test setup, not a product bug. No product code touched.
+Scope: docs-only. The npm editorial flag asks for an OpenCode plugin
+configuration or local plugin installation example in the GitHub
+(root) README. Earlier attempts put it on package READMEs (wrong file)
+and posted npm-command-only snippets (redundant with the Helper route,
+neither configuration nor local). This change mirrors the gold-standard
+Install section (`opencode-vcc-compaction#install`) part-for-part for
+this adapter.
 This session's changed files:
-Edited: `packages/opencode-v2/test/refresh.test.ts` (forced mtime bump
-after the file→directory swap, mirroring the existing `rewriteCatalog`
-hardening in the same file).
+Edited: `README.md` (hand-registration block in Installation: `opencode
+plugin add`, `opencode.json` string form, options-object form with the
+real `vcc-brain.contextManagement` block, from-source clone + build +
+local `dist` path).
+Touched then fully reverted: `packages/opencode-v2/README.md` (a
+misplaced "Native Plugin Setup" section; restored to HEAD, net zero —
+see revert commit `2e7706f` for the earlier landing-page attempt).
 This artifact: `.dev-framework/review.md`.
 
-## Cause
+## Change
 
-- `fingerprintPreamble` stats files (`path:mtimeMs`) and `stat` succeeds
-  on the swapped-in directory, so when the seed writes and the
-  unlink+mkdir share one millisecond tick, f2 == f1 and
-  `maybeRefreshPreamble` returns idle before ever rendering — no toast,
-  `reported` stays `[]`. Exactly the hazard class the file's own
-  `rewriteCatalog` comment already documents.
-- Proven deterministically with a repro script: forcing the new dir's
-  mtime back to the deleted file's mtime yields equal fingerprints
-  (`fingerprints equal: true`).
+- Root README carries the complete hand-install shape: command, string
+  form, configuration (options object), local path install. The options
+  example uses the real `vcc-brain.contextManagement` block (verified
+  against `packages/opencode-v2/src/options.ts` +
+  `src/context-config.ts`); the local path matches the documented
+  `<dir>/index.js` resolution and the package `main`
+  (`packages/opencode-v2/dist`).
 
-## Battery
+## Battery (docs cadence)
 
-- Repro script (`/tmp/repro-tick.mts`, memfs + real `fingerprintPreamble`):
-  collision reproduced before the fix (equal fingerprints → idle → no toast).
-- `bunx vitest run packages/opencode-v2/test/refresh.test.ts` × 8 after
-  the fix: 9/9 pass every run.
-- `bun run check packages/core`: green (177 tests). `bun run check
-  packages/opencode-v2`: green (174 tests, including the fixed test).
-- ODF lint on the edited test file: passed.
+- `bun run lint:md` (repo config, 116 files): 0 issues, exit 0. Docs-only
+  change — no product code touched; no specialists required, none run.
 
 ## Findings
 
-- None blocking. Residual note (accepted limitation, not fixed): mtime
-  fingerprints are blind to sub-tick swaps in production too — a
-  file→directory swap inside one ms tick is missed until the next change.
-  Same class as the `rewriteCatalog` same-tick caveat; fixing that means
-  changing the fingerprint format, out of scope for this test fix.
+- None blocking. The editorial notice clears on human re-review of the
+  published page, not on commit or publish.
