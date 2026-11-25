@@ -1,17 +1,17 @@
-# Review — docs(readme): tier bullets with emphasized no-upgrade note
+# Review — docs(readme): Tier-2 ceiling is structural on Codex/Claude
 
-Scope: docs-only. User restructured the tier legend into bullets and hardened the wording; agent added blockquote + bold emphasis to the note.
+Scope: docs-only, one paragraph. Records the established harness analysis: deterministic compaction is unbuildable on Codex/Claude (model-owned compaction, no substitute seam), possible-but-unowned on Pi.
 This session's changed files:
-Edited: `README.md` (tier legend bullets + `> **Note:**` no-upgrade callout).
+Edited: `README.md` (tier `Note` callout).
 This artifact: `.dev-framework/review.md`.
 
 ## Change
 
-- Tier 1/Tier 2 definitions as bullets; the no-path-to-Tier-1 statement as a `> **Note:**` blockquote so it reads as a callout instead of a third bullet.
+- The tier note now draws the real line: Codex/Claude memory-only is a structural ceiling, not a resourcing gap; Pi is seam-capable but maintainer-unrun, so no upgrade planned either way.
 
 ## Battery (docs cadence)
 
-- `bun run lint:md`: 0 issues in 116 files. No product code touched; no specialists required, none re-run.
+- `bun run lint:md`: 0 issues in 116 files. No product code touched; no specialists required, none re-run (prior product reports reused, scope unchanged).
 
 ## Findings
 

@@ -51,7 +51,7 @@ Then install the VCC Brain adapter for your harness. Click each link for harness
 - Tier 1 (🟢) is the full system: memory, deterministic compaction, cross-session recall, and status.
 - Tier 2 (🟡) injects memory plus the setup commands only — no deterministic compaction or cross-session recall (status UI varies by adapter: Pi has a footer, Codex and Claude Code have none).
 
-> **Note:** Tier 2 is not on a path to Tier 1: the maintainer does not run these harnesses, so no upgrade is planned — and full parity may not be possible where the harness exposes no suitable seams (skills-only commands, no subagent injection hooks, no compaction hooks).
+> **Note:** Tier 2 is not on a path to Tier 1. On Codex and Claude Code the ceiling is structural: compaction stays model-owned with no substitute seam, so deterministic compaction — the VCC proposition — cannot be built there; memory injection is all these adapters will ever do. On Pi the seams exist, but the maintainer does not run it, so no upgrade is planned.
 
 Setup is a conversation with your agent. Run each command in a new conversation.
 
