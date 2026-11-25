@@ -75,6 +75,12 @@ dsh plugin --profile <profile-name> add dsh-compaction-vcc
 opencode plugin add opencode-vcc-compaction
 ```
 
+- On Pi, pair VCC Brain with the third-party deterministic compactor [pi-tuck](https://github.com/galyavin/pi-tuck) — the same no-model-call idea (transcript-preserving cuts plus exact post-cut recall), maintained outside this project. No adapter wires the two together yet; someone with Pi needs to write it:
+
+```sh
+pi install npm:pi-tuck
+```
+
 When starting cold on an existing project, expect a sparse brain at first; ask the agent to write the first specifications for the modules you work on. Once those documents exist, later sessions maintain them as part of ordinary work.
 
 <p align="center"><big><strong>New to VCC Brain? Read the <a href="docs/getting-started.md">Getting Started guide</a>.</strong></big></p>

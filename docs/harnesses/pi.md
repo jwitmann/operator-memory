@@ -38,6 +38,16 @@ Pi reports available package updates at startup. Apply them with:
 pi update --extensions
 ```
 
+### Compaction
+
+VCC Brain on Pi is memory only: it ships no deterministic compaction of its own. For long sessions, pair it with the third-party [pi-tuck](https://github.com/galyavin/pi-tuck) extension, which compacts deterministically without a model call and can recall exact pre-cut content:
+
+```sh
+pi install npm:pi-tuck
+```
+
+pi-tuck is maintained outside this project. No adapter wires the two together yet — VCC Brain leaves `/compact` and automatic cuts to it, but the integration is unwritten and needs someone who runs Pi.
+
 ### Troubleshooting
 
 - No VCC Brain footer: the extension did not load. Rerun `vcc-brain-helper install pi` and start a new session.

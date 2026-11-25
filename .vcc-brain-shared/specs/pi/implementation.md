@@ -1,6 +1,6 @@
 # Pi Adapter Implementation
 
-Last Updated: November 3, 2026
+Last Updated: November 25, 2026
 
 How `@jwitmann/vcc-brain-pi` binds the general adapter contract with first-class Pi support. Command meaning and setup workflows stay in [`commands.md`](../commands.md) and [`../reference/implementation.md`](../reference/implementation.md). Behavioral deviations are recorded against the reference implementation, not other bindings.
 
@@ -59,6 +59,12 @@ Pi checks mutable package sources asynchronously at interactive startup and disp
 ## Differences From Reference
 
 Pathway selections: bundled-core resolution (bundled into the package with Pi's runtime packages as `"*"` peers), transform injection as a prepended synthetic user message, slash commands, footer status UI, and harness-native updates through Pi's startup notification and `pi update --extensions`. All are accepted reference pathways; there are no behavioral deviations.
+
+### Potential Compaction Source
+
+- The adapter ships no deterministic engine port; Tier 2 scope above stands. If compaction support is ever wanted, the candidate is third-party `pi-tuck` (`pi install npm:pi-tuck`, source `github.com/galyavin/pi-tuck`), which grew out of `@sting8k/pi-vcc` and pairs deterministic no-model-call cuts with exact post-cut recall (`tuck_recall` keyword lookup plus `entryId` and `#index` reads of the original entries).
+- Integration shape: the adapter registers no competing compactor and leaves `/compact` plus automatic cuts to pi-tuck; it keeps preamble injection, commands, and cross-session recall fed from the session log, attributing compact receipts to the external engine the way the DeepSeek binding attributes `vcc` versus `shaped`.
+- Status is potential only: hook coexistence, receipt attribution, and indexing against pi-tuck cuts are unprobed, and no dependency exists today.
 
 ## Pi Harness Notes
 
