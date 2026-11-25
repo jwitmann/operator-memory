@@ -24,4 +24,4 @@ End-to-end requirements for shipping a VCC Brain adapter package. `implementatio
 
 ## Release Automation
 
-- `scripts/publish-<pkg>.sh` and `.github/workflows/publish-<pkg>.yml` mirroring the Codex pipeline, plus root `publish:<pkg>` script. A maintainer executes the actual release.
+- `scripts/publish-<pkg>.sh` and `.github/workflows/publish-<pkg>.yml` mirroring the Codex pipeline, plus root `publish:<pkg>` script. The workflow must build the GitHub release body with `scripts/release-notes.sh` (`--notes-file`), never `--generate-notes`. A maintainer executes the actual release.
