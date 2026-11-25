@@ -40,6 +40,8 @@ Or Bun:
 bun add --global --minimum-release-age 0 @jwitmann/vcc-brain-helper@latest
 ```
 
+`vcc-brain-helper --help` lists the user and agent commands.
+
 Then install the VCC Brain adapter for your harness. Click each link for harness-specific information.
 
 | Harness                                                      | Status                                             | Install                                |
@@ -55,7 +57,9 @@ Then install the VCC Brain adapter for your harness. Click each link for harness
 
 > **Note:** Tier 2 is not on a path to Tier 1. On Codex and Claude Code the ceiling is structural: compaction stays model-owned with no substitute seam, so deterministic compaction — the VCC proposition — cannot be built there; memory injection is all these adapters will ever do. On Pi the seams exist, but the maintainer does not run it, so no upgrade is planned.
 
-The OpenCode adapter can be registered by hand without the Helper. Requires OpenCode `v2.x` (local install live-verified on `v2.4.1`):
+#### Direct harness installs (no Helper)
+
+OpenCode — requires `v2.x` (local install live-verified on `v2.4.1`):
 
 ```sh
 opencode plugin add @jwitmann/vcc-brain-opencode-v2
@@ -87,6 +91,18 @@ With options (all optional; per-project `.vcc-brain/config.json` overrides them)
 ```
 
 From source instead: clone `https://github.com/jwitmann/vcc-brain`, build the plugin (`bun run build:opencode-v2`), and register the local path (`"package": "/abs/path/to/vcc-brain/packages/opencode-v2/dist"`) in the same object form.
+
+DeepSeek Harness — install into a profile with its native command:
+
+```sh
+dsh plugin --profile <profile-name> add @jwitmann/vcc-brain-deepseek
+```
+
+Pi:
+
+```sh
+pi install npm:@jwitmann/vcc-brain-pi
+```
 
 Setup is a conversation with your agent. Run each command in a new conversation.
 
