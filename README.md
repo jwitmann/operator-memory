@@ -110,6 +110,8 @@ dsh plugin --profile <profile-name> add @jwitmann/vcc-brain-deepseek
 pi install npm:@jwitmann/vcc-brain-pi
 ```
 
+#### Setup
+
 Setup is a conversation with your agent. Run each command in a new conversation.
 
 1. First time only: `/vcc-brain:user-init` — set up your global user partition.
