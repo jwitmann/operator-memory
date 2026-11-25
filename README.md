@@ -48,7 +48,7 @@ Then install the VCC Brain adapter for your harness. Click each link for harness
 | [Codex (CLI + Desktop)](docs/harnesses/codex.md)             | 🟡 Memory only — no compaction, recall, or status  | `vcc-brain-helper install codex`       |
 | [Pi](docs/harnesses/pi.md)                                   | 🟡 Memory only — no compaction or recall             | `vcc-brain-helper install pi`          |
 
-Tier 1 (🟢) is the full system: memory, deterministic compaction, cross-session recall, and status. Tier 2 (🟡) injects memory plus the setup commands only — no deterministic compaction or cross-session recall (status UI varies by adapter: Pi has a footer, Codex and Claude Code have none).
+Tier 1 (🟢) is the full system: memory, deterministic compaction, cross-session recall, and status. Tier 2 (🟡) injects memory plus the setup commands only — no deterministic compaction or cross-session recall (status UI varies by adapter: Pi has a footer, Codex and Claude Code have none). Tier 2 is not on a path to Tier 1: the maintainer does not run these harnesses, so no upgrade is planned — and full parity may not be possible where the harness exposes no suitable seams (skills-only commands, no subagent injection hooks, no compaction hooks).
 
 Setup is a conversation with your agent. Run each command in a new conversation.
 
