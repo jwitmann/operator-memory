@@ -272,9 +272,15 @@ test("a failed render toasts once and keeps serving the cached preamble", async 
   expect(await invoke()).toBe("cached");
 
   // Break the render after the baseline: reading a directory as a file
-  // throws instead of returning a diagnostic.
+  // throws instead of returning a diagnostic. The mtime bump forces the
+  // fingerprint to move: without it the seed and the swap can share one
+  // millisecond tick, the fingerprint compares equal, and the refresh
+  // (correctly, by its own rules) stays quiet — no toast. Same hazard
+  // class as rewriteCatalog above.
   fs.unlinkSync(`${PROJECT}/.vcc-brain/vcc-brain.md`);
   fs.mkdirSync(`${PROJECT}/.vcc-brain/vcc-brain.md`);
+  const later = new Date(Date.now() + 1000);
+  fs.utimesSync(`${PROJECT}/.vcc-brain/vcc-brain.md`, later, later);
 
   expect(await invoke()).toBe("cached");
   expect(await invoke()).toBe("cached");

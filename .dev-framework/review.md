@@ -1,26 +1,41 @@
-# Review — docs(readme): badge row on repo landing page
+# Review — fix(opencode-v2): de-flake refresh failure-toast test
 
-Scope: docs-only, one file. This session added the gold-standard badge row
-(npm version, Node 20+, BSD-3-Clause, CI) under the heading in the root
-`README.md`, so the GitHub landing page shows the same maintenance signals
-as the npm page (`packages/helper/README.md`, badged in an earlier commit).
+Scope: test-only, one file. Fixes the CI failure
+(`refresh.test.ts > a failed render toasts once`, `reported` was `[]`,
+expected `["ses_test"]`) — a same-millisecond mtime-tick flake in the
+test setup, not a product bug. No product code touched.
 This session's changed files:
-Edited: `README.md` (badge row only, 2 insertions).
+Edited: `packages/opencode-v2/test/refresh.test.ts` (forced mtime bump
+after the file→directory swap, mirroring the existing `rewriteCatalog`
+hardening in the same file).
 This artifact: `.dev-framework/review.md`.
 
-## Change
+## Cause
 
-- Root README now opens with the shields.io badge row mirroring
-  `opencode-vcc-compaction` gold-standard shape: npm version (helper
-  package), Node.js >= 20, BSD-3-Clause license (`./LICENSE`), CI workflow
-  badge. No prose touched.
+- `fingerprintPreamble` stats files (`path:mtimeMs`) and `stat` succeeds
+  on the swapped-in directory, so when the seed writes and the
+  unlink+mkdir share one millisecond tick, f2 == f1 and
+  `maybeRefreshPreamble` returns idle before ever rendering — no toast,
+  `reported` stays `[]`. Exactly the hazard class the file's own
+  `rewriteCatalog` comment already documents.
+- Proven deterministically with a repro script: forcing the new dir's
+  mtime back to the deleted file's mtime yields equal fingerprints
+  (`fingerprints equal: true`).
 
-## Battery (docs cadence)
+## Battery
 
-- `bun run lint:md` (repo config, 116 files): 0 issues, exit 0. Docs-only
-  change — no product code touched; no specialists required, none run.
+- Repro script (`/tmp/repro-tick.mts`, memfs + real `fingerprintPreamble`):
+  collision reproduced before the fix (equal fingerprints → idle → no toast).
+- `bunx vitest run packages/opencode-v2/test/refresh.test.ts` × 8 after
+  the fix: 9/9 pass every run.
+- `bun run check packages/core`: green (177 tests). `bun run check
+  packages/opencode-v2`: green (174 tests, including the fixed test).
+- ODF lint on the edited test file: passed.
 
 ## Findings
 
-- None blocking. Note: GitHub renders the new badges on push; npm is
-  unaffected (it renders `packages/helper/README.md`).
+- None blocking. Residual note (accepted limitation, not fixed): mtime
+  fingerprints are blind to sub-tick swaps in production too — a
+  file→directory swap inside one ms tick is missed until the next change.
+  Same class as the `rewriteCatalog` same-tick caveat; fixing that means
+  changing the fingerprint format, out of scope for this test fix.
