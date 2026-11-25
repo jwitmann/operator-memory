@@ -1,13 +1,13 @@
-# Review — docs(pi-tuck): point Pi users at third-party compaction
+# Review — docs(helper-readme): OpenCode plugin evidence on the npm page
 
-Scope: docs-only, three files. Surfaces pi-tuck (`npm:pi-tuck`, source `github.com/galyavin/pi-tuck`) as the deterministic-compaction pairing for Pi users: same no-model-call idea (transcript-preserving cuts plus exact post-cut recall), maintained outside this project; VCC Brain stays memory-only on Pi and leaves `/compact` plus automatic cuts to it. Tier 2 scope unchanged.
+Scope: docs-only, one file. Answers the actionable half of the npm editorial flag on `@jwitmann/vcc-brain-helper` (v1.14.1) — the README example, now added (the "native evidence needs review" half is npm's editors to check, not fixable from here).
 This session's changed files:
-Edited: `README.md` (Pi bullet under "For the best long-session results"), `docs/harnesses/pi.md` (new `Compaction` section), `.vcc-brain-shared/specs/pi/implementation.md` (`Potential Compaction Source` H3, `Last Updated` → November 25, 2026). Public wording states plainly that no adapter wires pi-tuck and VCC Brain together yet and one needs writing; no maintainer commitment.
+Edited: `packages/helper/README.md` (gold-standard badges + OpenCode plugin configuration + local install examples).
 This artifact: `.dev-framework/review.md`.
 
 ## Change
 
-- Public docs now answer "what do I compact with on Pi?" instead of leaving Tier 2 Pi users with the LLM summarizer; the brain spec records the same candidate plus the adapter integration shape (no competing compactor, receipts attributed to the external engine, currently unprobed).
+- The npm page for the helper will now show a reader how the OpenCode adapter registers as a native plugin and how to configure it, instead of only the `vcc-brain-helper install` wrapper.
 
 ## Battery (docs cadence)
 
@@ -15,4 +15,4 @@ This artifact: `.dev-framework/review.md`.
 
 ## Findings
 
-- None blocking.
+- None blocking. Note: the npm page refreshes on the next helper publish — this edit alone doesn't update what npm shows.
