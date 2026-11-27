@@ -5,6 +5,16 @@
 Generated from conventional commits (`scripts/changelog.sh`).
 Human-readable record of what shipped, per package.
 
+## [v2.8.1] - 2026-11-27
+
+### Features
+
+- trim-only context management mode ([`9d325fc`](https://github.com/jwitmann/vcc-brain/commit/9d325fcf72110d7547d18344200b17ef4fc50f9d))
+
+### Other
+
+- rename trim-only mode to vcc ([`e96e7d0`](https://github.com/jwitmann/vcc-brain/commit/e96e7d0def9c052f586738a401b1b24d30fb5219))
+
 ## [v2.8.0] - 2026-11-27
 
 ### Features
