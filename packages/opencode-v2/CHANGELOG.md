@@ -5,6 +5,12 @@
 Generated from conventional commits (`scripts/changelog.sh`).
 Human-readable record of what shipped, per package.
 
+## [v2.8.0] - 2026-11-27
+
+### Features
+
+- one compaction provider per session ([`2481ed9`](https://github.com/jwitmann/vcc-brain/commit/2481ed9ebcaa4ccf1172f9936028d5699fb9c900))
+
 ## [v2.7.2] - 2026-11-25
 
 ### Fixes
