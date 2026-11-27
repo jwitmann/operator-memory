@@ -16,6 +16,7 @@ import { DEFAULT_BRAIN_PATHS, registerCompactionHook } from "./compaction.ts";
 import { registerContextHook } from "./context.ts";
 import {
   DEFAULT_CONTEXT_MANAGEMENT_CONFIG,
+  isFullContextMode,
   parseContextManagementConfig,
 } from "./context-config.ts";
 import {
@@ -138,7 +139,9 @@ const VccBrainPlugin = Plugin.define({
     // external engine turns our context management off at setup (preamble,
     // refresh, and brain updates stay on). Engines that load after us are
     // caught by the deferred re-check on first session activity below.
-    if (contextManagementEnabled) {
+    // Trim-only mode skips both: coexistence with an external engine is
+    // the point of the mode, not a conflict to resolve.
+    if (contextManagementEnabled && isFullContextMode(effectiveContextManagement)) {
       const external = await findExternalCompactionProvider(context);
       if (external !== null) {
         contextManagementEnabled = false;
@@ -159,7 +162,14 @@ const VccBrainPlugin = Plugin.define({
     const isActive = () => isCurrent() && !standDown.stoodDown;
     let providerRecheckDone = false;
     const maybeStandDownForExternalProvider = async (): Promise<void> => {
-      if (!contextManagementEnabled || providerRecheckDone || !isCurrent()) return;
+      if (
+        !contextManagementEnabled
+        || !isFullContextMode(effectiveContextManagement)
+        || providerRecheckDone
+        || !isCurrent()
+      ) {
+        return;
+      }
       providerRecheckDone = true;
       const hit = await findExternalCompactionProvider(context);
       if (hit === null || !isCurrent()) return;
@@ -297,6 +307,11 @@ const VccBrainPlugin = Plugin.define({
       };
       const controller = new AbortController();
       if (contextManagementEnabled) {
+        // Trim-only mode (an external engine owns compaction and recall):
+        // we trim, trigger, and serve omissions; the engine summarizes
+        // and recalls. Full mode additionally handles compactions and
+        // serves per-session recall/search.
+        const fullMode = isFullContextMode(config);
         const requestCompaction = (sessionID: string, cause: TriggerKind) => {
           if (!isActive()) {
             return;
@@ -312,24 +327,28 @@ const VccBrainPlugin = Plugin.define({
           isCurrent: isActive,
         };
         registerContextHook(context, deps, runtime);
-        registerCompactionHook(
-          context,
-          {
-            config,
-            stateDirectory,
-            brainPaths: DEFAULT_BRAIN_PATHS,
-            isBrainAvailable,
-            reportReceiptFailure,
-            refreshEnabled: refreshConfig.enabled,
-            isCurrent: isActive,
-          },
-          runtime,
-        );
+        if (fullMode) {
+          registerCompactionHook(
+            context,
+            {
+              config,
+              stateDirectory,
+              brainPaths: DEFAULT_BRAIN_PATHS,
+              isBrainAvailable,
+              reportReceiptFailure,
+              refreshEnabled: refreshConfig.enabled,
+              isCurrent: isActive,
+            },
+            runtime,
+          );
+        }
         registerCompletionTrigger(context, deps, runtime, { signal: controller.signal });
         await registerReadOmittedTool(context, { stateDirectory });
         await registerPruneTool(context, { stateDirectory });
-        await registerRecallTool(context, { stateDirectory });
-        await registerSearchTool(context, { stateDirectory });
+        if (fullMode) {
+          await registerRecallTool(context, { stateDirectory });
+          await registerSearchTool(context, { stateDirectory });
+        }
         await registerSearchSessionsTool(context, {
           projectDirectory: context.location.directory,
         });

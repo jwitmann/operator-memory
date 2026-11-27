@@ -83,6 +83,8 @@ Two compaction/recall stacks in one session produce two snapshot stores and two 
 
 Checkpoint recognition is shape-tolerant across VCC-family engines: besides the assistant carrying-lone-compaction-block shape, a user-text message carrying both `<compacted-checkpoint>` tags counts as a checkpoint, so a foreign engine's tagged checkpoint stays ordinal-recallable from our snapshot. When a checkpoint ordinal has no servable checkpoint but the snapshot carries a foreign `-compaction` header, `vcc-brain-recall` names the header and hands the agent to the owning engine's recall tool instead of reporting zero checkpoints.
 
+Trim-only mode (`mode: "trim-only"`, default `"full"`) partitions ownership with an external engine instead of standing down: trim, threshold and task-complete trigger evaluation (requests still fire — the engine summarizes whatever the host compacts), receipts, and the omission store with `vcc-brain-read_omitted`/`vcc-brain-prune` stay on, while snapshot maintenance, the compaction hook, per-session `vcc-brain-recall`/`vcc-brain-search`, and engine stand-down stay off. Cross-session recall tools are engine-independent and stay registered in both modes. An invalid `mode` value fails loudly like any other mistyped option.
+
 ## Preamble Refresh
 
 Opt-in mid-session preamble re-render when the Brain changes on disk. Disabled by default and independent from context management: preamble rendering is Brain behavior, not context reduction. Its own switch lives under `vcc-brain.preambleRefresh`:

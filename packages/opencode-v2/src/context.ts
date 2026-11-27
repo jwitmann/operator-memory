@@ -13,7 +13,7 @@ import {
 import type { Context } from "@opencode/plugin/promise/plugin";
 import { join } from "node:path";
 
-import { toTriggerConfig } from "./context-config.ts";
+import { isFullContextMode, toTriggerConfig } from "./context-config.ts";
 import { rememberSnapshot } from "./compaction-snapshot.ts";
 import {
   ensureRefusalReceipt,
@@ -44,6 +44,10 @@ export function registerContextHook(
     }
     const sessionID = event.sessionID;
     const config = deps.config;
+    // Trim-only mode (an external engine owns compaction and recall):
+    // trim, receipts, and omission recovery stay; snapshot maintenance
+    // and compaction requests are the engine's job, never ours.
+    const fullMode = isFullContextMode(config);
 
     await ensureSessionHydrated(deps.stateDirectory, runtime, sessionID);
     if (!deps.isBrainAvailable(sessionID)) {
@@ -56,25 +60,28 @@ export function registerContextHook(
     // last-written snapshot, so every request refreshes it while the
     // feature is active. Runs on the untrimmed messages (trim below
     // replaces content with omission notices) and is growth-guarded, so
-    // unchanged conversations skip the rewrite. Best-effort: a failed
-    // write leaves the previous snapshot in place. A reload may have
-    // landed during hydration above: re-check before the disk write, and
-    // again before touching shared state, so a superseded generation
-    // neither regresses the file nor the guard.
-    if (isContextStale(deps)) {
-      return;
+    // idle turns cost no I/O. Best-effort: a failed write leaves the
+    // previous snapshot in place. A reload may have landed during
+    // hydration above: re-check before the disk write, and again before
+    // touching shared state, so a superseded generation neither
+    // regresses the file nor the guard. Skipped in trim-only mode: the
+    // external engine owns the snapshot and recall.
+    if (fullMode) {
+      if (isContextStale(deps)) {
+        return;
+      }
+      const remembered = await rememberSnapshot(
+        join(deps.stateDirectory, "context-snapshot"),
+        sessionID,
+        event.messages as readonly unknown[],
+        new Date().toISOString(),
+        session.snapshotSeen,
+      );
+      if (isContextStale(deps)) {
+        return;
+      }
+      session.snapshotSeen = remembered.seen;
     }
-    const remembered = await rememberSnapshot(
-      join(deps.stateDirectory, "context-snapshot"),
-      sessionID,
-      event.messages as readonly unknown[],
-      new Date().toISOString(),
-      session.snapshotSeen,
-    );
-    if (isContextStale(deps)) {
-      return;
-    }
-    session.snapshotSeen = remembered.seen;
 
     const estimatedTokens = estimateContextTokens(session.estimator, event.messages);
     const windowTokens = await resolveWindowTokens(context, session, event.model);
@@ -136,6 +143,13 @@ export function registerContextHook(
 
     const estimateAfterTrim = estimatedTokens - trimResult.removedTokens;
     if (!exceedsThresholds(estimateAfterTrim, windowTokens ?? 0, config)) {
+      return;
+    }
+    // Threshold compaction requests are full-mode only: in trim-only
+    // mode the external engine (or the host) compacts on its own
+    // triggers, and task-complete requests still flow through the
+    // completion trigger below.
+    if (!fullMode) {
       return;
     }
     if (shouldSuppressCompactionRequest(session, estimatedTokens, windowTokens ?? 0, Date.now())) {

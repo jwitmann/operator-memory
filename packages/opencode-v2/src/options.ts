@@ -53,6 +53,22 @@ export function readOptionNumber(
   return success(value);
 }
 
+export function readOptionString(
+  path: string,
+  block: Record<string, unknown>,
+  key: string,
+  defaultValue: string,
+): Result<string, OptionError> {
+  const value = block[key];
+  if (value === undefined) {
+    return success(defaultValue);
+  }
+  if (typeof value !== "string") {
+    return failure({ message: `The "${path}.${key}" option must be a string.` });
+  }
+  return success(value);
+}
+
 export function readOptionBoolean(
   path: string,
   block: Record<string, unknown>,

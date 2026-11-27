@@ -188,6 +188,34 @@ test("toasts on invalid context management options", async () => {
   );
 });
 
+test("an invalid mode toasts and disables context management", async () => {
+  const sessionHook = vi.fn();
+  const context = {
+    location: { directory: "/project" },
+    options: { "vcc-brain": { contextManagement: { enabled: true, mode: "sometimes" } } },
+    command: {
+      list: () => Promise.resolve({ data: [], location: { directory: "/project" } }),
+      transform: vi.fn(),
+    },
+    rpc: { register: vi.fn(() => Promise.resolve({ events: { emit: emitToast } })) },
+    session: { hook: sessionHook },
+  } as unknown as Context;
+  emitToast.mockClear();
+
+  await VccBrainPlugin.setup(context);
+
+  // Preamble hook only: the feature is off, never half-enabled.
+  expect(sessionHook).toHaveBeenCalledOnce();
+  expect(emitToast).toHaveBeenCalledWith(
+    "toast",
+    expect.objectContaining({
+      title: "VCC Brain Error",
+      variant: "error",
+      message: expect.stringContaining('"vcc-brain.contextManagement.mode"'),
+    }),
+  );
+});
+
 test("trims only when the Brain is initialized", async () => {
   const big = "lorem ipsum dolor sit amet consectetur adipiscing elit sed do ".repeat(500);
   const readMessages = () => {
@@ -459,5 +487,41 @@ test("stands down on first activity when the engine loads late", async () => {
   removed.length = 0;
   await preambleHook({ sessionID: "ses-late", system: [] });
   expect(removed).toEqual([]);
+  expect(emitToast).not.toHaveBeenCalled();
+});
+
+test("trim-only mode partitions ownership with the external engine", async () => {
+  // An engine is listed, yet nothing stands down: coexistence is the
+  // point of the mode. Trim + completion trigger + omission tools stay;
+  // the compaction hook and per-session recall/search never register.
+  const added: string[] = [];
+  const { context, sessionHook, toolTransform } = engineAwareContext(
+    [{ name: "vcc-recall", description: "external recall" }],
+    [{ id: "opencode-vcc-port", source: { type: "local", path: "/x/opencode-vcc-port" } }],
+  );
+  (context.options as { "vcc-brain": { contextManagement: Record<string, unknown> } })[
+    "vcc-brain"
+  ].contextManagement = { enabled: true, mode: "trim-only" };
+  toolTransform.mockImplementation(async callback =>
+    callback({
+      namespace: vi.fn(),
+      add: (tool: { name: string }) => added.push(tool.name),
+      remove: vi.fn(),
+    }),
+  );
+  emitToast.mockClear();
+
+  await VccBrainPlugin.setup(context);
+
+  // Preamble + our trim context hook only; no compaction hook.
+  expect(sessionHook.mock.calls.map(([name]) => name)).toEqual(["context", "context"]);
+  // Omission tools + cross-session recall only; no per-session recall/search.
+  expect(added).toEqual([
+    "vcc-brain-read_omitted",
+    "vcc-brain-prune",
+    "vcc-brain-search-sessions",
+    "vcc-brain-recall-session",
+  ]);
+  // No stand-down toast: the engine is expected here.
   expect(emitToast).not.toHaveBeenCalled();
 });

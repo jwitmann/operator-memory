@@ -27,6 +27,7 @@ test("parses a full block", () => {
 
   expect(result.ok && result.value).toEqual({
     enabled: true,
+    mode: "full",
     ratio: 0.7,
     hardCapTokens: 200000,
     keepRecentTurns: 5,
@@ -57,6 +58,24 @@ test("rejects wrong-typed values instead of falling back", () => {
     "vcc-brain": { contextManagement: { enabled: "yes" } },
   });
   expect(enabled.ok).toBe(false);
+
+  const mode = parseContextManagementConfig({
+    "vcc-brain": { contextManagement: { enabled: true, mode: "sometimes" } },
+  });
+  expect(mode.ok).toBe(false);
+});
+
+test("accepts trim-only mode, defaulting to full", () => {
+  const trimmed = parseContextManagementConfig({
+    "vcc-brain": { contextManagement: { enabled: true, mode: "trim-only" } },
+  });
+  expect(trimmed.ok && trimmed.value.mode).toBe("trim-only");
+
+  const absent = parseContextManagementConfig({
+    "vcc-brain": { contextManagement: { enabled: true } },
+  });
+  expect(absent.ok && absent.value.mode).toBe("full");
+  expect(DEFAULT_CONTEXT_MANAGEMENT_CONFIG.mode).toBe("full");
 });
 
 test("rejects non-object blocks", () => {

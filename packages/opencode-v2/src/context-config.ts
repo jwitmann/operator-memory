@@ -1,5 +1,10 @@
-import { success, type Result } from "./utils.ts";
-import { readOptionBlock, readOptionBoolean, readOptionNumber } from "./options.ts";
+import { failure, success, type Result } from "./utils.ts";
+import {
+  readOptionBlock,
+  readOptionBoolean,
+  readOptionNumber,
+  readOptionString,
+} from "./options.ts";
 import type { TriggerConfig } from "@jwitmann/vcc-brain-core/context/triggers";
 
 // Parses the vcc-brain.contextManagement block from ctx.options. Absent means
@@ -7,8 +12,19 @@ import type { TriggerConfig } from "@jwitmann/vcc-brain-core/context/triggers";
 // parse failure, not a silent fallback, so misconfiguration surfaces instead
 // of quietly running with unintended thresholds.
 
+export type ContextManagementMode = "full" | "trim-only";
+
+// True when context management runs the full stack (trim handling plus
+// compaction handling and per-session recall). Trim-only mode partitions
+// ownership with an external engine instead. Single predicate for every
+// mode branch so a future mode value changes behavior in one place.
+export function isFullContextMode(config: { readonly mode: ContextManagementMode }): boolean {
+  return config.mode === "full";
+}
+
 export type ContextManagementConfig = {
   readonly enabled: boolean;
+  readonly mode: ContextManagementMode;
   readonly ratio: number;
   readonly hardCapTokens: number;
   readonly keepRecentTurns: number;
@@ -18,6 +34,7 @@ export type ContextManagementConfig = {
 
 export const DEFAULT_CONTEXT_MANAGEMENT_CONFIG: ContextManagementConfig = {
   enabled: false,
+  mode: "full",
   ratio: 0.8,
   hardCapTokens: 250000,
   keepRecentTurns: 3,
@@ -64,6 +81,7 @@ export function parseContextManagementBlock(
 
   const path = "vcc-brain.contextManagement";
   const enabled = readOptionBoolean(path, block, "enabled", base.enabled);
+  const mode = readOptionString(path, block, "mode", base.mode);
   const ratio = readOptionNumber(path, block, "ratio", base.ratio);
   const hardCapTokens = readOptionNumber(path, block, "hardCapTokens", base.hardCapTokens);
   const keepRecentTurns = readOptionNumber(path, block, "keepRecentTurns", base.keepRecentTurns);
@@ -81,6 +99,12 @@ export function parseContextManagementBlock(
   );
 
   if (!enabled.ok) return enabled;
+  if (!mode.ok) return mode;
+  if (mode.value !== "full" && mode.value !== "trim-only") {
+    return failure({
+      message: `The "${path}.mode" option must be "full" or "trim-only".`,
+    });
+  }
   if (!ratio.ok) return ratio;
   if (!hardCapTokens.ok) return hardCapTokens;
   if (!keepRecentTurns.ok) return keepRecentTurns;
@@ -89,6 +113,7 @@ export function parseContextManagementBlock(
 
   return success({
     enabled: enabled.value,
+    mode: mode.value,
     ratio: ratio.value,
     hardCapTokens: hardCapTokens.value,
     keepRecentTurns: keepRecentTurns.value,

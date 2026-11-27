@@ -28,6 +28,7 @@ const STATE = "/home/.vcc-brain/state";
 
 const CONFIG: ContextManagementConfig = {
   enabled: true,
+  mode: "full",
   ratio: 0.01,
   hardCapTokens: 250000,
   keepRecentTurns: 0,
@@ -319,6 +320,36 @@ test("requests compaction when the estimate stays over threshold after trim", as
   await hook(fakeEvent([[{ type: "text", text: "word ".repeat(40000) }]], null));
 
   expect(requestCompaction).toHaveBeenCalledWith(SESSION, "ratio");
+});
+
+test("trim-only mode trims without snapshots or compaction requests", async () => {
+  const { context, sessionHook } = contextHookFake(100000);
+  const requestCompaction = vi.fn();
+  registerContextHook(
+    context,
+    {
+      config: { ...CONFIG, mode: "trim-only" },
+      stateDirectory: STATE,
+      isBrainAvailable: () => true,
+      reportReceiptFailure: () => undefined,
+      requestCompaction,
+    },
+    createContextRuntime(),
+  );
+  const hook = sessionHook.mock.calls[0]?.[1] as (event: unknown) => Promise<void>;
+
+  const event = fakeEvent(readCall(), CALL_ROLES);
+  await hook(event);
+
+  const resultPart = (event.messages[RESULT_INDEX]?.content[0] ?? {}) as {
+    result: { value: string };
+  };
+  expect(resultPart.result.value).toContain("<tool-output-omission-notice>");
+  expect(requestCompaction).not.toHaveBeenCalled();
+  expect(fs.existsSync(`${STATE}/context-snapshot/${SESSION}.json`)).toBe(false);
+  const receipts = await readReceipts(`${STATE}/context-log`, SESSION);
+  expect(receipts.ok && receipts.value).toHaveLength(1);
+  expect(receipts.ok ? receipts.value[0] : null).toMatchObject({ kind: "trim" });
 });
 
 test("ratio cannot fire when the model window is unknown", async () => {

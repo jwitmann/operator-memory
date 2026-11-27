@@ -29,6 +29,7 @@ const STATE = "/home/.vcc-brain/state";
 
 const CONFIG: ContextManagementConfig = {
   enabled: true,
+  mode: "full",
   ratio: 0.8,
   hardCapTokens: 250000,
   keepRecentTurns: 3,

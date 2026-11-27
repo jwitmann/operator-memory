@@ -98,6 +98,7 @@ Alternative: organization-wide defaults through the `plugins` entry's `options` 
 ```
 
 - `enabled`: the master switch. Vanilla VCC Brain behavior is unchanged while `false`.
+- `mode`: `"full"` (default) or `"trim-only"`. Trim-only partitions ownership with an external compaction engine: trim, trigger evaluation, receipts, and omission recovery stay on, while the compaction hook, snapshot, per-session recall/search, and engine stand-down stay off. Requests still fire — the engine summarizes whatever the host compacts. An invalid value fails loudly.
 - `ratio`: trim past this fraction of the model's declared window.
 - `hardCapTokens`: trim past this absolute size. The backstop when the model window is unknown.
 - `keepRecentTurns`: the most recent assistant turns are never trimmed.
