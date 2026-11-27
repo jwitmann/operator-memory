@@ -18,7 +18,7 @@ Helper invokes `pi install npm:@jwitmann/vcc-brain-pi`. The unversioned source p
 
 ## Feature Scope (Tier 2)
 
-Pi is a Tier 2 adapter: memory injection, setup commands, footer status, and native updates. It intentionally has no deterministic context management and no cross-session recall — those are Tier 1 (OpenCode V2, DeepSeek) surfaces. Provided surfaces:
+Pi is a Tier 2 adapter: memory injection, setup commands, footer status, and native updates. It intentionally has no context management and no cross-session recall — those are Tier 1 (OpenCode V2, DeepSeek) surfaces. Provided surfaces:
 
 - Immutable core-rendered preamble injection on every outgoing model call
 - Canonical all-or-nothing load diagnostic and visible recovery cue

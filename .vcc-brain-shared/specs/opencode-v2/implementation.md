@@ -1,6 +1,6 @@
 # OpenCode V2 Adapter Implementation
 
-Last Updated: November 24, 2026
+Last Updated: November 27, 2026
 
 How `@jwitmann/vcc-brain-opencode-v2` binds the general adapter contract as the default OpenCode integration. V2 is an incompatible plugin platform and therefore remains a separate package; the unversioned npm package and source directory still belong to legacy V1. Behavioral deviations are recorded against [`../reference/implementation.md`](../reference/implementation.md), not other bindings.
 
@@ -76,6 +76,12 @@ Every context-hook turn refreshes a per-session snapshot of the cleaned raw requ
 Omitted payloads are retained per session up to 200 payloads, 32 MiB, and 30 days, with the count cap enforced automatically on every store; the `vcc-brain-prune` tool applies the same policy on demand. Receipts are never pruned. Both locations live under `~/.vcc-brain/state/`, operational state outside the Brain partitions that is safe to delete when a session is done with.
 
 A host-reported failed compaction (`session.compaction.failed`) arms a per-session backoff: new requests are suppressed for ten minutes, then only real growth past the failure-point estimate re-arms. A compaction attempt running (or `session.compaction.ended`) clears the backoff. Requests are also single-flight: a second admission while one request is outstanding with an unknown outcome is skipped. The shared runtime lives on `globalThis` so a host bundle re-import on config change keeps dedup and backoff state instead of refiring. None of this stops a host-side retry loop already in progress — that needs the server stopped and the stuck inbox row deleted — it only stops our plugin from feeding it.
+
+### One Compaction Provider Per Session
+
+Two compaction/recall stacks in one session produce two snapshot stores and two recall tool pairs with incompatible checkpoint shapes, and the agent can call the wrong recall. When another compaction engine is active in the session, our context management stands down: setup-time detection (plugin and tool listings) auto-disables it with a warning toast, and a deferred one-shot re-check on first session activity catches engines that load after us — flipping enforcement off and removing the session-scoped tools (`vcc-brain-read_omitted`, `vcc-brain-prune`, `vcc-brain-recall`, `vcc-brain-search`) so exactly one recall surface remains. Preamble injection, preamble refresh, and brain updates stay on: they are Brain behavior, not context reduction. Detection is fail-closed and load-order-limited; explicit config remains the primary contract — enable our `contextManagement` only where no other engine owns compaction.
+
+Checkpoint recognition is shape-tolerant across VCC-family engines: besides the assistant carrying-lone-compaction-block shape, a user-text message carrying both `<compacted-checkpoint>` tags counts as a checkpoint, so a foreign engine's tagged checkpoint stays ordinal-recallable from our snapshot. When a checkpoint ordinal has no servable checkpoint but the snapshot carries a foreign `-compaction` header, `vcc-brain-recall` names the header and hands the agent to the owning engine's recall tool instead of reporting zero checkpoints.
 
 ## Preamble Refresh
 

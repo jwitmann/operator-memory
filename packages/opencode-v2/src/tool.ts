@@ -11,6 +11,7 @@ import type { Context } from "@opencode/plugin/promise/plugin";
 
 import {
   classifySnapshotStore,
+  findForeignCheckpointHeader,
   formatRecallReply,
   formatSearchReply,
   readCompactionSnapshot,
@@ -25,6 +26,17 @@ export type ReadOmittedDeps = {
 };
 
 const OMISSION_ID_PATTERN = /^omitted-\d+$/;
+
+// Session-scoped tools owned by context management. A deferred stand-down
+// (external compaction engine loaded after our setup) removes these again
+// so the agent sees exactly one recall/search surface. Cross-session tools
+// stay: they read host history through the helper, independent of engine.
+export const CONTEXT_MANAGEMENT_TOOL_NAMES: readonly string[] = [
+  "vcc-brain-read_omitted",
+  "vcc-brain-prune",
+  "vcc-brain-recall",
+  "vcc-brain-search",
+];
 
 function isOmissionID(contentID: string): boolean {
   return OMISSION_ID_PATTERN.test(contentID);
@@ -230,6 +242,20 @@ export async function registerRecallTool(context: Context, deps: ReadOmittedDeps
         }
         const resolved = resolveRecallSelections(classified.messages, input.type, input.id);
         if (resolved.errors.length > 0 || resolved.selections.length === 0) {
+          // A foreign engine's checkpoint carries no ordinals in our
+          // snapshot: hand the agent to the owning engine's recall tool
+          // instead of reporting zero checkpoints.
+          if (input.type === "checkpoint") {
+            const foreign = findForeignCheckpointHeader(classified.messages);
+            if (foreign !== null) {
+              return {
+                content:
+                  `This session's checkpoint was compiled by an external compaction engine (${foreign}), `
+                  + "not by VCC Brain instant-compaction, so vcc-brain-recall has no checkpoint ordinals for it. "
+                  + "Restore it with the owning engine's recall tool (for the opencode-vcc-port engine: vcc-recall).",
+              };
+            }
+          }
           return {
             content: resolved.errors.length > 0 ? resolved.errors.join("; ") : "Nothing to recall.",
           };

@@ -115,5 +115,5 @@ Customize your brain and your agent's behavior however you want. With VCC Brain,
 Tip: Run each VCC Brain command in a new conversation so the agent can focus on setup or indexing with a clean working context.
 
 - `/vcc-brain:user-init` — Initializes or revises private user-global memory (instructions and freeform) in the current conversation.
-- `/vcc-brain:project-init` — Initializes or revises project setup without overwriting existing content. It configures Private, guides optional Shared activation, and indexes the repository. Project setup also offers optional features such as deterministic context management on supported harnesses (OpenCode, DeepSeek).
+- `/vcc-brain:project-init` — Initializes or revises project setup without overwriting existing content. It configures Private, guides optional Shared activation, and indexes the repository. Project setup also offers optional features such as context management on supported harnesses (OpenCode, DeepSeek).
 - `/vcc-brain:index` — Builds or refreshes the Project Index so future agents can navigate repository structure and applicable subsystem context. Refreshing records a structural stamp of the tree, and the agent warns when later changes make the index stale.

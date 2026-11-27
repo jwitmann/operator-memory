@@ -142,3 +142,20 @@ test("resolves engine defaults with elision off", () => {
   expect(config.elideSourceKinds).toEqual([]);
   expect(config.framing.recallGuide).toContain("RECALL");
 });
+
+test("re-enters a tagged user-text checkpoint as a checkpoint user message", () => {
+  const node = toCompilerNode(
+    textMessage(
+      "m9",
+      "Continue the task directly from the messages that follow.\n\n<compacted-checkpoint>\n\nsummary body\n\n</compacted-checkpoint>",
+    ),
+    9,
+  );
+  expect(node?.message).toMatchObject({ role: "user", source: { kind: "compact-checkpoint" } });
+});
+
+test("does not mistake prose quoting one tag for a checkpoint", () => {
+  const node = toCompilerNode(textMessage("m9", "what does <compacted-checkpoint> mean?"), 9);
+  expect(node?.message).toMatchObject({ role: "user" });
+  expect(node?.message).not.toMatchObject({ source: { kind: "compact-checkpoint" } });
+});

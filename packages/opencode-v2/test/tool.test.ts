@@ -5,6 +5,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 
 import { writeCompactionSnapshot } from "../src/compaction-snapshot.ts";
 import {
+  CONTEXT_MANAGEMENT_TOOL_NAMES,
   registerPruneTool,
   registerReadOmittedTool,
   registerRecallSessionTool,
@@ -221,6 +222,35 @@ test("recall resolves result and checkpoint references", async () => {
   expect(missing.content).toContain("not found in this session");
 });
 
+test("recall hands a foreign checkpoint to the owning engine", async () => {
+  // Foreign header but no checkpoint tags our detector can serve: recall
+  // must route to the owning engine instead of reporting zero checkpoints.
+  const written = await writeCompactionSnapshot(
+    `${STATE}/context-snapshot`,
+    SESSION,
+    [
+      {
+        id: "m1",
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: "[other-vcc-compaction rev-9: 4 messages -> 1 entries]\n\ndistant summary without tags",
+          },
+        ],
+      },
+    ],
+    "2026-11-20T00:00:00Z",
+  );
+  expect(written.ok).toBe(true);
+  const { tool } = await addedRecallTool();
+
+  const result = await tool.execute({ type: "checkpoint", id: "1" }, { sessionID: SESSION });
+
+  expect(result.content).toContain("[other-vcc-compaction rev-9: 4 messages -> 1 entries]");
+  expect(result.content).toContain("owning engine's recall tool");
+});
+
 test("recall registers under a flat hyphenated name", async () => {
   const { editor, tool } = await addedRecallTool();
 
@@ -235,6 +265,20 @@ test("search registers under a flat hyphenated name", async () => {
   expect(editor.namespace).not.toHaveBeenCalled();
   expect(tool.name).toBe("vcc-brain-search");
   expect(tool.options).toEqual({ codemode: false });
+});
+
+test("session tool names match the stand-down removal list", async () => {
+  const editor = { namespace: vi.fn(), add: vi.fn(), remove: vi.fn() };
+  const context = {
+    tool: { transform: vi.fn(async (callback: (editor: unknown) => void) => callback(editor)) },
+  } as never;
+  await registerReadOmittedTool(context, { stateDirectory: STATE });
+  await registerPruneTool(context, { stateDirectory: STATE });
+  await registerRecallTool(context, { stateDirectory: STATE });
+  await registerSearchTool(context, { stateDirectory: STATE });
+
+  const names = editor.add.mock.calls.map(([tool]) => (tool as { name: string }).name);
+  expect(names).toEqual([...CONTEXT_MANAGEMENT_TOOL_NAMES]);
 });
 
 test("recall validates input and reports a missing snapshot", async () => {

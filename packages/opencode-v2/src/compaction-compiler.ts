@@ -9,6 +9,8 @@
 // compaction — never a broken summary.
 
 import {
+  CHECKPOINT_CLOSE_TAG,
+  CHECKPOINT_OPEN_TAG,
   COMPILER_REV,
   compileNoisePatterns,
   compileRegion,
@@ -245,9 +247,29 @@ export function toCompilerNode(message: unknown, seq: number): CompileNode | nul
       const block = toBlock(part);
       if (block !== null) blocks.push(block);
     }
+    // A checkpoint compiled by a VCC-family engine re-enters as user text
+    // carrying the checkpoint tags (the host replays the assistant
+    // compaction block as plain text). Tag-pairing keeps prose that merely
+    // quotes one tag from counting as a checkpoint: both tags are required.
+    if (isTaggedCheckpointBlocks(blocks)) {
+      return {
+        seq,
+        message: { role: "user", content: blocks, source: { kind: "compact-checkpoint" } },
+      };
+    }
     return { seq, message: { role: "user", content: blocks } };
   }
   return null;
+}
+
+// Whether compiled text blocks carry a landed checkpoint: both core
+// checkpoint tags must be present (see CHECKPOINT_OPEN_TAG).
+function isTaggedCheckpointBlocks(blocks: readonly CompileContentBlock[]): boolean {
+  let text = "";
+  for (const block of blocks) {
+    if (block?.type === "text" && typeof block.text === "string") text += block.text;
+  }
+  return text.includes(CHECKPOINT_OPEN_TAG) && text.includes(CHECKPOINT_CLOSE_TAG);
 }
 
 // Pick the keepID: id of the first tailed message (scan forward past id-less

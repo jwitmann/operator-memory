@@ -78,6 +78,7 @@ Cross-cutting rules under both pathways:
 
 - Subagents receive the same complete preamble as main agents, through the same mechanism where possible.
 - `resume` and `fork` skip reinjection only when the retained history provably already carries the preamble; the transform pathway needs no such check because it reapplies automatically.
+- Accepted retention proofs, cheapest first: harness-provided retained-context metadata where the harness exposes it; an adapter-kept session-to-transcript map that reinjects when the transcript behind a session changes; full transcript verification only as a last resort. Transcript parsing is permitted but never the recommended pattern: it couples the adapter to undocumented harness internals on every resume.
 - Injected content is immutable for the session under the transform pathway; the persisted-context pathway trades that immutability for re-rendered currency and records this as an accepted consequence.
 
 ### Failure Semantics

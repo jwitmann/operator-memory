@@ -32,10 +32,12 @@ import {
 } from "./notifications.ts";
 import { loadPreamble } from "./preamble.ts";
 import { resolveProjectConfig } from "./project-config.ts";
+import { findExternalCompactionProvider } from "./provider-detect.ts";
 import { refreshPreambleContent } from "./refresh.ts";
 import { DEFAULT_PREAMBLE_REFRESH_CONFIG, parsePreambleRefreshConfig } from "./refresh-config.ts";
 import { sharedContextRuntime } from "./runtime.ts";
 import {
+  CONTEXT_MANAGEMENT_TOOL_NAMES,
   registerPruneTool,
   registerReadOmittedTool,
   registerRecallSessionTool,
@@ -131,12 +133,62 @@ const VccBrainPlugin = Plugin.define({
     const effectiveRefreshConfig = projectOverride.config.preambleRefresh;
     const effectiveBrainUpdatesConfig = projectOverride.config.brainUpdates;
     const effectiveContextManagement = projectOverride.config.contextManagement;
-    const contextManagementEnabled = parsed.ok && effectiveContextManagement.enabled;
+    let contextManagementEnabled = parsed.ok && effectiveContextManagement.enabled;
+    // One compaction/recall provider per session: an already-loaded
+    // external engine turns our context management off at setup (preamble,
+    // refresh, and brain updates stay on). Engines that load after us are
+    // caught by the deferred re-check on first session activity below.
+    if (contextManagementEnabled) {
+      const external = await findExternalCompactionProvider(context);
+      if (external !== null) {
+        contextManagementEnabled = false;
+        await showToast({
+          title: "VCC Brain",
+          message:
+            `External compaction engine detected (${external.detail}); VCC Brain context management is off — `
+            + "one compaction/recall provider per session. Preamble, refresh, and brain updates stay on.",
+          variant: "warning",
+        }).catch(() => undefined);
+      }
+    }
+    // Deferred stand-down cell: flipped when a late-loading external
+    // engine is found on first session activity. Enforcement hooks gate on
+    // isActive (generation-staleness AND stand-down); preamble, refresh,
+    // and brain updates keep gating on generation-staleness only.
+    const standDown = { stoodDown: false };
+    const isActive = () => isCurrent() && !standDown.stoodDown;
+    let providerRecheckDone = false;
+    const maybeStandDownForExternalProvider = async (): Promise<void> => {
+      if (!contextManagementEnabled || providerRecheckDone || !isCurrent()) return;
+      providerRecheckDone = true;
+      const hit = await findExternalCompactionProvider(context);
+      if (hit === null || !isCurrent()) return;
+      standDown.stoodDown = true;
+      try {
+        await context.tool.transform(editor => {
+          for (const name of CONTEXT_MANAGEMENT_TOOL_NAMES) editor.remove(name);
+        });
+      } catch {
+        // Best-effort: enforcement below already stopped; leftover tool
+        // registrations are a cosmetic remainder, never fatal.
+      }
+      await showToast({
+        title: "VCC Brain",
+        message:
+          `External compaction engine detected (${hit.detail}); VCC Brain context management stood down — `
+          + "use the owning engine's recall/search tools.",
+        variant: "warning",
+      }).catch(() => undefined);
+    };
     await registerCommands(context);
     // Brain availability per session, from preamble loads. Context management
     // gates on it: the feature stays off without the Brain.
     const brainAvailable = new Map<string, boolean>();
     await context.session.hook("context", async event => {
+      if (!isCurrent()) {
+        return;
+      }
+      await maybeStandDownForExternalProvider();
       if (!isCurrent()) {
         return;
       }
@@ -246,7 +298,7 @@ const VccBrainPlugin = Plugin.define({
       const controller = new AbortController();
       if (contextManagementEnabled) {
         const requestCompaction = (sessionID: string, cause: TriggerKind) => {
-          if (!isCurrent()) {
+          if (!isActive()) {
             return;
           }
           requestSessionCompaction(context, runtime, sessionID, cause);
@@ -257,7 +309,7 @@ const VccBrainPlugin = Plugin.define({
           requestCompaction,
           isBrainAvailable,
           reportReceiptFailure,
-          isCurrent,
+          isCurrent: isActive,
         };
         registerContextHook(context, deps, runtime);
         registerCompactionHook(
@@ -269,7 +321,7 @@ const VccBrainPlugin = Plugin.define({
             isBrainAvailable,
             reportReceiptFailure,
             refreshEnabled: refreshConfig.enabled,
-            isCurrent,
+            isCurrent: isActive,
           },
           runtime,
         );

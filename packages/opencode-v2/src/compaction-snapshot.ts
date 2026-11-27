@@ -555,6 +555,35 @@ export function formatSearchReply(pattern: string, found: SearchResult): string 
   return `**vcc-brain-search ${pattern}** (${found.totalMatches} matching event(s))\n\n${found.text}`;
 }
 
+// A `-compaction` header line names the engine that compiled a checkpoint:
+// ours frames `[vcc-compaction <rev>: ...]`, the port frames
+// `[opencode-vcc-compaction <rev>: ...]`. The revision-and-colon tail is
+// required so bracketed prose like `[post-compaction review]` never counts.
+// Anything else in the family was compiled by a foreign engine.
+const FOREIGN_COMPACTION_HEADER_PATTERN = /\[([^\][\n]*-compaction\s+\S[^\][\n]*:[^\][\n]*)\]/;
+const OWN_COMPACTION_HEADER_PREFIX = "[vcc-compaction ";
+
+// Find the header of a checkpoint compiled by a foreign engine, if any.
+// Used by recall to hand a checkpoint ordinal to the owning engine's recall
+// tool instead of reporting zero checkpoints.
+export function findForeignCheckpointHeader(messages: readonly CleanedMessage[]): string | null {
+  const list = Array.isArray(messages) ? messages : [];
+  for (const message of list) {
+    const content = message?.content;
+    if (!Array.isArray(content)) continue;
+    for (const part of content) {
+      if (part === null || part === undefined || part.type !== "text") continue;
+      const text = part.text;
+      if (typeof text !== "string") continue;
+      const match = FOREIGN_COMPACTION_HEADER_PATTERN.exec(text);
+      if (match === null) continue;
+      const header = `[${match[1] ?? ""}]`;
+      if (!header.startsWith(OWN_COMPACTION_HEADER_PREFIX)) return header;
+    }
+  }
+  return null;
+}
+
 // Classify a snapshot read for tool wiring: read-failure vs empty vs ready
 // never diverge per tool.
 export function classifySnapshotStore(

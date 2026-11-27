@@ -8,6 +8,7 @@ import {
   classifySnapshotStore,
   cleanMessage,
   cleanPart,
+  findForeignCheckpointHeader,
   formatRecallReply,
   formatSearchReply,
   makeSnapshotSession,
@@ -306,4 +307,58 @@ test("cleaners drop control and transport shapes", () => {
   expect(cleanMessage({ role: "user" })).toBeNull();
   const events = toSnapshotEvents(buildSnapshot(SNAP_MSGS).messages);
   expect(events.map(event => event.seq)).toEqual([1, 2, 3, 4, 5]);
+});
+
+test("marks a tagged user-text checkpoint for ordinal recall", () => {
+  const msgs = [
+    { id: "m1", role: "user", content: [{ type: "text", text: "do the thing" }] },
+    {
+      id: "m2",
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: "[opencode-vcc-compaction vcc-compiler-debug-2: 10 messages -> 2 entries]\n\n<compacted-checkpoint>\n\nsummary\n\n</compacted-checkpoint>",
+        },
+      ],
+    },
+  ];
+  const messages = buildSnapshot(msgs).messages;
+  const events = toSnapshotEvents(messages);
+  expect(events[1]?.data?.source).toEqual({ kind: "compact-checkpoint" });
+  const resolved = resolveRecallSelections(messages, "checkpoint", "1");
+  expect(resolved.errors).toEqual([]);
+  expect(resolved.selections).toEqual([{ start: 2, end: 2 }]);
+});
+
+test("finds foreign checkpoint headers and ignores our own", () => {
+  const foreign = buildSnapshot([
+    {
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: "[opencode-vcc-compaction vcc-compiler-debug-2: 10 messages -> 2 entries]",
+        },
+      ],
+    },
+  ]).messages;
+  expect(findForeignCheckpointHeader(foreign)).toBe(
+    "[opencode-vcc-compaction vcc-compiler-debug-2: 10 messages -> 2 entries]",
+  );
+  const own = buildSnapshot([
+    {
+      role: "user",
+      content: [{ type: "text", text: "[vcc-compaction 2.7.2: 10 messages -> 2 entries]" }],
+    },
+  ]).messages;
+  expect(findForeignCheckpointHeader(own)).toBeNull();
+  const plain = buildSnapshot([
+    { role: "user", content: [{ type: "text", text: "just a question (see [checkpoint 1])" }] },
+  ]).messages;
+  expect(findForeignCheckpointHeader(plain)).toBeNull();
+  const prose = buildSnapshot([
+    { role: "user", content: [{ type: "text", text: "notes from the [post-compaction review]" }] },
+  ]).messages;
+  expect(findForeignCheckpointHeader(prose)).toBeNull();
 });

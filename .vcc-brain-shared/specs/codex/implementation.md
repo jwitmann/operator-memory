@@ -1,13 +1,13 @@
 # Codex Adapter
 
-Last Updated: November 3, 2026
+Last Updated: November 26, 2026
 
 Codex CLI and Codex Desktop use the dependency-free `@jwitmann/vcc-brain-codex` legacy plugin package. Shared memory rendering remains in Helper; the adapter only binds Codex lifecycle events to `vcc-brain-helper preamble`. Behavioral deviations are recorded against [`../reference/implementation.md`](../reference/implementation.md), not other bindings.
 
 ## Preamble Injection
 
 - `SessionStart` injects current memory for `startup`, `clear`, and `compact` sources.
-- `resume` and `fork` skip reinjection because their retained history already contains the prior preamble.
+- `resume` and `fork` skip reinjection unconditionally. This is a known gap against the reference retention-proof rule: reverting the first turn (or forking before it) discards the persisted preamble while reporting an ordinary `resume`, leaving the session with no preamble and the adapter silent. A transcript-verification fix exists at aerovato/operator-memory (#80); no port is scheduled because Codex is not used or verifiable here — no CLI, no local sessions, no reference clone.
 - `SubagentStart` injects current memory for delegated `ThreadSpawn` subagents. Codex does not expose start hooks for internal workers.
 - Every render runs Helper with the event `cwd` and passes successful stdout to Codex unchanged with no context-output limit.
 - The adapter keeps no cache.

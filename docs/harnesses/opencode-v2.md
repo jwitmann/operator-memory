@@ -34,11 +34,11 @@ Secondary signals: the home footer shows `VCC Brain Ready (vX.Y.Z)` and the sess
 
 Run each in a new conversation. See [Getting Started](../getting-started.md#appendix-commands) for what each command does.
 
-Once the basics are running, see [Context Management](#context-management): deterministic trim and compaction that reduce what a session resends to the model. Off by default — enable it during project setup.
+Once the basics are running, see [Context Management](#context-management): deterministic trim and compaction that reduce what a session resends to the model. Off by default — enable it during project setup only where no external VCC compaction engine runs in the same sessions (see [One compaction provider per session](#one-compaction-provider-per-session)).
 
 ### Context Management
 
-When enabled, VCC Brain reduces what a session resends to the model. Three deterministic rules, evaluated with token arithmetic and host-reported run outcomes — never model judgment. Compaction runs through the deterministic VCC engine, ported in-tree from the [VCC reference engine](https://github.com/jwitmann/opencode-vcc-compaction):
+When enabled, VCC Brain reduces what a session resends to the model. Three deterministic rules, evaluated with token arithmetic and host-reported run outcomes — never model judgment. Trim and snapshot recall are ours; the compaction override runs through an in-tree port of the [VCC reference engine](https://github.com/jwitmann/opencode-vcc-compaction) — a fallback subset (no `vccRev`/`vccConfigHash` stamping, no tunables), not the full engine. That port exists from before a standalone engine was available: where the standalone `opencode-vcc-compaction` engine is installed, prefer it and leave this feature off — one compaction provider per session.
 
 Why shaped compaction matters: a plain summarizer rewrites what it touches, including your rules — a restated rule is a different rule, and the next session treats the paraphrase as fact. VCC Brain's compaction instructions forbid restating Brain content: durable findings are written to the Brain before summarizing, the summary references Brain paths instead of inlining them, and trimmed tool output keeps verbatim omission handles recoverable through `vcc-brain-read_omitted`. Your rules survive long sessions as pointers to verbatim source. Shaping is prompt-only — the host still writes the summary.
 
@@ -51,6 +51,10 @@ Trimming replaces completed tool inputs and outputs with short notices and store
 #### Prerequisites
 
 The Brain must exist: run `/vcc-brain:user-init` (cross-project memory) or `/vcc-brain:project-init` (project memory) first. Without an initialized Brain the feature stays off and records one refusal receipt per session explaining why. The feature itself is off by default.
+
+#### One compaction provider per session
+
+Do not enable VCC Brain context management in a session that already runs another compaction/recall engine (for example the standalone `opencode-vcc-port`). Two active stacks write two snapshot stores and register two recall tool pairs with incompatible checkpoint shapes, and the agent can call the wrong recall. When our plugin detects a foreign engine it stands its own context management down automatically (warning toast; preamble, refresh, and brain updates stay on) — but the supported configuration is exactly one provider per session: disable ours where the other engine owns compaction.
 
 #### Configuration
 

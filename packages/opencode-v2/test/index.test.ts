@@ -375,3 +375,89 @@ test("refreshes the preamble end to end when the Brain changes cold", async () =
     { kind: "refresh", reason: "brain-changed" },
   ]);
 });
+
+function engineAwareContext(tools: readonly unknown[], plugins: readonly unknown[]) {
+  async function* emptyStream(): AsyncGenerator<never> {
+    // No events.
+  }
+  const sessionHook = vi.fn();
+  const subscribe = vi.fn(() => emptyStream());
+  const toolTransform = vi.fn(async callback => callback({ namespace: vi.fn(), add: vi.fn() }));
+  const context = {
+    location: { directory: "/project" },
+    options: { "vcc-brain": { contextManagement: { enabled: true } } },
+    command: {
+      list: () => Promise.resolve({ data: [], location: { directory: "/project" } }),
+      transform: vi.fn(),
+    },
+    rpc: { register: vi.fn(() => Promise.resolve({ events: { emit: emitToast } })) },
+    session: { hook: sessionHook },
+    event: { subscribe },
+    model: { list: vi.fn(async () => ({ data: [] })) },
+    tool: { transform: toolTransform, list: () => Promise.resolve([...tools]) },
+    plugin: {
+      list: () => Promise.resolve({ location: { directory: "/project" }, data: [...plugins] }),
+    },
+  } as unknown as Context;
+  return { context, sessionHook, toolTransform };
+}
+
+test("stands down at setup when an external engine is already listed", async () => {
+  const { context, sessionHook, toolTransform } = engineAwareContext(
+    [],
+    [{ id: "opencode-vcc-port", source: { type: "local", path: "/x/opencode-vcc-port" } }],
+  );
+  emitToast.mockClear();
+
+  await VccBrainPlugin.setup(context);
+
+  // Preamble hook only: no trim, compaction, completion, or tool wiring.
+  expect(sessionHook.mock.calls.map(([name]) => name)).toEqual(["context"]);
+  expect(toolTransform).not.toHaveBeenCalled();
+  expect(emitToast).toHaveBeenCalledWith(
+    "toast",
+    expect.objectContaining({ title: "VCC Brain", variant: "warning" }),
+  );
+});
+
+test("stands down on first activity when the engine loads late", async () => {
+  const tools: unknown[] = [];
+  const { context, sessionHook, toolTransform } = engineAwareContext(tools, []);
+  await VccBrainPlugin.setup(context);
+  expect(sessionHook.mock.calls.map(([name]) => name)).toEqual([
+    "context",
+    "context",
+    "compaction",
+  ]);
+
+  // The engine loads after our setup: visible on first session activity.
+  tools.push({ name: "vcc-recall", description: "external recall" });
+  const removed: string[] = [];
+  toolTransform.mockImplementation(async callback =>
+    callback({ namespace: vi.fn(), add: vi.fn(), remove: (id: string) => removed.push(id) }),
+  );
+  emitToast.mockClear();
+  const preambleHook = sessionHook.mock.calls[0]?.[1] as (event: {
+    sessionID: string;
+    system: unknown[];
+  }) => Promise<void>;
+  await preambleHook({ sessionID: "ses-late", system: [] });
+
+  expect(removed).toEqual([
+    "vcc-brain-read_omitted",
+    "vcc-brain-prune",
+    "vcc-brain-recall",
+    "vcc-brain-search",
+  ]);
+  expect(emitToast).toHaveBeenCalledWith(
+    "toast",
+    expect.objectContaining({ title: "VCC Brain", variant: "warning" }),
+  );
+
+  // One-shot: later activity neither re-removes nor re-toasts.
+  emitToast.mockClear();
+  removed.length = 0;
+  await preambleHook({ sessionID: "ses-late", system: [] });
+  expect(removed).toEqual([]);
+  expect(emitToast).not.toHaveBeenCalled();
+});
