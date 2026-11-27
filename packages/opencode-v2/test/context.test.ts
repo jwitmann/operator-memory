@@ -322,13 +322,13 @@ test("requests compaction when the estimate stays over threshold after trim", as
   expect(requestCompaction).toHaveBeenCalledWith(SESSION, "ratio");
 });
 
-test("trim-only mode trims without snapshots or compaction requests", async () => {
+test("vcc mode trims without snapshots or threshold compaction requests", async () => {
   const { context, sessionHook } = contextHookFake(100000);
   const requestCompaction = vi.fn();
   registerContextHook(
     context,
     {
-      config: { ...CONFIG, mode: "trim-only" },
+      config: { ...CONFIG, mode: "vcc" },
       stateDirectory: STATE,
       isBrainAvailable: () => true,
       reportReceiptFailure: () => undefined,

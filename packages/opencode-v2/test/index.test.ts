@@ -490,7 +490,7 @@ test("stands down on first activity when the engine loads late", async () => {
   expect(emitToast).not.toHaveBeenCalled();
 });
 
-test("trim-only mode partitions ownership with the external engine", async () => {
+test("vcc mode partitions ownership with the external engine", async () => {
   // An engine is listed, yet nothing stands down: coexistence is the
   // point of the mode. Trim + completion trigger + omission tools stay;
   // the compaction hook and per-session recall/search never register.
@@ -501,7 +501,7 @@ test("trim-only mode partitions ownership with the external engine", async () =>
   );
   (context.options as { "vcc-brain": { contextManagement: Record<string, unknown> } })[
     "vcc-brain"
-  ].contextManagement = { enabled: true, mode: "trim-only" };
+  ].contextManagement = { enabled: true, mode: "vcc" };
   toolTransform.mockImplementation(async callback =>
     callback({
       namespace: vi.fn(),

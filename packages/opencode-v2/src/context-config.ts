@@ -12,10 +12,10 @@ import type { TriggerConfig } from "@jwitmann/vcc-brain-core/context/triggers";
 // parse failure, not a silent fallback, so misconfiguration surfaces instead
 // of quietly running with unintended thresholds.
 
-export type ContextManagementMode = "full" | "trim-only";
+export type ContextManagementMode = "full" | "vcc";
 
 // True when context management runs the full stack (trim handling plus
-// compaction handling and per-session recall). Trim-only mode partitions
+// compaction handling and per-session recall). "vcc" mode partitions
 // ownership with an external engine instead. Single predicate for every
 // mode branch so a future mode value changes behavior in one place.
 export function isFullContextMode(config: { readonly mode: ContextManagementMode }): boolean {
@@ -100,9 +100,9 @@ export function parseContextManagementBlock(
 
   if (!enabled.ok) return enabled;
   if (!mode.ok) return mode;
-  if (mode.value !== "full" && mode.value !== "trim-only") {
+  if (mode.value !== "full" && mode.value !== "vcc") {
     return failure({
-      message: `The "${path}.mode" option must be "full" or "trim-only".`,
+      message: `The "${path}.mode" option must be "full" or "vcc".`,
     });
   }
   if (!ratio.ok) return ratio;

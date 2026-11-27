@@ -34,17 +34,19 @@ Secondary signals: the home footer shows `VCC Brain Ready (vX.Y.Z)` and the sess
 
 Run each in a new conversation. See [Getting Started](../getting-started.md#appendix-commands) for what each command does.
 
-Once the basics are running, see [Context Management](#context-management): deterministic trim and compaction that reduce what a session resends to the model. Off by default — enable it during project setup only where no external VCC compaction engine runs in the same sessions (see [One compaction provider per session](#one-compaction-provider-per-session)).
+Once the basics are running, see [Context Management](#context-management): deterministic trim and compaction that reduce what a session resends to the model. Off by default — use full mode only where no external VCC compaction engine runs in the same sessions, or `"vcc"` mode alongside one (see [One compaction provider per session](#one-compaction-provider-per-session)).
 
 ### Context Management
 
-When enabled, VCC Brain reduces what a session resends to the model. Three deterministic rules, evaluated with token arithmetic and host-reported run outcomes — never model judgment. Trim and snapshot recall are ours; the compaction override runs through an in-tree port of the [VCC reference engine](https://github.com/jwitmann/opencode-vcc-compaction) — a fallback subset (no `vccRev`/`vccConfigHash` stamping, no tunables), not the full engine. That port exists from before a standalone engine was available: where the standalone `opencode-vcc-compaction` engine is installed, prefer it and leave this feature off — one compaction provider per session.
+When enabled, VCC Brain reduces what a session resends to the model. Three deterministic rules, evaluated with token arithmetic and host-reported run outcomes — never model judgment. Trim is ours in both modes; in full mode snapshot recall is also ours, and the compaction override runs through an in-tree port of the [VCC reference engine](https://github.com/jwitmann/opencode-vcc-compaction) — a fallback subset (no `vccRev`/`vccConfigHash` stamping, no tunables), not the full engine. That port exists from before a standalone engine was available: where the standalone `opencode-vcc-compaction` engine is installed, prefer it with `"mode": "vcc"` — one compaction provider per session.
 
 Why shaped compaction matters: a plain summarizer rewrites what it touches, including your rules — a restated rule is a different rule, and the next session treats the paraphrase as fact. VCC Brain's compaction instructions forbid restating Brain content: durable findings are written to the Brain before summarizing, the summary references Brain paths instead of inlining them, and trimmed tool output keeps verbatim omission handles recoverable through `vcc-brain-read_omitted`. Your rules survive long sessions as pointers to verbatim source. Shaping is prompt-only — the host still writes the summary.
 
-1. A run ends successfully and context clears `compactFloorTokens`: compact once.
-2. Estimated context passes `ratio` of the model window: trim bulky tool I/O, then compact if still over.
+1. A run ends successfully and context clears `compactFloorTokens`: call for a compaction once.
+2. Estimated context passes `ratio` of the model window: trim bulky tool I/O, then call for a compaction if still over.
 3. Estimated context passes `hardCapTokens`: same as above, absolute.
+
+In full mode these rules issue compaction *calls* — requests to the host. In `"vcc"` mode threshold rules still trim but do not request compaction; only the end-of-run rule still calls. The summary itself is the VCC engine's work: our deterministic override in full mode, the standalone engine in `"vcc"` mode. Triggers decide *when*; the engine decides *how*.
 
 Trimming replaces completed tool inputs and outputs with short notices and stores the originals on disk; compaction summarizes history through the host's normal compaction, shaped to reference your Brain instead of inlining it. The host's own native compaction keeps working unchanged — this feature acts earlier and audits everything it does.
 
@@ -54,7 +56,7 @@ The Brain must exist: run `/vcc-brain:user-init` (cross-project memory) or `/vcc
 
 #### One compaction provider per session
 
-Do not enable VCC Brain context management in a session that already runs another compaction/recall engine (for example the standalone `opencode-vcc-port`). Two active stacks write two snapshot stores and register two recall tool pairs with incompatible checkpoint shapes, and the agent can call the wrong recall. When our plugin detects a foreign engine it stands its own context management down automatically (warning toast; preamble, refresh, and brain updates stay on) — but the supported configuration is exactly one provider per session: disable ours where the other engine owns compaction.
+Do not enable VCC Brain context management in full mode in a session that already runs another compaction/recall engine (for example the standalone `opencode-vcc-port`). Two active stacks write two snapshot stores and register two recall tool pairs with incompatible checkpoint shapes, and the agent can call the wrong recall. When our plugin detects a foreign engine in full mode it stands its own context management down automatically (warning toast; preamble, refresh, and brain updates stay on). Use `"vcc"` mode for supported coexistence, or disable ours entirely: exactly one provider summarizes and recalls per session.
 
 #### Configuration
 
@@ -98,11 +100,11 @@ Alternative: organization-wide defaults through the `plugins` entry's `options` 
 ```
 
 - `enabled`: the master switch. Vanilla VCC Brain behavior is unchanged while `false`.
-- `mode`: `"full"` (default) or `"trim-only"`. Trim-only partitions ownership with an external compaction engine: trim, trigger evaluation, receipts, and omission recovery stay on, while the compaction hook, snapshot, per-session recall/search, and engine stand-down stay off. Requests still fire — the engine summarizes whatever the host compacts. An invalid value fails loudly.
+- `mode`: `"full"` (default) or `"vcc"`. `"vcc"` partitions ownership with an external VCC compaction engine: trim, trigger evaluation, receipts, and omission recovery stay on, while the compaction hook, snapshot, per-session recall/search, and engine stand-down stay off. Threshold compaction calls are suppressed; end-of-run calls still fire. The engine summarizes whatever the host compacts. An invalid value fails loudly.
 - `ratio`: trim past this fraction of the model's declared window.
 - `hardCapTokens`: trim past this absolute size. The backstop when the model window is unknown.
 - `keepRecentTurns`: the most recent assistant turns are never trimmed.
-- `compactOnComplete`: compact at the end of successful runs.
+- `compactOnComplete`: call for a host compaction at the end of successful runs — the call only; the active engine performs the summary.
 - `compactFloorTokens`: skip end-of-run compaction below this size; small sessions gain nothing from it.
 
 #### What it leaves behind

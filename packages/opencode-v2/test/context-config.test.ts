@@ -65,11 +65,11 @@ test("rejects wrong-typed values instead of falling back", () => {
   expect(mode.ok).toBe(false);
 });
 
-test("accepts trim-only mode, defaulting to full", () => {
-  const trimmed = parseContextManagementConfig({
-    "vcc-brain": { contextManagement: { enabled: true, mode: "trim-only" } },
+test("accepts vcc mode, defaulting to full", () => {
+  const result = parseContextManagementConfig({
+    "vcc-brain": { contextManagement: { enabled: true, mode: "vcc" } },
   });
-  expect(trimmed.ok && trimmed.value.mode).toBe("trim-only");
+  expect(result.ok && result.value.mode).toBe("vcc");
 
   const absent = parseContextManagementConfig({
     "vcc-brain": { contextManagement: { enabled: true } },

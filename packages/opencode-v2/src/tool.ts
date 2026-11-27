@@ -30,7 +30,7 @@ const OMISSION_ID_PATTERN = /^omitted-\d+$/;
 // Session-scoped tools owned by context management in full mode. A
 // deferred stand-down (external compaction engine loaded after our setup)
 // removes these again so the agent sees exactly one recall/search
-// surface. Trim-only mode registers a documented subset (read_omitted +
+// surface. "vcc" mode registers a documented subset (read_omitted +
 // prune; per-session recall/search stay with the engine) — removing a
 // never-registered name is a no-op, so this set stays the removal source
 // of truth in both modes. Cross-session tools stay: they read host

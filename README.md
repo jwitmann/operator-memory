@@ -22,7 +22,7 @@ Originally forked from [aerovato/operator-memory](https://github.com/aerovato/op
 - **Sharable Knowledge** — Track documents with Git and share knowledge with your team.
 - **Zero Infrastructure** — No background agents, no embeddings, no vector database, no model configuration.
 - **Deterministic Compaction (Recommended)** — No-model-call compaction through the standalone VCC engine: transcript-preserving cuts with exact post-cut recall, stamped and tunable. Install the engine for your harness; it owns compaction. See [Pair VCC Brain with deterministic compaction](#pair-vcc-brain-with-deterministic-compaction-recommended).
-- **Context Management (built-in fallback)** — Trim bulky tool I/O by token arithmetic, snapshot every turn for exact recall, and shape host compactions so your rules survive them: summaries must reference Brain paths instead of paraphrasing them. Off by default and not recommended where the VCC engine runs — one compaction provider per session. [OpenCode](docs/harnesses/opencode-v2.md#context-management) · [DeepSeek](docs/harnesses/deepseek.md#context-management).
+- **Context Management (with built-in fallback)** — Trim bulky tool I/O by token arithmetic and shape compactions so your rules survive them: summaries must reference Brain paths instead of paraphrasing them. Off by default. On OpenCode, who compacts depends on the setting: `enabled: true` alone means we do everything — trim, trigger, summarize via the in-tree port, recall — and requires no standalone engine installed; `enabled: true` with `"mode": "vcc"` means we trim and trigger while the standalone VCC engine summarizes and recalls. Never run full mode alongside the engine. [OpenCode](docs/harnesses/opencode-v2.md#context-management) · [DeepSeek](docs/harnesses/deepseek.md#context-management).
 - **Cache-Aware Preamble Refresh** — Re-render the preamble mid-session when the Brain changes, timed to cold prompt-cache moments so it costs nothing. [How it works](docs/harnesses/opencode-v2.md#preamble-refresh).
 - **Brain-Update Nudges** — A quiet reminder to record durable knowledge during long sessions; never an automatic writer. [How it works](docs/harnesses/opencode-v2.md#brain-updates).
 - **Cross-Session Recall** — Search past sessions by keyword and restore full turns, scoped to the current project plus mutual peers (declare peers in `.vcc-brain/config.json`; sharing applies only where both sides list each other). The index is local-only with 30-day retention; title a session `[no-recall]` to opt out. [OpenCode](docs/harnesses/opencode-v2.md#cross-session-recall) · [DeepSeek](docs/harnesses/deepseek.md#cross-session-recall).
@@ -89,10 +89,10 @@ With options (all optional; per-project `.vcc-brain/config.json` overrides them)
   "plugins": [
     {
       "package": "@jwitmann/vcc-brain-opencode-v2",
-      // All features are opt-in (off by default). Enable
+      // All features are opt-in (off by default). Run full
       // contextManagement only where no other compaction engine runs
-      // in the same session — see docs/harnesses/opencode-v2.md ("One
-      // compaction provider per session").
+      // in the same session — alongside an engine, use "mode":
+      // "vcc" instead (see docs/harnesses/opencode-v2.md).
       "options": { "vcc-brain": { "contextManagement": { "enabled": false, "ratio": 0.8 } } }
     }
   ]
@@ -141,7 +141,7 @@ dsh plugin --profile <profile-name> add dsh-compaction-vcc
 opencode plugin add opencode-vcc-compaction
 ```
 
-Then turn our own context management off (`vcc-brain.contextManagement.enabled: false`): exactly one compaction provider may own a session — two active stacks register competing recall tools with incompatible checkpoint shapes.
+Then stand our own context management down: either disable it entirely (`vcc-brain.contextManagement.enabled: false`) or switch it to `"mode": "vcc"` (`vcc-brain.contextManagement` — trim, triggers, and omission recovery stay ours; the engine summarizes and recalls). Exactly one compaction provider may own a session — two active stacks register competing recall tools with incompatible checkpoint shapes.
 
 - On Pi, pair VCC Brain with the third-party deterministic compactor [pi-tuck](https://github.com/galyavin/pi-tuck) — the same no-model-call idea (transcript-preserving cuts plus exact post-cut recall), maintained outside this project. No adapter wires the two together yet; someone with Pi needs to write it:
 

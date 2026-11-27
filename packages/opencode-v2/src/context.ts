@@ -44,9 +44,10 @@ export function registerContextHook(
     }
     const sessionID = event.sessionID;
     const config = deps.config;
-    // Trim-only mode (an external engine owns compaction and recall):
+    // "vcc" mode (an external VCC engine owns compaction and recall):
     // trim, receipts, and omission recovery stay; snapshot maintenance
-    // and compaction requests are the engine's job, never ours.
+    // and threshold compaction requests stay off, while end-of-run
+    // compaction calls remain ours.
     const fullMode = isFullContextMode(config);
 
     await ensureSessionHydrated(deps.stateDirectory, runtime, sessionID);
@@ -64,7 +65,7 @@ export function registerContextHook(
     // previous snapshot in place. A reload may have landed during
     // hydration above: re-check before the disk write, and again before
     // touching shared state, so a superseded generation neither
-    // regresses the file nor the guard. Skipped in trim-only mode: the
+    // regresses the file nor the guard. Skipped in "vcc" mode: the
     // external engine owns the snapshot and recall.
     if (fullMode) {
       if (isContextStale(deps)) {
@@ -145,7 +146,7 @@ export function registerContextHook(
     if (!exceedsThresholds(estimateAfterTrim, windowTokens ?? 0, config)) {
       return;
     }
-    // Threshold compaction requests are full-mode only: in trim-only
+    // Threshold compaction requests are full-mode only: in "vcc"
     // mode the external engine (or the host) compacts on its own
     // triggers, and task-complete requests still flow through the
     // completion trigger below.

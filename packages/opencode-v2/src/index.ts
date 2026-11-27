@@ -139,7 +139,7 @@ const VccBrainPlugin = Plugin.define({
     // external engine turns our context management off at setup (preamble,
     // refresh, and brain updates stay on). Engines that load after us are
     // caught by the deferred re-check on first session activity below.
-    // Trim-only mode skips both: coexistence with an external engine is
+    // "vcc" mode skips both: coexistence with an external VCC engine is
     // the point of the mode, not a conflict to resolve.
     if (contextManagementEnabled && isFullContextMode(effectiveContextManagement)) {
       const external = await findExternalCompactionProvider(context);
@@ -307,7 +307,7 @@ const VccBrainPlugin = Plugin.define({
       };
       const controller = new AbortController();
       if (contextManagementEnabled) {
-        // Trim-only mode (an external engine owns compaction and recall):
+        // "vcc" mode (an external VCC engine owns compaction and recall):
         // we trim, trigger, and serve omissions; the engine summarizes
         // and recalls. Full mode additionally handles compactions and
         // serves per-session recall/search.
